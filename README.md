@@ -1,24 +1,165 @@
-# 🏦 Análisis de Riesgo Crediticio - Sistema Financiero Colombiano
+# 🏦 Sistema de Análisis de Riesgo Crediticio  
+### Análisis Geo-Espacial del Sistema Financiero Colombiano
 
-## 📊 Descripción del Proyecto
+![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
+![Pandas](https://img.shields.io/badge/pandas-2.x-blue.svg)
+![Status](https://img.shields.io/badge/status-production--ready-success.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-Este proyecto realiza un análisis completo de riesgo crediticio utilizando datos abiertos de captaciones y colocaciones por municipio en Colombia. El análisis sigue una metodología profesional que incluye:
+---
 
-1. **Análisis Exploratorio (EDA)** para justificar cada decisión de limpieza
-2. **Limpieza de datos** basada en hallazgos del EDA
-3. **Cálculo de métricas** de riesgo crediticio
-4. **Visualizaciones profesionales** con interpretaciones
-5. **Reporte automático** de resultados
+## 📌 Resumen Ejecutivo
 
-## 🎯 Requisitos del Módulo - Verificados
+Pipeline modular de análisis de riesgo crediticio usando datos abiertos del sistema financiero colombiano.
 
-- [x] **Python 3.11.9**: Usado en el desarrollo
-- [x] **Entorno virtual**: `requirements.txt` incluido
-- [x] **Git**: Repositorio con historial de commits
-- [x] **Decoradores personalizados**: `@timer`, `@log_execution`, `@validar_dataframe`
-- [x] **Type hinting estricto**: Todas las funciones tipadas
-- [x] **Dataset personal**: Datos Abiertos Colombia
-- [x] **Limpieza con Pandas**: Basada en EDA
-- [x] **Funciones modulares**: Cada función tiene una sola responsabilidad
+Incluye:
 
-## 📁 Estructura del Proyecto
+- Ingesta de datos  
+- Análisis Exploratorio (EDA)  
+- Limpieza estadística  
+- Construcción de métricas  
+- Visualización profesional  
+- Reporte automático  
+
+---
+
+## 🧠 Marco Teórico
+
+### Riesgo Crediticio
+
+Pérdida Esperada (EL):
+
+```
+
+EL = PD × LGD × EAD
+
+```
+
+Donde:
+
+- PD: Probabilidad de Incumplimiento  
+- LGD: Pérdida dada el Incumplimiento  
+- EAD: Exposición al Incumplimiento  
+
+---
+
+### Índice de Riesgo (Proxy NPL)
+
+```
+
+Índice de Riesgo = (C + D + E) / Cartera Total
+
+```
+
+C = Subestándar  
+D = Dudosa  
+E = Pérdida  
+
+---
+
+### Ratio de Liquidez
+
+```
+
+Ratio de Liquidez = Captaciones / Colocaciones
+
+```
+
+- < 1 → Tensión de fondeo  
+- > 1 → Estructura estable  
+
+---
+
+## 🏗 Arquitectura del Pipeline
+
+```
+
+Fuente de Datos
+↓
+Ingesta
+↓
+EDA
+↓
+Limpieza
+↓
+Ingeniería de Variables
+↓
+Cálculo de Métricas
+↓
+Visualización
+↓
+Reporte
+
+```
+
+---
+
+## 📊 Hallazgos Principales
+
+- Cartera total: 73 billones COP  
+- Índice promedio: 0.27%  
+- 66% municipios sin riesgo alto  
+- Alta concentración geográfica  
+- Desequilibrio estructural de liquidez  
+
+---
+
+## 📁 Estructura
+
+```
+
+├── analisis.py
+├── decorators.py
+├── requirements.txt
+├── outputs/
+│   ├── graficos/
+│   ├── datos/
+│   └── reportes/
+├── .gitignore
+└── README.md
+
+````
+
+---
+
+## 🚀 Instalación
+
+```bash
+git clone https://github.com/angelaricortega/Python.git
+cd Python
+
+python -m venv venv
+venv\Scripts\activate
+
+pip install -r requirements.txt
+python analisis.py
+````
+
+---
+
+## 📦 Dependencias
+
+* pandas
+* numpy
+* matplotlib
+* seaborn
+* scipy
+* requests
+
+---
+
+## 👩‍💻 Autores
+
+Angela Rico
+Sebastian Ramirez
+
+USTA – 2026
+
+---
+
+## 📜 Licencia
+
+MIT
+
+```
+
