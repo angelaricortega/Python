@@ -1,6 +1,6 @@
 """
 analisis.py - Análisis de Riesgo Crediticio - Sistema Financiero Colombiano
-Autor: Angela Rico
+Autor: Angela Rico - sebastian Ramirez
 Módulo: Fundamentos - Proyecto Fase 1 - Semana 1
 
 Este script realiza:
