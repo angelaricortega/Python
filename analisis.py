@@ -1,846 +1,1108 @@
 """
-analisis.py - Análisis de Riesgo Crediticio - Sistema Financiero Colombiano
-Autor: Angela Rico - sebastian Ramirez
-Módulo: Fundamentos - Proyecto Fase 1 - Semana 1
-
-Este script realiza:
-1. ANÁLISIS EXPLORATORIO (EDA) para justificar decisiones
-2. LIMPIEZA de datos basada en hallazgos del EDA
-3. CÁLCULO de métricas de riesgo crediticio
-4. VISUALIZACIONES profesionales
-5. EXPORTACIÓN de resultados
+╔══════════════════════════════════════════════════════════════════════════╗
+║   Sistema de Análisis de Riesgo Crediticio                              ║
+║   Sistema Financiero Colombiano — Datos Abiertos Gov.co                 ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║   Curso  : Python para APIs e IA Aplicada                               ║
+║   Semanas: 1 y 2                                                        ║
+║   Univ.  : Universidad Santo Tomás · 2026                               ║
+║   Autores: Angela Rico · Sebastian Ramirez                              ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║   CONCEPTOS APLICADOS                                                   ║
+║   Semana 1                                                              ║
+║     · Pattern Matching (match/case con guardas)   → clasificar_riesgo() ║
+║     · Decoradores simples y decorator factories   → decoradores.py      ║
+║     · Modularización en archivos separados        → modelos.py          ║
+║     · Type hints modernos (Literal, Optional)     → todo el código      ║
+║   Semana 2                                                              ║
+║     · OOP con __init__, atributos y métodos       → ClienteAPI, Pipeline║
+║     · requests.Session (conexión TCP persistente) → ClienteAPIFinanciero║
+║     · JSON vs Pickle (cuándo usar cada uno)       → exportar_*()        ║
+║     · Pydantic v2: BaseModel, Field, validators   → modelos.py          ║
+║     · EDA → Limpieza justificada estadísticamente → eda() / limpiar()   ║
+╚══════════════════════════════════════════════════════════════════════════╝
 """
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from typing import Optional, Tuple, List, Dict, Any
-import requests
-import os
+# ── Librería estándar ────────────────────────────────────────────────────
+import json
+import pickle
+import functools
 from datetime import datetime
-import warnings
-warnings.filterwarnings('ignore')
+from pathlib import Path
+from typing import Literal, Optional, List
 
-# Importar decoradores personalizados
-from decorators import timer, log_execution, validar_dataframe
+# ── Terceros ─────────────────────────────────────────────────────────────
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import seaborn as sns
+import requests
+from scipy import stats
+from pydantic import BaseModel, Field, field_validator, ValidationError
 
-# =============================================================================
-# CONFIGURACIÓN PROFESIONAL DE VISUALIZACIÓN
-# =============================================================================
 
-plt.style.use('seaborn-v0_8-whitegrid')
-sns.set_palette("viridis")
+# ══════════════════════════════════════════════════════════════════════════
+# 0. CONFIGURACIÓN GLOBAL
+# ══════════════════════════════════════════════════════════════════════════
 
-# Configuración de fuentes y tamaños para gráficos profesionales
+API_BASE = "https://www.datos.gov.co/resource/3kqn-n4za.json"
+
+COLUMNAS = {
+    "municipio":   "nombre_municipio",
+    "cartera_a":   "cartera_categoria_a",
+    "cartera_b":   "cartera_categoria_b",
+    "cartera_c":   "cartera_categoria_c",
+    "cartera_d":   "cartera_categoria_d",
+    "cartera_e":   "cartera_categoria_e",
+    "cartera_tot": "total_cartera",
+    "captaciones": "total_captaciones",
+}
+
+PALETA = {
+    "primario":    "#3D008D",
+    "secundario":  "#ED1E79",
+    "neutro":      "#64748B",
+    "sin_riesgo":  "#2ECC71",
+    "riesgo_bajo": "#27AE60",
+    "riesgo_mod":  "#F39C12",
+    "riesgo_alto": "#E67E22",
+    "riesgo_crit": "#E74C3C",
+    "sin_datos":   "#95A5A6",
+}
+
+RUTA_SALIDA = Path("outputs")
+RUTA_SALIDA.mkdir(parents=True, exist_ok=True)
+
 plt.rcParams.update({
-    'figure.figsize': (16, 10),
-    'figure.dpi': 150,
-    'font.size': 12,
-    'axes.titlesize': 16,
-    'axes.titleweight': 'bold',
-    'axes.labelsize': 13,
-    'xtick.labelsize': 11,
-    'ytick.labelsize': 11,
-    'legend.fontsize': 11,
-    'figure.titlesize': 18,
-    'figure.titleweight': 'bold'
+    "figure.facecolor":  "white",
+    "axes.facecolor":    "#F8FAFC",
+    "axes.edgecolor":    "#CBD5E1",
+    "axes.grid":         True,
+    "grid.color":        "#E2E8F0",
+    "grid.linewidth":    0.6,
+    "axes.spines.top":   False,
+    "axes.spines.right": False,
+    "font.family":       "sans-serif",
+    "font.size":         10,
+    "axes.titlesize":    11,
+    "axes.titleweight":  "bold",
+    "axes.labelsize":    9,
+    "xtick.labelsize":   8,
+    "ytick.labelsize":   8,
+    "legend.fontsize":   8,
+    "figure.dpi":        120,
 })
 
-# Crear carpetas para outputs
-os.makedirs('outputs/graficos', exist_ok=True)
-os.makedirs('outputs/datos', exist_ok=True)
-os.makedirs('outputs/reportes', exist_ok=True)
 
+# ══════════════════════════════════════════════════════════════════════════
+# 1. SEMANA 1 — DECORADORES
+# ══════════════════════════════════════════════════════════════════════════
 
-# =============================================================================
-# 1. ANÁLISIS EXPLORATORIO DE DATOS (EDA) - Justifica cada decisión
-# =============================================================================
-
-@timer
-@log_execution
-def analisis_exploratorio_inicial(df: pd.DataFrame) -> Dict[str, Any]:
+def registrar_ejecucion(func):
     """
-    Realiza análisis exploratorio detallado para JUSTIFICAR decisiones de limpieza.
-    
-    Este EDA responde:
-    - ¿Qué columnas tenemos? ¿Cuáles son relevantes?
-    - ¿Hay valores nulos? ¿Cómo tratarlos?
-    - ¿Qué columnas son numéricas? ¿Cuáles necesitan conversión?
-    - ¿Hay valores extremos? ¿Cómo detectarlos?
-    - ¿La distribución de datos justifica transformaciones?
-    
-    Returns:
-        Dict con insights del EDA que guían la limpieza
+    Decorador simple de logging de timestamp y duración.
     """
-    print("\n" + "="*80)
-    print(" 🔍 ANÁLISIS EXPLORATORIO DE DATOS (EDA) ".center(80, "="))
-    print("="*80)
-    
-    insights = {}
-    
-    # 1.1 DIMENSIONES Y ESTRUCTURA
-    print("\n📊 1. DIMENSIONES DEL DATASET:")
-    print(f"   • Filas: {df.shape[0]:,} registros")
-    print(f"   • Columnas: {df.shape[1]} variables")
-    insights['n_filas'] = df.shape[0]
-    insights['n_columnas'] = df.shape[1]
-    
-    # 1.2 TIPOS DE DATOS - JUSTIFICA CONVERSIONES
-    print("\n📋 2. TIPOS DE DATOS (justifica conversiones):")
-    dtypes_count = df.dtypes.value_counts()
-    for dtype, count in dtypes_count.items():
-        pct = (count / df.shape[1]) * 100
-        print(f"   • {dtype}: {count} columnas ({pct:.1f}%)")
-    insights['tipos_datos'] = {str(k): v for k, v in dtypes_count.to_dict().items()}
-    
-    # 1.3 COLUMNAS RELEVANTES PARA ANÁLISIS DE RIESGO
-    print("\n🎯 3. COLUMNAS RELEVANTES IDENTIFICADAS:")
-    columnas_riesgo = [col for col in df.columns if any(x in col.lower() 
-                      for x in ['riesgo', 'cartera', 'credito', 'deposito'])]
-    
-    for i, col in enumerate(columnas_riesgo[:10]):  # Mostrar primeras 10
-        print(f"   • {col}")
-    if len(columnas_riesgo) > 10:
-        print(f"   • ... y {len(columnas_riesgo) - 10} más")
-    insights['columnas_relevantes'] = len(columnas_riesgo)
-    
-    # 1.4 VALORES NULOS - ¡CRÍTICO PARA LIMPIEZA!
-    print("\n❓ 4. ANÁLISIS DE VALORES NULOS (justifica tratamiento de missing):")
-    nulos = df.isnull().sum()
-    nulos = nulos[nulos > 0].sort_values(ascending=False)
-    
-    if len(nulos) > 0:
-        print(f"   • {len(nulos)} columnas con valores nulos")
-        print("\n   Top 10 columnas con más nulos:")
-        for col, val in nulos.head(10).items():
-            pct = (val / len(df)) * 100
-            print(f"     - {col}: {val:,} nulos ({pct:.1f}%)")
-        
-        # Decisión basada en EDA
-        if (nulos / len(df)).max() > 0.3:
-            print("\n   🔴 DECISIÓN: Columnas con >30% nulos serán evaluadas para eliminación")
-        else:
-            print("\n   🟢 DECISIÓN: Nulos manejables con errors='coerce' en conversión")
-        
-        insights['columnas_con_nulos'] = len(nulos)
-        insights['max_pct_nulos'] = (nulos.max() / len(df)) * 100
-    else:
-        print("   ✅ Sin valores nulos")
-        insights['columnas_con_nulos'] = 0
-    
-    # 1.5 COLUMNAS NUMÉRICAS POTENCIALES
-    print("\n🔢 5. IDENTIFICACIÓN DE COLUMNAS NUMÉRICAS:")
-    numericas_potenciales = []
-    no_numericas = []
-    
-    for col in df.columns:
-        # Tomar muestra para prueba rápida
-        muestra = df[col].dropna().iloc[:100] if len(df) > 100 else df[col].dropna()
-        try:
-            pd.to_numeric(muestra, errors='coerce')
-            numericas_potenciales.append(col)
-        except:
-            no_numericas.append(col)
-    
-    print(f"   • {len(numericas_potenciales)} columnas convertibles a numérico")
-    print(f"   • {len(no_numericas)} columnas no numéricas (fechas, texto, etc.)")
-    insights['columnas_numericas_potenciales'] = len(numericas_potenciales)
-    
-    # 1.6 MUESTRA DE DATOS
-    print("\n👀 6. VISTA PREVIA (primeras 3 filas):")
-    print(df.head(3).to_string())
-    
-    # 1.7 ESTADÍSTICAS DESCRIPTIVAS INICIALES
-    print("\n📈 7. ESTADÍSTICAS DESCRIPTIVAS INICIALES:")
-    
-    # Buscar columnas numéricas para mostrar estadísticas
-    cols_estadisticas = [col for col in df.columns[:10] 
-                        if col in numericas_potenciales[:5]]
-    
-    if cols_estadisticas:
-        print(df[cols_estadisticas].describe().to_string())
-        
-        # Detección de outliers
-        for col in cols_estadisticas[:3]:  # Primeras 3 columnas
-            q1 = df[col].quantile(0.25)
-            q3 = df[col].quantile(0.75)
-            iqr = q3 - q1
-            outliers = df[(df[col] < q1 - 1.5*iqr) | (df[col] > q3 + 1.5*iqr)]
-            pct_outliers = (len(outliers) / len(df)) * 100
-            print(f"\n   • {col}: {pct_outliers:.1f}% valores atípicos (IQR)")
-    
-    # 1.8 RESUMEN DE DECISIONES DE LIMPIEZA
-    print("\n" + "="*80)
-    print(" 📋 DECISIONES DE LIMPIEZA BASADAS EN EDA ".center(80, "="))
-    print("="*80)
-    
-    decisiones = [
-        "1. Renombrar columnas a nombres cortos y consistentes (mejor legibilidad)",
-        f"2. Convertir {len(numericas_potenciales)} columnas a tipo numérico (basado en identificación)",
-        "3. Usar errors='coerce' para manejar valores no numéricos (basado en detección de nulos)",
-        "4. Crear métricas derivadas: índice de riesgo, ratio provisiones, etc.",
-        "5. Filtrar valores extremos usando percentiles (basado en detección de outliers)",
-        "6. Mantener columnas de municipio y fecha para análisis temporal/geográfico"
-    ]
-    
-    for decision in decisiones:
-        print(f"   {decision}")
-    
-    print("\n" + "="*80)
-    print(" ✅ EDA COMPLETADO - Decisiones de limpieza justificadas ".center(80, "="))
-    print("="*80 + "\n")
-    
-    return insights
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        ts = datetime.now()
+        print(f"\n  ┌─ [{ts:%H:%M:%S}] {func.__name__}()")
+        resultado = func(*args, **kwargs)
+        duracion = (datetime.now() - ts).total_seconds()
+        print(f"  └─ Completado en {duracion:.2f}s")
+        return resultado
+    return wrapper
 
 
-# =============================================================================
-# 2. DESCARGA DE DATOS
-# =============================================================================
-
-@timer
-@log_execution
-def descargar_datos(url: str = "https://www.datos.gov.co/api/views/u2wk-tfe3/rows.csv?accessType=DOWNLOAD") -> Optional[pd.DataFrame]:
+def validar_normalidad(alpha: float = 0.05):
     """
-    Descarga datos de captaciones y colocaciones.
-    
-    Args:
-        url: URL del dataset en Datos Abiertos Colombia
-        
-    Returns:
-        DataFrame con los datos o None si hay error
-    """
-    print("🌐 Iniciando descarga desde Datos Abiertos Colombia...")
-    
-    try:
-        # Headers para simular navegador
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        
-        df = pd.read_csv(url, storage_options=headers)
-        
-        print(f"✅ Descarga exitosa:")
-        print(f"   • {len(df):,} registros")
-        print(f"   • {len(df.columns)} columnas")
-        print(f"   • Tamaño aproximado: {df.memory_usage(deep=True).sum() / 1e6:.1f} MB")
-        
-        return df
-        
-    except Exception as e:
-        print(f"❌ Error en descarga: {e}")
-        return None
+    Decorator factory compatible con funciones y métodos de clase.
+    Ejecuta Shapiro-Wilk antes de la función decorada.
 
-
-# =============================================================================
-# 3. LIMPIEZA Y PREPARACIÓN DE DATOS (Basada en hallazgos del EDA)
-# =============================================================================
-
-@timer
-@log_execution
-@validar_dataframe(columnas_requeridas=['Cartera de créditos'])
-def preparar_datos(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str], Dict[str, Any]]:
+    Compatibilidad:
+      - funciones: f(data)
+      - métodos:   obj.metodo(data=...)
+      - métodos sin parámetro `data`: intenta inferir desde obj.df["indice_riesgo"]
     """
-    Limpia y prepara los datos para análisis de riesgo.
-    
-    Decisiones basadas en EDA:
-    - Renombrar columnas para consistencia
-    - Convertir a numérico con manejo de errores
-    - Crear métricas derivadas de riesgo
-    - Identificar columnas útiles para análisis
-    
-    Args:
-        df: DataFrame crudo
-        
-    Returns:
-        Tuple[DataFrame limpio, Lista columnas numéricas, Diccionario métricas de limpieza]
-    """
-    print("\n🛠️  INICIANDO PROCESO DE LIMPIEZA...")
-    
-    df_clean = df.copy()
-    metricas_limpieza = {
-        'registros_iniciales': len(df),
-        'columnas_iniciales': len(df.columns)
-    }
-    
-    # 3.1 RENOMBRAR COLUMNAS (basado en identificación de relevantes)
-    print("\n   📝 Renombrando columnas para consistencia...")
-    columnas_rename = {
-        'Código del departamento': 'cod_depto',
-        'Código del municipio': 'cod_municipio',
-        'Nombre del municipio': 'municipio',
-        'Fecha de Corte': 'fecha',
-        'Cartera de créditos': 'cartera_total',
-        'Depósitos en cuenta corriente bancaria': 'dep_corriente',
-        'Depósitos simples': 'dep_simples',
-        'Certificados de depósito a término': 'cdts',
-        'Depósitos de ahorro': 'dep_ahorro',
-        'Categoría A riesgo normal': 'riesgo_a',
-        'Categoría B riesgo aceptable': 'riesgo_b',
-        'Categoría C riesgo apreciable': 'riesgo_c',
-        'Categoría D riesgo significativo': 'riesgo_d',
-        'Categoría E riesgo de Incobrabilidad': 'riesgo_e',
-        'Créditos de vivienda': 'cred_vivienda',
-        'Provisión créditos de vivienda': 'prov_vivienda',
-        'Provisión créditos de consumo': 'prov_consumo',
-        'Provisión microcréditos': 'prov_micro',
-        'Provisión general': 'prov_general'
-    }
-    
-    # Solo renombrar columnas que existen
-    rename_dict = {k: v for k, v in columnas_rename.items() if k in df_clean.columns}
-    df_clean = df_clean.rename(columns=rename_dict)
-    metricas_limpieza['columnas_renombradas'] = len(rename_dict)
-    
-    # 3.2 CONVERTIR A NUMÉRICO (basado en identificación de numéricas potenciales)
-    print("\n   🔢 Convirtiendo columnas a tipo numérico...")
-    columnas_texto = ['cod_depto', 'cod_municipio', 'municipio', 'fecha']
-    cols_numericas = []
-    errores_conversion = 0
-    
-    for col in df_clean.columns:
-        if col not in columnas_texto:
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            data = kwargs.get("data", None)
+
+            # Caso 1: método/función con `data` posicional
+            if data is None and len(args) >= 2:
+                data = args[1]
+
+            # Caso 2: método sin `data` explícito -> inferir desde self.df
+            if data is None and len(args) >= 1:
+                self_obj = args[0]
+                df_obj = getattr(self_obj, "df", None)
+                if isinstance(df_obj, pd.DataFrame) and "indice_riesgo" in df_obj.columns:
+                    data = df_obj["indice_riesgo"].dropna().tolist()
+
+            # Caso 3: función normal cuyo primer argumento es data
+            if data is None and len(args) >= 1 and not hasattr(args[0], "df"):
+                data = args[0]
+
+            if data is None:
+                print("    ⚠ No se recibió `data` para validar normalidad")
+                return func(*args, **kwargs)
+
             try:
-                # Intentar conversión, valores no convertibles -> NaN
-                df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
-                cols_numericas.append(col)
-            except:
-                errores_conversion += 1
-    
-    metricas_limpieza['columnas_numericas'] = len(cols_numericas)
-    metricas_limpieza['errores_conversion'] = errores_conversion
-    
-    print(f"      • {len(cols_numericas)} columnas convertidas a numérico")
-    print(f"      • {errores_conversion} columnas no convertibles (texto/fechas)")
-    
-    # 3.3 CONVERTIR FECHA (si existe)
-    if 'fecha' in df_clean.columns:
-        print("\n   📅 Procesando fechas...")
-        df_clean['fecha'] = pd.to_datetime(df_clean['fecha'], errors='coerce')
-        fechas_validas = df_clean['fecha'].notna().sum()
-        print(f"      • {fechas_validas:,} fechas válidas")
-    
-    # 3.4 CREAR MÉTRICAS DE RIESGO (basado en disponibilidad de columnas)
-    print("\n   📊 Creando métricas derivadas de riesgo...")
-    
-    # Índice de riesgo alto (C+D+E)
-    columnas_riesgo_alto = ['riesgo_c', 'riesgo_d', 'riesgo_e']
-    cols_existentes = [c for c in columnas_riesgo_alto if c in df_clean.columns]
-    
-    if cols_existentes:
-        df_clean['cartera_riesgo_alto'] = df_clean[cols_existentes].sum(axis=1)
-        df_clean['indice_riesgo'] = df_clean['cartera_riesgo_alto'] / df_clean['cartera_total'].replace(0, np.nan)
-        print(f"      • Índice de riesgo creado usando: {cols_existentes}")
-    
-    # Depósitos totales
-    cols_depositos = ['dep_corriente', 'dep_simples', 'cdts', 'dep_ahorro']
-    cols_dep_existentes = [c for c in cols_depositos if c in df_clean.columns]
-    
-    if cols_dep_existentes:
-        df_clean['depositos_totales'] = df_clean[cols_dep_existentes].sum(axis=1)
-        print(f"      • Depósitos totales creados usando: {cols_dep_existentes}")
-    
-    # Ratio de liquidez (captaciones/colocaciones)
-    if 'depositos_totales' in df_clean.columns and 'cartera_total' in df_clean.columns:
-        df_clean['ratio_liquidez'] = df_clean['depositos_totales'] / df_clean['cartera_total'].replace(0, np.nan)
-        print(f"      • Ratio de liquidez creado")
-    
-    # 3.5 ELIMINAR VALORES EXTREMOS (basado en detección de outliers)
-    print("\n   📉 Detectando y manejando valores extremos...")
-    registros_antes = len(df_clean)
-    
-    for col in ['indice_riesgo', 'ratio_liquidez']:
-        if col in df_clean.columns:
-            q1, q99 = df_clean[col].quantile([0.01, 0.99])
-            df_clean = df_clean[(df_clean[col] >= q1) & (df_clean[col] <= q99)]
-    
-    registros_despues = len(df_clean)
-    metricas_limpieza['registros_eliminados'] = registros_antes - registros_despues
-    metricas_limpieza['pct_eliminados'] = ((registros_antes - registros_despues) / registros_antes) * 100
-    
-    print(f"      • {metricas_limpieza['registros_eliminados']:,} registros eliminados ({metricas_limpieza['pct_eliminados']:.1f}%)")
-    
-    metricas_limpieza['registros_finales'] = len(df_clean)
-    
-    print(f"\n✅ LIMPIEZA COMPLETADA:")
-    print(f"   • {metricas_limpieza['registros_finales']:,} registros finales")
-    print(f"   • {len(cols_numericas)} columnas numéricas disponibles")
-    
-    return df_clean, cols_numericas, metricas_limpieza
+                n = len(data)
+            except TypeError:
+                print("    ⚠ `data` no es iterable; se omite test de normalidad")
+                return func(*args, **kwargs)
+
+            if n < 3:
+                print(f"    ⚠ n={n} insuficiente para Shapiro-Wilk (mín. 3)")
+                return func(*args, **kwargs)
+
+            # Shapiro con límite práctico para evitar advertencias en muestras muy grandes
+            muestra = list(data)[:5000]
+            stat, p = stats.shapiro(muestra)
+
+            if p < alpha:
+                print(f"    ⚠ Datos NO normales: W={stat:.4f}, p={p:.4f} < α={alpha}")
+                print("      → Considera: Mann-Whitney U o Kruskal-Wallis")
+            else:
+                print(f"    ✓ Normalidad confirmada: p={p:.4f} ≥ α={alpha}")
+
+            return func(*args, **kwargs)  # no duplicar `data`
+        return wrapper
+    return decorator
 
 
-# =============================================================================
-# 4. ANÁLISIS DESCRIPTIVO Y MÉTRICAS
-# =============================================================================
+# ══════════════════════════════════════════════════════════════════════════
+# 2. SEMANA 1 — PATTERN MATCHING
+# ══════════════════════════════════════════════════════════════════════════
 
-@timer
-def calcular_metricas(df: pd.DataFrame) -> Dict[str, Any]:
+TipoRiesgo = Literal[
+    "sin_riesgo", "riesgo_bajo", "riesgo_moderado",
+    "riesgo_alto", "riesgo_critico", "sin_datos",
+]
+
+
+def clasificar_riesgo(obs: dict) -> TipoRiesgo:
     """
-    Calcula métricas estadísticas del análisis.
-    
-    Args:
-        df: DataFrame limpio
-        
-    Returns:
-        Diccionario con métricas calculadas
+    Clasifica el nivel de riesgo crediticio de un municipio usando Pattern Matching.
     """
-    print("\n📈 CALCULANDO MÉTRICAS ESTADÍSTICAS...")
+    if not isinstance(obs, dict) or "indice_riesgo" not in obs:
+        return "sin_datos"
+        
+    val = obs.get("indice_riesgo")
     
-    metricas = {}
-    
-    # 4.1 Métricas de riesgo
-    if 'indice_riesgo' in df.columns:
-        datos_riesgo = df['indice_riesgo'].dropna()
-        metricas['riesgo'] = {
-            'media': datos_riesgo.mean(),
-            'mediana': datos_riesgo.median(),
-            'desviacion': datos_riesgo.std(),
-            'min': datos_riesgo.min(),
-            'max': datos_riesgo.max(),
-            'q25': datos_riesgo.quantile(0.25),
-            'q75': datos_riesgo.quantile(0.75),
-            'pct_cero': (datos_riesgo == 0).mean() * 100
-        }
-    
-    # 4.2 Métricas de cartera
-    if 'cartera_total' in df.columns:
-        cartera = df['cartera_total']
-        metricas['cartera'] = {
-            'total': cartera.sum(),
-            'promedio': cartera.mean(),
-            'mediana': cartera.median(),
-            'total_formateado': f"${cartera.sum():,.0f}"
-        }
-    
-    # 4.3 Métricas de liquidez
-    if 'ratio_liquidez' in df.columns:
-        liquidez = df['ratio_liquidez'].dropna()
-        metricas['liquidez'] = {
-            'media': liquidez.mean(),
-            'mediana': liquidez.median(),
-            'pct_mayor_1': (liquidez > 1).mean() * 100
-        }
-    
-    # 4.4 Top municipios
-    if 'municipio' in df.columns and 'cartera_total' in df.columns:
-        top_municipios = df.groupby('municipio')['cartera_total'].sum().nlargest(10)
-        metricas['top_municipios'] = top_municipios.to_dict()
-    
-    print("✅ Métricas calculadas")
-    return metricas
+    if val is None or pd.isna(val):
+        return "sin_datos"
+        
+    try:
+        idx = float(val)
+    except (ValueError, TypeError):
+        return "sin_datos"
+        
+    match idx:
+        case 0.0:
+            return "sin_riesgo"
+        case default if default < 0.05:
+            return "riesgo_bajo"
+        case default if default < 0.10:
+            return "riesgo_moderado"
+        case default if default < 0.20:
+            return "riesgo_alto"
+        case _:
+            return "riesgo_critico"
 
 
-# =============================================================================
-# 5. VISUALIZACIONES PROFESIONALES
-# =============================================================================
+# ══════════════════════════════════════════════════════════════════════════
+# 3. SEMANA 2 — PYDANTIC: Modelos de Validación
+# ══════════════════════════════════════════════════════════════════════════
 
-@timer
-def generar_graficos(df: pd.DataFrame, metricas: Dict[str, Any]) -> None:
+class MunicipioFinanciero(BaseModel):
     """
-    Genera visualizaciones profesionales del análisis.
-    Guarda cada gráfico por separado Y un collage completo.
-    
-    Args:
-        df: DataFrame limpio
-        metricas: Diccionario con métricas calculadas
+    Contrato Pydantic para cada registro del sistema financiero colombiano.
     """
-    print("\n🎨 GENERANDO VISUALIZACIONES PROFESIONALES...")
-    
-    # Configurar estilo profesional
-    sns.set_style("whitegrid")
-    sns.set_palette("viridis")
-    
-    # Asegurar que existe la carpeta
-    os.makedirs('outputs/graficos', exist_ok=True)
-    
-    # =========================================================================
-    # GRÁFICO 1: Distribución del Índice de Riesgo
-    # =========================================================================
-    print("   📊 Generando gráfico 1/4: Distribución de riesgo...")
-    fig1, ax1 = plt.subplots(figsize=(12, 8))
-    
-    if 'indice_riesgo' in df.columns:
-        datos = df['indice_riesgo'].dropna()
-        
-        # Histograma con KDE
-        sns.histplot(datos, bins=50, kde=True, ax=ax1, 
-                    color='#2E86AB', alpha=0.6, edgecolor='white', linewidth=0.5)
-        
-        # Líneas de estadísticas
-        ax1.axvline(datos.mean(), color='#A23B72', linestyle='--', linewidth=2.5,
-                   label=f'Media: {datos.mean():.3f}')
-        ax1.axvline(datos.median(), color='#F18F01', linestyle='-', linewidth=2.5,
-                   label=f'Mediana: {datos.median():.3f}')
-        
-        # Sombrear región de alto riesgo (>1%)
-        ax1.axvspan(0.01, datos.max(), alpha=0.2, color='red', label='Riesgo >1%')
-        
-        ax1.set_xlabel('Índice de Riesgo (C+D+E)/Cartera Total', fontsize=12, fontweight='bold')
-        ax1.set_ylabel('Frecuencia', fontsize=12, fontweight='bold')
-        ax1.set_title('📊 Distribución del Índice de Riesgo Crediticio', 
-                     fontsize=16, fontweight='bold', pad=20)
-        ax1.legend(loc='upper right', frameon=True, fancybox=True, shadow=True)
-        
-        # Formato de ejes
-        ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.1%}'))
-        
-        # Texto explicativo
-        texto = f"Distribución sesgada a la izquierda\n{metricas.get('riesgo', {}).get('pct_cero', 0):.1f}% de municipios con riesgo 0"
-        ax1.text(0.98, 0.95, texto, transform=ax1.transAxes, 
-                fontsize=10, verticalalignment='top', horizontalalignment='right',
-                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-        
-        # Guardar gráfico individual
-        plt.savefig('outputs/graficos/01_distribucion_riesgo.png', 
-                    dpi=300, bbox_inches='tight', facecolor='white')
-        plt.close(fig1)
-        print("      ✅ Guardado: 01_distribucion_riesgo.png")
-    
-    # =========================================================================
-    # GRÁFICO 2: Top 10 Municipios por Cartera
-    # =========================================================================
-    print("   📊 Generando gráfico 2/4: Top municipios...")
-    fig2, ax2 = plt.subplots(figsize=(12, 8))
-    
-    if 'top_municipios' in metricas:
-        top = pd.Series(metricas['top_municipios'])
-        
-        # Crear colores degradados
-        colors = plt.cm.Blues(np.linspace(0.4, 0.9, len(top)))
-        
-        # Gráfico de barras horizontal
-        bars = ax2.barh(range(len(top)), top.values, color=colors)
-        
-        # Añadir etiquetas con valores
-        for i, (bar, val) in enumerate(zip(bars, top.values)):
-            width = bar.get_width()
-            ax2.text(width, bar.get_y() + bar.get_height()/2, 
-                    f'  ${width:,.0f}', ha='left', va='center', fontsize=10, fontweight='bold')
-        
-        ax2.set_yticks(range(len(top)))
-        ax2.set_yticklabels(top.index, fontsize=11)
-        ax2.set_xlabel('Cartera Total ($)', fontsize=12, fontweight='bold')
-        ax2.set_title('🏆 Top 10 Municipios por Cartera Crediticia', 
-                     fontsize=16, fontweight='bold', pad=20)
-        
-        # Formato de eje x en miles de millones
-        ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1e12:.1f}B'))
-        
-        # Añadir línea de promedio
-        total_sistema = metricas.get('cartera', {}).get('total', 0)
-        ax2.axvline(total_sistema/10, color='red', linestyle='--', alpha=0.5, 
-                   label='Promedio top 10')
-        ax2.legend()
-        
-        # Guardar gráfico individual
-        plt.savefig('outputs/graficos/02_top_municipios.png', 
-                    dpi=300, bbox_inches='tight', facecolor='white')
-        plt.close(fig2)
-        print("      ✅ Guardado: 02_top_municipios.png")
-    
-    # =========================================================================
-    # GRÁFICO 3: Boxplot de Riesgo por Quintiles
-    # =========================================================================
-    print("   📊 Generando gráfico 3/4: Boxplot por quintiles...")
-    fig3, ax3 = plt.subplots(figsize=(12, 8))
-    
-    if 'cartera_total' in df.columns and 'indice_riesgo' in df.columns:
-        # Crear quintiles por tamaño de cartera
-        df_temp = df[['cartera_total', 'indice_riesgo']].dropna().copy()
-        df_temp['quintil'] = pd.qcut(df_temp['cartera_total'], q=5, 
-                                     labels=['Q1 (Menor)', 'Q2', 'Q3', 'Q4', 'Q5 (Mayor)'])
-        
-        # Boxplot
-        sns.boxplot(data=df_temp, x='quintil', y='indice_riesgo', ax=ax3, 
-                   palette='RdYlGn_r', fliersize=2, linewidth=1.5)
-        
-        ax3.set_xlabel('Tamaño de Cartera (Quintiles)', fontsize=12, fontweight='bold')
-        ax3.set_ylabel('Índice de Riesgo', fontsize=12, fontweight='bold')
-        ax3.set_title('📦 Distribución de Riesgo por Tamaño de Cartera', 
-                     fontsize=16, fontweight='bold', pad=20)
-        ax3.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.1%}'))
-        
-        # Rotar etiquetas para mejor lectura
-        plt.setp(ax3.xaxis.get_majorticklabels(), rotation=15)
-        
-        # Test estadístico
+
+    municipio: str = Field(..., min_length=2, description="Nombre del municipio")
+
+    cartera_a: Optional[float] = Field(None, ge=0, description="Cartera normal (COP)")
+    cartera_b: Optional[float] = Field(None, ge=0, description="Cartera en observación (COP)")
+    cartera_c: Optional[float] = Field(None, ge=0, description="Cartera subestándar (COP)")
+    cartera_d: Optional[float] = Field(None, ge=0, description="Cartera dudosa (COP)")
+    cartera_e: Optional[float] = Field(None, ge=0, description="Cartera pérdida (COP)")
+    total_cartera: Optional[float] = Field(None, ge=0)
+    total_captaciones: Optional[float] = Field(None, ge=0)
+
+    indice_riesgo: Optional[float] = Field(None, ge=0, le=1)
+    ratio_liquidez: Optional[float] = Field(None, ge=0)
+    nivel_riesgo: Optional[str] = None
+
+    @field_validator("municipio", mode="before")
+    @classmethod
+    def normalizar_nombre(cls, v) -> str:
+        return str(v).strip().title() if v else "Desconocido"
+
+    @field_validator(
+        "cartera_a", "cartera_b", "cartera_c",
+        "cartera_d", "cartera_e", "total_cartera", "total_captaciones",
+        mode="before",
+    )
+    @classmethod
+    def convertir_numerico(cls, v) -> Optional[float]:
+        # Nota: esta versión funciona bien con floats y strings simples.
+        # Si luego la API trae separadores mixtos regionales, conviene reemplazar
+        # por la función robusta que ya usaste en `modelos.py`.
+        if v is None or v == "":
+            return None
+        if isinstance(v, (int, float, np.floating, np.integer)):
+            return float(v)
+        limpio = (
+            str(v)
+            .replace("$", "")
+            .replace(" ", "")
+            .replace(",", ".")
+        )
+        return float(limpio)
+
+    def calcular_indicadores(self) -> "MunicipioFinanciero":
+        mora = sum(filter(None, [self.cartera_c, self.cartera_d, self.cartera_e]))
+
+        if self.total_cartera and self.total_cartera > 0:
+            self.indice_riesgo = mora / self.total_cartera
+            if self.total_captaciones is not None:
+                self.ratio_liquidez = self.total_captaciones / self.total_cartera
+
+        self.nivel_riesgo = clasificar_riesgo({"indice_riesgo": self.indice_riesgo})
+        return self
+
+
+class ResultadoAnalisis(BaseModel):
+    """
+    Modelo de salida para serialización.
+    """
+    fecha_analisis: datetime = Field(default_factory=datetime.now)
+    version: str = "1.0.0"
+    n_municipios: int = Field(..., ge=0)
+    cartera_total_billones: float
+    indice_riesgo_promedio: float = Field(..., ge=0, le=1)
+    pct_sin_riesgo: float = Field(..., ge=0, le=100)
+    municipios: List[MunicipioFinanciero] = Field(default_factory=list)
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 4. SEMANA 2 — OOP: Cliente API
+# ══════════════════════════════════════════════════════════════════════════
+
+class ClienteAPIFinanciero:
+    """
+    Cliente HTTP para la API de Datos Abiertos Colombia (Socrata).
+    """
+
+    def __init__(self, base_url: str, timeout: int = 12):
+        self.base_url = base_url
+        self.timeout = timeout
+        self.session = requests.Session()
+        self.session.headers.update({
+            "Accept": "application/json",
+            "User-Agent": "RiesgoCredito-USTA/1.0",
+        })
+
+    def obtener_datos(self, limite: int = 500) -> list[dict]:
+        url = f"{self.base_url}?$limit={limite}&$offset=0"
         try:
-            from scipy import stats
-            q1_data = df_temp[df_temp['quintil'] == 'Q1 (Menor)']['indice_riesgo'].dropna()
-            q5_data = df_temp[df_temp['quintil'] == 'Q5 (Mayor)']['indice_riesgo'].dropna()
-            stat, p_value = stats.mannwhitneyu(q1_data, q5_data, alternative='two-sided')
-            
-            texto = f"Test Mann-Whitney: p={p_value:.4f}\n{'✅ Diferencia significativa' if p_value < 0.05 else '❌ Sin diferencia'}"
-        except:
-            # Si no hay scipy, cálculo manual
-            q1_media = q1_data.mean()
-            q5_media = q5_data.mean()
-            diferencia_pct = abs(q1_media - q5_media) / max(q1_media, q5_media) * 100
-            texto = f"Diferencia entre grupos: {diferencia_pct:.1f}%\n{'✅ Diferencia significativa' if diferencia_pct > 20 else '⚠️ Diferencia moderada'}"
-        
-        ax3.text(0.05, 0.95, texto, transform=ax3.transAxes, fontsize=10,
-                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-        
-        # Guardar gráfico individual
-        plt.savefig('outputs/graficos/03_boxplot_riesgo.png', 
-                    dpi=300, bbox_inches='tight', facecolor='white')
-        plt.close(fig3)
-        print("      ✅ Guardado: 03_boxplot_riesgo.png")
-    
-    # =========================================================================
-    # GRÁFICO 4: Composición de Cartera por Riesgo
-    # =========================================================================
-    print("   📊 Generando gráfico 4/4: Composición de riesgo...")
-    fig4, ax4 = plt.subplots(figsize=(12, 8))
-    
-    categorias_riesgo = ['riesgo_a', 'riesgo_b', 'riesgo_c', 'riesgo_d', 'riesgo_e']
-    cols_existentes = [c for c in categorias_riesgo if c in df.columns]
-    
-    if cols_existentes:
-        # Calcular porcentajes
-        total_riesgo = df[cols_existentes].sum().sum()
-        valores = [df[col].sum() / total_riesgo * 100 for col in cols_existentes]
-        labels = ['A - Normal', 'B - Aceptable', 'C - Apreciable', 
-                 'D - Significativo', 'E - Incobrable']
-        
-        # Colores para cada categoría
-        colors = ['#2ECC71', '#F1C40F', '#E67E22', '#E74C3C', '#C0392B']
-        
-        # Crear gráfico de torta
-        wedges, texts, autotexts = ax4.pie(valores, labels=labels, autopct='%1.1f%%',
-                                           colors=colors, startangle=90, 
-                                           wedgeprops={'edgecolor': 'white', 'linewidth': 2})
-        
-        # Mejorar formato de porcentajes
-        for autotext in autotexts:
-            autotext.set_color('white')
-            autotext.set_fontsize(11)
-            autotext.set_fontweight('bold')
-        
-        ax4.set_title('🥧 Composición de Cartera por Categoría de Riesgo', 
-                     fontsize=16, fontweight='bold', pad=20)
-        
-        # Destacar categorías de alto riesgo
-        alto_riesgo = sum(valores[2:])  # C+D+E
-        ax4.text(0, -1.2, f'⚠️ Cartera de Alto Riesgo (C+D+E): {alto_riesgo:.1f}%', 
-                ha='center', fontsize=12, fontweight='bold',
-                bbox=dict(boxstyle='round', facecolor='red', alpha=0.1))
-        
-        # Guardar gráfico individual
-        plt.savefig('outputs/graficos/04_composicion_riesgo.png', 
-                    dpi=300, bbox_inches='tight', facecolor='white')
-        plt.close(fig4)
-        print("      ✅ Guardado: 04_composicion_riesgo.png")
-    
-    # =========================================================================
-    # COLLAGE COMPLETO (todos los gráficos juntos)
-    # =========================================================================
-    print("   🖼️  Generando collage completo...")
-    
-    fig = plt.figure(figsize=(20, 12))
-    gs = fig.add_gridspec(2, 2, hspace=0.3, wspace=0.25)
-    
-    # Re-crear cada gráfico en el collage
-    # (código del collage - similar al anterior pero en subplots)
-    
-    ax1 = fig.add_subplot(gs[0, 0])
-    if 'indice_riesgo' in df.columns:
-        datos = df['indice_riesgo'].dropna()
-        sns.histplot(datos, bins=50, kde=True, ax=ax1, color='#2E86AB', alpha=0.6)
-        ax1.axvline(datos.mean(), color='#A23B72', linestyle='--', linewidth=2, label=f'Media: {datos.mean():.3f}')
-        ax1.axvline(datos.median(), color='#F18F01', linestyle='-', linewidth=2, label=f'Mediana: {datos.median():.3f}')
-        ax1.set_title('Distribución del Índice de Riesgo', fontsize=14, fontweight='bold')
-        ax1.legend()
-    
-    ax2 = fig.add_subplot(gs[0, 1])
-    if 'top_municipios' in metricas:
-        top = pd.Series(metricas['top_municipios'])
-        top.plot(kind='barh', ax=ax2, color=plt.cm.Blues(np.linspace(0.4, 0.9, len(top))))
-        ax2.set_title('Top 10 Municipios por Cartera', fontsize=14, fontweight='bold')
-        ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1e12:.1f}B'))
-    
-    ax3 = fig.add_subplot(gs[1, 0])
-    if 'cartera_total' in df.columns and 'indice_riesgo' in df.columns:
-        df_temp = df[['cartera_total', 'indice_riesgo']].dropna().copy()
-        df_temp['quintil'] = pd.qcut(df_temp['cartera_total'], q=5, labels=['Q1', 'Q2', 'Q3', 'Q4', 'Q5'])
-        sns.boxplot(data=df_temp, x='quintil', y='indice_riesgo', ax=ax3, palette='RdYlGn_r')
-        ax3.set_title('Riesgo por Tamaño de Cartera', fontsize=14, fontweight='bold')
-        ax3.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.1%}'))
-    
-    ax4 = fig.add_subplot(gs[1, 1])
-    if cols_existentes:
-        valores = [df[col].sum() for col in cols_existentes]
-        ax4.pie(valores, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
-        ax4.set_title('Composición por Riesgo', fontsize=14, fontweight='bold')
-    
-    plt.suptitle('📊 ANÁLISIS DE RIESGO CREDITICIO - SISTEMA FINANCIERO COLOMBIANO', 
-                fontsize=18, fontweight='bold', y=1.02)
-    
-    plt.savefig('outputs/graficos/00_collage_completo.png', dpi=300, bbox_inches='tight', facecolor='white')
-    plt.savefig('outputs/graficos/00_collage_completo.pdf', bbox_inches='tight', facecolor='white')
-    plt.close(fig)
-    print("      ✅ Guardado: 00_collage_completo.png y .pdf")
-    
-    print(f"\n✅ TODOS LOS GRÁFICOS GUARDADOS EN: outputs/graficos/")
-    print("   📁 Archivos generados:")
-    print("      • 01_distribucion_riesgo.png")
-    print("      • 02_top_municipios.png") 
-    print("      • 03_boxplot_riesgo.png")
-    print("      • 04_composicion_riesgo.png")
-    print("      • 00_collage_completo.png (todos juntos)")
+            resp = self.session.get(url, timeout=self.timeout)
+            resp.raise_for_status()
+            return resp.json()
 
-    # =============================================================================
-# 6. REPORTE DE RESULTADOS
-# =============================================================================
+        except requests.exceptions.Timeout:
+            print(f"    ⚠ Timeout ({self.timeout}s). Activando datos sintéticos…")
+        except requests.exceptions.HTTPError as e:
+            print(f"    ✗ Error HTTP {e.response.status_code}")
+        except requests.exceptions.JSONDecodeError:
+            print("    ✗ Respuesta no es JSON válido")
+        except requests.exceptions.ConnectionError:
+            print("    ✗ Sin conexión. Activando datos sintéticos…")
+        return []
 
-def generar_reporte(metricas_eda: Dict, metricas_limpieza: Dict, 
-                   metricas_analisis: Dict, df: pd.DataFrame) -> str:
+    def cerrar(self):
+        self.session.close()
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 5. PIPELINE PRINCIPAL
+# ══════════════════════════════════════════════════════════════════════════
+
+class PipelineRiesgo:
     """
-    Genera reporte completo del análisis.
+    Orquestador del análisis de riesgo crediticio.
     """
-    reporte = []
-    reporte.append("\n" + "="*80)
-    reporte.append(" 📋 REPORTE FINAL DE ANÁLISIS DE RIESGO CREDITICIO ".center(80, "="))
-    reporte.append("="*80)
-    
-    # 1. RESUMEN EJECUTIVO
-    reporte.append("\n🎯 1. RESUMEN EJECUTIVO")
-    reporte.append("-" * 40)
-    reporte.append(f"📅 Fecha análisis: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    reporte.append(f"📊 Registros analizados: {len(df):,}")
-    reporte.append(f"📈 Cartera total sistema: ${df['cartera_total'].sum():,.0f}")
-    
-    if 'indice_riesgo' in df.columns:
-        riesgo_medio = df['indice_riesgo'].mean()
-        reporte.append(f"⚠️  Riesgo promedio: {riesgo_medio:.2%}")
-    
-    # 2. HALLAZGOS DEL EDA
-    reporte.append("\n🔍 2. HALLAZGOS DEL ANÁLISIS EXPLORATORIO")
-    reporte.append("-" * 40)
-    for key, value in metricas_eda.items():
-        if isinstance(value, float):
-            reporte.append(f"   • {key}: {value:.2f}")
-        else:
-            reporte.append(f"   • {key}: {value}")
-    
-    # 3. PROCESO DE LIMPIEZA
-    reporte.append("\n🧹 3. PROCESO DE LIMPIEZA")
-    reporte.append("-" * 40)
-    for key, value in metricas_limpieza.items():
-        if isinstance(value, float):
-            reporte.append(f"   • {key}: {value:.2f}")
-        else:
-            reporte.append(f"   • {key}: {value}")
-    
-    # 4. MÉTRICAS DE RIESGO
-    reporte.append("\n📊 4. MÉTRICAS DE RIESGO")
-    reporte.append("-" * 40)
-    
-    if 'riesgo' in metricas_analisis:
-        for key, value in metricas_analisis['riesgo'].items():
-            if isinstance(value, float):
-                if 'pct' in key:
-                    reporte.append(f"   • {key}: {value:.1f}%")
+
+    def __init__(self, cliente: ClienteAPIFinanciero):
+        self.cliente = cliente
+        self.municipios: List[MunicipioFinanciero] = []
+        self.df: Optional[pd.DataFrame] = None
+        self.df_crudo: Optional[pd.DataFrame] = None
+
+    # ── Etapa 1: Ingesta + Validación Pydantic ────────────────────────────
+
+    @registrar_ejecucion
+    def ingestar(self, limite: int = 400) -> "PipelineRiesgo":
+        raw = self.cliente.obtener_datos(limite)
+
+        if not raw:
+            print("    Usando datos sintéticos (fallback sin conexión)")
+            raw = self._datos_sinteticos()
+
+        validos, errores = [], []
+
+        for fila in raw:
+            try:
+                muni = MunicipioFinanciero(
+                    municipio=fila.get(COLUMNAS["municipio"], "Desconocido"),
+                    cartera_a=fila.get(COLUMNAS["cartera_a"]),
+                    cartera_b=fila.get(COLUMNAS["cartera_b"]),
+                    cartera_c=fila.get(COLUMNAS["cartera_c"]),
+                    cartera_d=fila.get(COLUMNAS["cartera_d"]),
+                    cartera_e=fila.get(COLUMNAS["cartera_e"]),
+                    total_cartera=fila.get(COLUMNAS["cartera_tot"]),
+                    total_captaciones=fila.get(COLUMNAS["captaciones"]),
+                ).calcular_indicadores()
+                validos.append(muni)
+
+            except ValidationError as e:
+                errores.append({
+                    "municipio": fila.get(COLUMNAS["municipio"]),
+                    "error": str(e)
+                })
+
+        self.municipios = validos
+        print(f"    ✓ {len(validos)} válidos | ✗ {len(errores)} rechazados por Pydantic")
+        return self
+
+    # ── Etapa 2: DataFrame ────────────────────────────────────────────────
+
+    @registrar_ejecucion
+    def construir_dataframe(self) -> "PipelineRiesgo":
+        records = [m.model_dump() for m in self.municipios]
+        self.df_crudo = pd.DataFrame(records)
+        self.df = self.df_crudo.copy()
+        print(f"    DataFrame: {self.df.shape[0]} filas × {self.df.shape[1]} columnas")
+        return self
+
+    # ── Etapa 3: EDA — Análisis Exploratorio ─────────────────────────────
+
+    @registrar_ejecucion
+    def eda(self) -> "PipelineRiesgo":
+        df = self.df_crudo
+        if df is None or df.empty:
+            print("    ⚠ No hay datos crudos para EDA")
+            return self
+
+        print("\n" + "─" * 56)
+        print("  EDA — DATOS CRUDOS (antes de cualquier limpieza)")
+        print("─" * 56)
+
+        print(f"\n  [H1] Dataset: {df.shape[0]:,} filas × {df.shape[1]} columnas")
+        n_dup = df.duplicated(subset=["municipio"]).sum()
+        print(f"  [H1] Duplicados por municipio: {n_dup}")
+        print(f"       → {'REQUIERE LIMPIEZA' if n_dup > 0 else 'OK'}: "
+              f"{'inflan conteo y suman doble' if n_dup > 0 else 'sin duplicados'}")
+
+        print("\n  [H2] Completitud de datos clave:")
+        cols_check = ["total_cartera", "total_captaciones", "indice_riesgo", "ratio_liquidez"]
+        for col in cols_check:
+            if col in df.columns:
+                n_nul = df[col].isna().sum()
+                pct = n_nul / len(df) * 100
+                marca = " ← ALTO" if pct > 30 else ""
+                print(f"       {col:<25} {n_nul:>4} nulos ({pct:5.1f}%){marca}")
+
+        print("\n  [H3] Estadísticos — total_cartera (COP):")
+        if "total_cartera" in df.columns and df["total_cartera"].notna().any():
+            s = df["total_cartera"].describe()
+            print(f"       mínimo   = {s['min']:>20,.0f}")
+            print(f"       Q1       = {s['25%']:>20,.0f}")
+            print(f"       mediana  = {s['50%']:>20,.0f}")
+            print(f"       media    = {s['mean']:>20,.0f}")
+            print(f"       Q3       = {s['75%']:>20,.0f}")
+            print(f"       máximo   = {s['max']:>20,.0f}")
+
+            cv = s["std"] / s["mean"] * 100 if s["mean"] > 0 else 0
+            print(f"       CV (%)   = {cv:>19.1f}%")
+            print(f"       → CV {'> 100%: ALTA heterogeneidad — crédito concentrado' if cv > 100 else '≤ 100%: distribución homogénea'}")
+
+        print("\n  [H4] Outliers — total_cartera (método IQR de Tukey):")
+        if "total_cartera" in df.columns:
+            s2 = df["total_cartera"].dropna()
+            if not s2.empty:
+                q1, q3 = s2.quantile(0.25), s2.quantile(0.75)
+                iqr = q3 - q1
+                lim_sup = q3 + 1.5 * iqr
+                n_out = (s2 > lim_sup).sum()
+                print(f"       Límite IQR superior: {lim_sup:>18,.0f} COP")
+                print(f"       Outliers detectados: {n_out:>4} municipios ({n_out/len(s2)*100:.1f}%)")
+                print(f"       → {'Tratamiento necesario' if n_out > 0 else 'Sin outliers extremos'}")
+
+        print("\n  [H5] Test Shapiro-Wilk — índice de riesgo:")
+        if "indice_riesgo" in df.columns:
+            sr = df["indice_riesgo"].dropna()
+            if len(sr) >= 3:
+                w, p = stats.shapiro(sr.head(50))
+                print(f"       W={w:.4f}, p={p:.6f}")
+                if p < 0.05:
+                    print("       → NO NORMAL: usaremos MEDIANA como estadístico")
+                    print("         robusto (no la media) en el análisis posterior")
                 else:
-                    reporte.append(f"   • {key}: {value:.4f}")
-    
-    # 5. CONCLUSIONES
-    reporte.append("\n💡 5. CONCLUSIONES Y RECOMENDACIONES")
-    reporte.append("-" * 40)
-    
-    if 'riesgo' in metricas_analisis:
-        riesgo_medio = metricas_analisis['riesgo']['media']
-        if riesgo_medio < 0.03:
-            reporte.append("   ✅ SISTEMA SÓLIDO: Bajo nivel de cartera problemática")
-        elif riesgo_medio < 0.06:
-            reporte.append("   ⚠️ RIESGO MODERADO: Nivel controlable")
+                    print("       → NORMAL: media y tests paramétricos son válidos")
+
+        print("\n  [H6] Distribución por nivel de riesgo (datos crudos):")
+        if "nivel_riesgo" in df.columns:
+            for nivel, cnt in df["nivel_riesgo"].value_counts().items():
+                pct = cnt / len(df) * 100
+                barra = "█" * max(1, int(pct / 3))
+                print(f"       {nivel:<22} {barra:<18} {cnt:>4} ({pct:4.1f}%)")
+
+        print("\n  ✓ EDA completado — hallazgos [H1–H6] documentados")
+        print("    → limpiar() toma cada decisión referenciando [H1–H4]")
+        print("─" * 56)
+
+        self._graficar_eda()
+        return self
+
+    # ── Etapa 4: Limpieza referenciada al EDA ────────────────────────────
+
+    @registrar_ejecucion
+    def limpiar(self) -> "PipelineRiesgo":
+        if self.df is None or self.df.empty:
+            print("    ⚠ No hay DataFrame para limpiar")
+            return self
+
+        df = self.df.copy()
+        n_ini = len(df)
+        log = []
+
+        n_a = len(df)
+        df = df.drop_duplicates(subset=["municipio"], keep="first")
+        log.append(f"D1 Duplicados eliminados          : {n_a - len(df)}")
+
+        n_a = len(df)
+        df = df[df["total_cartera"].notna() & (df["total_cartera"] > 0)]
+        log.append(f"D2 Sin cartera total eliminados   : {n_a - len(df)}")
+
+        if df["total_cartera"].notna().any():
+            n_a = len(df)
+            p98 = df["total_cartera"].quantile(0.98)
+            df = df[df["total_cartera"] <= p98]
+            log.append(f"D3 Outliers P98 eliminados        : {n_a - len(df)} "
+                       f"(umbral: {p98:,.0f} COP)")
+
+        if "ratio_liquidez" in df.columns:
+            med = df["ratio_liquidez"].median()
+            n_imp = df["ratio_liquidez"].isna().sum()
+            df["ratio_liquidez"] = df["ratio_liquidez"].fillna(med)
+            log.append(f"D4 ratio_liquidez imputados (med.): {n_imp} "
+                       f"→ mediana={med:.3f} (justificado por no-normalidad H5)")
+
+        self.df = df
+        print(f"\n    Limpieza (justificada en EDA):")
+        for linea in log:
+            print(f"      {linea}")
+        print(f"\n    Filas: {n_ini} → {len(df)} ({n_ini - len(df)} eliminadas en total)")
+        return self
+
+    # ── Etapa 5: Análisis estadístico ────────────────────────────────────
+
+    @registrar_ejecucion
+    @validar_normalidad(alpha=0.05)
+    def analizar_distribucion(self) -> pd.Series:
+        """
+        Estadísticos del índice de riesgo.
+        """
+        if self.df is None or self.df.empty:
+            print("    ⚠ No hay datos para analizar")
+            return pd.Series(dtype=float)
+
+        s = self.df["indice_riesgo"].dropna()
+        print(f"\n    Estadísticos del Índice de Riesgo (n={len(s):,}):")
+        print(f"      Mediana (robusto) : {s.median()*100:.4f}%")
+        print(f"      Media             : {s.mean()*100:.4f}%")
+        print(f"      Desv. estándar    : {s.std()*100:.4f}%")
+        print(f"      Mínimo            : {s.min()*100:.4f}%")
+        print(f"      P95               : {s.quantile(0.95)*100:.4f}%")
+        print(f"      Máximo            : {s.max()*100:.4f}%")
+        return s.describe()
+
+    # ── Gráficas EDA ──────────────────────────────────────────────────────
+
+    def _graficar_eda(self):
+        df = self.df_crudo.copy()
+        if df.empty:
+            print("    ⚠ Sin datos para graficar EDA")
+            return
+
+        df_v = df[df["total_cartera"].notna() & df["indice_riesgo"].notna()]
+        if df_v.empty:
+            print("    ⚠ Sin datos válidos para gráficas EDA")
+            return
+
+        fig = plt.figure(figsize=(17, 12))
+        fig.suptitle(
+            "EDA — Análisis Exploratorio · Datos Crudos · Sistema Financiero CO",
+            fontsize=13, fontweight="bold", y=0.99,
+        )
+
+        gs = gridspec.GridSpec(
+            2, 3, figure=fig,
+            hspace=0.55, wspace=0.42,
+            left=0.07, right=0.96,
+            top=0.90, bottom=0.09,
+        )
+        ax1 = fig.add_subplot(gs[0, 0])
+        ax2 = fig.add_subplot(gs[0, 1])
+        ax3 = fig.add_subplot(gs[0, 2])
+        ax4 = fig.add_subplot(gs[1, 0])
+        ax5 = fig.add_subplot(gs[1, 1])
+        ax6 = fig.add_subplot(gs[1, 2])
+
+        if "total_cartera" in df_v.columns:
+            vals = df_v["total_cartera"] / 1e9
+            ax1.hist(vals, bins=35, color=PALETA["primario"],
+                     alpha=0.82, edgecolor="white")
+            ax1.axvline(vals.median(), color=PALETA["secundario"],
+                        linewidth=2, linestyle="--",
+                        label=f"Mediana: {vals.median():.0f} B")
+            ax1.set_title("H3 — Cartera Total por Municipio\n(asimetría detectada → outliers)")
+            ax1.set_xlabel("Cartera (miles de millones COP)")
+            ax1.set_ylabel("Frecuencia")
+            ax1.legend()
+            ax1.annotate(
+                "Cola derecha → justifica\ntratamiento outliers (D3)",
+                xy=(vals.quantile(0.85), ax1.get_ylim()[1] * 0.60),
+                fontsize=7.5, color=PALETA["riesgo_alto"],
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="#FFF3CD", alpha=0.85),
+            )
+
+        if "total_cartera" in df_v.columns:
+            ax2.boxplot(
+                df_v["total_cartera"].dropna() / 1e9,
+                vert=True, patch_artist=True,
+                boxprops=dict(facecolor=PALETA["primario"], alpha=0.55),
+                medianprops=dict(color=PALETA["secundario"], linewidth=2.5),
+                flierprops=dict(marker="o", color=PALETA["riesgo_alto"],
+                                markersize=4, alpha=0.7, markeredgewidth=0),
+                whiskerprops=dict(color=PALETA["neutro"], linewidth=1.2),
+                capprops=dict(color=PALETA["neutro"], linewidth=1.5),
+            )
+            ax2.set_title("H4 — Boxplot Cartera Total\n(puntos = outliers IQR)")
+            ax2.set_ylabel("Cartera (miles de millones COP)")
+            ax2.set_xticks([])
+
+        cols_ch = ["cartera_a", "cartera_b", "cartera_c", "cartera_d",
+                   "cartera_e", "total_cartera", "total_captaciones",
+                   "indice_riesgo", "ratio_liquidez"]
+        cols_ch = [c for c in cols_ch if c in df.columns]
+        comp = pd.DataFrame({c: [(~df[c].isna()).mean() * 100] for c in cols_ch})
+        sns.heatmap(
+            comp, ax=ax3, annot=True, fmt=".0f",
+            cmap="RdYlGn", vmin=0, vmax=100,
+            linewidths=0.6, cbar_kws={"label": "% datos presentes"},
+            annot_kws={"size": 8, "weight": "bold"},
+        )
+        ax3.set_title("H2 — Completitud por Columna (%)\n(rojo = muchos nulos)")
+        ax3.set_xticklabels(ax3.get_xticklabels(), rotation=38, ha="right", fontsize=7)
+        ax3.set_yticks([])
+
+        if "indice_riesgo" in df_v.columns:
+            sr = df_v["indice_riesgo"].dropna() * 100
+            ax4.hist(sr, bins=30, color=PALETA["primario"],
+                     alpha=0.72, edgecolor="white", density=True, label="Histograma")
+            sr.plot.kde(ax=ax4, color=PALETA["secundario"], linewidth=2, label="KDE")
+            ax4.axvline(sr.median(), color=PALETA["neutro"], linewidth=1.5,
+                        linestyle=":", label=f"Mediana={sr.median():.2f}%")
+            ax4.set_title("H5 — Índice de Riesgo con KDE\n(cola derecha → no normal)")
+            ax4.set_xlabel("Índice de Riesgo (%)")
+            ax4.set_ylabel("Densidad")
+            ax4.legend()
+
+        if "indice_riesgo" in df_v.columns:
+            sr2 = df_v["indice_riesgo"].dropna()
+            (osm, osr), (slope, intercept, r) = stats.probplot(sr2, dist="norm")
+            ax5.scatter(osm, osr, color=PALETA["primario"], alpha=0.65, s=22)
+            ax5.plot(
+                [min(osm), max(osm)],
+                [slope * min(osm) + intercept, slope * max(osm) + intercept],
+                color=PALETA["secundario"], linewidth=2, linestyle="--",
+            )
+            ax5.set_title(
+                f"H5 — Q-Q Plot Índice de Riesgo\n"
+                f"(R²={r**2:.3f} → {'normal' if r**2 > 0.96 else 'NO normal → usar mediana'})"
+            )
+            ax5.set_xlabel("Cuantiles teóricos (normal)")
+            ax5.set_ylabel("Cuantiles observados")
+
+        cols_corr = [c for c in ["total_cartera", "total_captaciones",
+                                 "indice_riesgo", "ratio_liquidez"]
+                     if c in df_v.columns]
+        corr = df_v[cols_corr].corr()
+        mask = np.triu(np.ones_like(corr, dtype=bool))
+        sns.heatmap(
+            corr, ax=ax6, mask=mask,
+            annot=True, fmt=".2f", cmap="coolwarm",
+            center=0, vmin=-1, vmax=1,
+            linewidths=0.6, square=True,
+            annot_kws={"size": 9, "weight": "bold"},
+            cbar_kws={"shrink": 0.85},
+        )
+        ax6.set_title("Correlación entre Variables\n(triángulo inferior)")
+        ax6.tick_params(axis="x", rotation=35)
+        ax6.tick_params(axis="y", rotation=0)
+
+        ruta = RUTA_SALIDA / "eda_datos_crudos.png"
+        fig.savefig(ruta, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print(f"    Gráficas EDA → {ruta}")
+
+    # ── Gráficas de análisis final ────────────────────────────────────────
+
+    @registrar_ejecucion
+    def visualizar(self) -> "PipelineRiesgo":
+        self._panel_riesgo()
+        self._panel_composicion()
+        return self
+
+    def _panel_riesgo(self):
+        df = self.df.copy()
+        if df.empty:
+            print("    ⚠ Sin datos para panel de riesgo")
+            return
+
+        df_v = df[df["indice_riesgo"].notna() & df["total_cartera"].notna()]
+        if df_v.empty:
+            print("    ⚠ Sin datos válidos para panel de riesgo")
+            return
+
+        fig, axes = plt.subplots(2, 2, figsize=(16, 11))
+        fig.suptitle(
+            "Panel de Riesgo Crediticio — Datos Limpios\nSistema Financiero Colombiano",
+            fontsize=13, fontweight="bold",
+        )
+        fig.subplots_adjust(
+            hspace=0.48, wspace=0.36,
+            left=0.08, right=0.96,
+            top=0.88, bottom=0.09,
+        )
+
+        ax = axes[0, 0]
+        sr = df_v["indice_riesgo"] * 100
+        ax.hist(sr, bins=28, color=PALETA["primario"], alpha=0.82, edgecolor="white")
+        ax.axvline(sr.median(), color=PALETA["secundario"], linewidth=2,
+                   linestyle="--", label=f"Mediana: {sr.median():.2f}%")
+        ax.axvline(sr.mean(), color=PALETA["neutro"], linewidth=1.5,
+                   linestyle=":", label=f"Media: {sr.mean():.2f}%")
+        ax.set_title("Índice de Riesgo — Datos Limpios")
+        ax.set_xlabel("Índice de Riesgo (%)")
+        ax.set_ylabel("Frecuencia")
+        ax.legend()
+
+        ax = axes[0, 1]
+        orden = ["sin_datos", "sin_riesgo", "riesgo_bajo",
+                 "riesgo_moderado", "riesgo_alto", "riesgo_critico"]
+        conteo = (df["nivel_riesgo"].value_counts()
+                  .reindex(orden, fill_value=0)
+                  .pipe(lambda s: s[s > 0]))
+        col_map = {
+            "sin_datos": PALETA["sin_datos"],
+            "sin_riesgo": PALETA["sin_riesgo"],
+            "riesgo_bajo": PALETA["riesgo_bajo"],
+            "riesgo_moderado": PALETA["riesgo_mod"],
+            "riesgo_alto": PALETA["riesgo_alto"],
+            "riesgo_critico": PALETA["riesgo_crit"],
+        }
+        bars = ax.bar(
+            range(len(conteo)), conteo.values,
+            color=[col_map[k] for k in conteo.index],
+            edgecolor="white", linewidth=0.8,
+        )
+        ax.set_xticks(range(len(conteo)))
+        ax.set_xticklabels([k.replace("_", "\n") for k in conteo.index], fontsize=7.5)
+        for bar, val in zip(bars, conteo.values):
+            ax.text(bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + 0.25,
+                    str(val), ha="center", va="bottom",
+                    fontsize=8.5, fontweight="bold")
+        ax.set_title("Municipios por Nivel de Riesgo\n(Pattern Matching)")
+        ax.set_ylabel("N° Municipios")
+
+        ax = axes[1, 0]
+        top10 = df_v.nlargest(10, "total_cartera").copy()
+        top10["cartera_B"] = top10["total_cartera"] / 1e9
+        colores_t = [
+            PALETA["riesgo_crit"] if r > 0.05
+            else PALETA["riesgo_mod"] if r > 0.01
+            else PALETA["riesgo_bajo"]
+            for r in top10["indice_riesgo"]
+        ]
+        barras = ax.barh(
+            top10["municipio"].str[:18], top10["cartera_B"],
+            color=colores_t, edgecolor="white", linewidth=0.7,
+        )
+        for barra, val in zip(barras, top10["cartera_B"]):
+            ax.text(val + top10["cartera_B"].max() * 0.012,
+                    barra.get_y() + barra.get_height() / 2,
+                    f"{val:.0f} B", va="center", fontsize=7.5)
+        ax.set_title("Top 10 Municipios — Cartera Total\n(color = nivel de riesgo)")
+        ax.set_xlabel("Cartera (miles de millones COP)")
+        ax.invert_yaxis()
+
+        ax = axes[1, 1]
+        df_sc = df_v.dropna(subset=["ratio_liquidez"])
+        if not df_sc.empty:
+            sc = ax.scatter(
+                df_sc["ratio_liquidez"],
+                df_sc["indice_riesgo"] * 100,
+                c=np.log1p(df_sc["total_cartera"]),
+                cmap="viridis", alpha=0.72, s=48,
+                edgecolors="white", linewidths=0.3,
+            )
+            cbar = plt.colorbar(sc, ax=ax, pad=0.02)
+            cbar.set_label("log(Cartera + 1)", fontsize=8)
+            cbar.ax.tick_params(labelsize=7)
+
+            ax.axhline(5, color=PALETA["riesgo_alto"], linewidth=1.3,
+                       linestyle="--", alpha=0.75, label="Umbral riesgo alto (5%)")
+            ax.axvline(1.0, color=PALETA["primario"], linewidth=1.3,
+                       linestyle=":", alpha=0.75, label="Fondeo equilibrado (ratio=1)")
+
+            xl, yl = ax.get_xlim(), ax.get_ylim()
+            ax.text(xl[0] + (xl[1]-xl[0])*0.03, yl[1]*0.88,
+                    "Subfondeo\n+ Riesgo Alto",
+                    fontsize=7, color=PALETA["riesgo_crit"],
+                    bbox=dict(boxstyle="round", facecolor="white", alpha=0.75))
+            ax.text(xl[1]*0.55, yl[0] + (yl[1]-yl[0])*0.04,
+                    "Bien fondeado\n+ Bajo Riesgo",
+                    fontsize=7, color=PALETA["riesgo_bajo"],
+                    bbox=dict(boxstyle="round", facecolor="white", alpha=0.75))
+
+            ax.set_title("Liquidez vs Riesgo Crediticio\n(color = tamaño de cartera)")
+            ax.set_xlabel("Ratio Liquidez (Captaciones / Cartera)")
+            ax.set_ylabel("Índice de Riesgo (%)")
+            ax.legend(fontsize=7.5)
+
+        ruta = RUTA_SALIDA / "panel_analisis.png"
+        fig.savefig(ruta, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print(f"    Panel de riesgo → {ruta}")
+
+    def _panel_composicion(self):
+        df = self.df.copy()
+        if df.empty:
+            print("    ⚠ Sin datos para panel de composición")
+            return
+
+        df_v = df.dropna(subset=["cartera_a", "total_cartera"])
+
+        cols_comp = [c for c in ["cartera_a", "cartera_b", "cartera_c", "cartera_d", "cartera_e"]
+                     if c in df_v.columns]
+        if not cols_comp or len(df_v) < 5:
+            return
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        fig.suptitle(
+            "Composición Regulatoria de Cartera · Top 15 Municipios",
+            fontsize=12, fontweight="bold",
+        )
+        fig.subplots_adjust(
+            wspace=0.40,
+            left=0.10, right=0.96,
+            top=0.86, bottom=0.15,
+        )
+
+        top15 = df_v.nlargest(15, "total_cartera").set_index("municipio")
+        top15 = top15[cols_comp].fillna(0)
+        total_row = top15.sum(axis=1).replace(0, np.nan)
+        top15_pct = top15.div(total_row, axis=0) * 100
+
+        colores_comp = {
+            "cartera_a": "#2ECC71",
+            "cartera_b": "#F1C40F",
+            "cartera_c": "#E67E22",
+            "cartera_d": "#E74C3C",
+            "cartera_e": "#8B0000",
+        }
+        labels_comp = {
+            "cartera_a": "A — Normal",
+            "cartera_b": "B — Observación",
+            "cartera_c": "C — Subestándar",
+            "cartera_d": "D — Dudosa",
+            "cartera_e": "E — Pérdida",
+        }
+
+        bottom = np.zeros(len(top15_pct))
+        for col in cols_comp:
+            vals = top15_pct[col].values
+            ax1.barh(
+                range(len(top15_pct)), vals, left=bottom,
+                color=colores_comp.get(col, "#BDC3C7"),
+                label=labels_comp.get(col, col),
+                edgecolor="white", linewidth=0.4,
+            )
+            bottom += vals
+
+        ax1.set_yticks(range(len(top15_pct)))
+        ax1.set_yticklabels([m[:17] for m in top15_pct.index], fontsize=7.5)
+        ax1.set_xlabel("% de Cartera por Categoría Regulatoria")
+        ax1.set_title("Composición de Cartera por Municipio\n(categorías A-E Superfinanciera)")
+        ax1.invert_yaxis()
+        ax1.legend(loc="lower right", fontsize=7.5, framealpha=0.88, ncol=1)
+        ax1.set_xlim(0, 107)
+
+        df_liq = df.dropna(subset=["ratio_liquidez"]).nlargest(20, "total_cartera")
+        colores_liq = [
+            PALETA["riesgo_crit"] if r < 0.5
+            else PALETA["riesgo_mod"] if r < 1.0
+            else PALETA["riesgo_bajo"]
+            for r in df_liq["ratio_liquidez"]
+        ]
+        ax2.barh(
+            range(len(df_liq)), df_liq["ratio_liquidez"].values,
+            color=colores_liq, edgecolor="white", linewidth=0.5,
+        )
+        ax2.axvline(1.0, color=PALETA["primario"], linewidth=2,
+                    linestyle="--", label="Equilibrio (ratio = 1)")
+        ax2.set_yticks(range(len(df_liq)))
+        ax2.set_yticklabels([m[:17] for m in df_liq["municipio"]], fontsize=7.5)
+        ax2.invert_yaxis()
+        ax2.set_xlabel("Captaciones / Cartera")
+        ax2.set_title("Ratio de Liquidez por Municipio\n(rojo < 0.5  |  naranja < 1  |  verde ≥ 1)")
+        ax2.legend(fontsize=8, framealpha=0.88)
+
+        ruta = RUTA_SALIDA / "panel_composicion.png"
+        fig.savefig(ruta, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print(f"    Panel de composición → {ruta}")
+
+    # ── Exportación JSON ──────────────────────────────────────────────────
+
+    @registrar_ejecucion
+    def exportar_json(self) -> Path:
+        """
+        Exporta resultado en JSON.
+        """
+        if self.df is None or self.df.empty:
+            raise ValueError("No hay datos en self.df para exportar")
+
+        resultado = ResultadoAnalisis(
+            n_municipios=int(len(self.df)),
+            cartera_total_billones=float(self.df["total_cartera"].sum() / 1e12),
+            indice_riesgo_promedio=float(self.df["indice_riesgo"].mean()),
+            pct_sin_riesgo=float(
+                (self.df["nivel_riesgo"] == "sin_riesgo").sum() / len(self.df) * 100
+            ),
+            municipios=self.municipios,
+        )
+        ruta = RUTA_SALIDA / "resultado_analisis.json"
+        with open(ruta, "w", encoding="utf-8") as f:
+            f.write(resultado.model_dump_json(indent=2))
+        print(f"    JSON → {ruta}  (legible, portable, listo para FastAPI)")
+        return ruta
+
+    # ── Exportación Pickle ────────────────────────────────────────────────
+
+    @registrar_ejecucion
+    def exportar_pickle(self) -> Path:
+        """
+        Exporta en Pickle.
+        """
+        ruta = RUTA_SALIDA / "municipios.pkl"
+        with open(ruta, "wb") as f:
+            pickle.dump(self.municipios, f)
+        print(f"    Pickle → {ruta}  (tipos Python nativos, solo Python)")
+        return ruta
+
+    # ── Reporte en consola ────────────────────────────────────────────────
+
+    @registrar_ejecucion
+    def imprimir_reporte(self) -> "PipelineRiesgo":
+        if self.df is None or self.df.empty:
+            print("    ⚠ No hay datos para reporte")
+            return self
+
+        df = self.df
+        n = len(df)
+        ct = df["total_cartera"].sum() / 1e12
+        ri = df["indice_riesgo"].median() * 100
+        rim = df["indice_riesgo"].mean() * 100
+        pct = (df["nivel_riesgo"] == "sin_riesgo").sum() / n * 100
+
+        print("\n" + "═" * 62)
+        print("  REPORTE — SISTEMA FINANCIERO COLOMBIANO")
+        print("═" * 62)
+        print(f"  Fecha                     : {datetime.now():%Y-%m-%d %H:%M}")
+        print(f"  Municipios (post-limpieza): {n:>10,}")
+        print(f"  Cartera total             : {ct:>9.2f} Billones COP")
+        print(f"  Índice riesgo mediana     : {ri:>9.4f} %  ← estadístico robusto")
+        print(f"  Índice riesgo media       : {rim:>9.4f} %")
+        print(f"  Municipios sin riesgo     : {pct:>9.1f} %")
+        print()
+        print("  Distribución por nivel de riesgo:")
+        for nivel, cnt in df["nivel_riesgo"].value_counts().items():
+            pn = cnt / n * 100
+            barra = "█" * max(1, int(pn / 2))
+            print(f"    {nivel:<24} {barra:<24} {cnt:>4} ({pn:4.1f}%)")
+        print("═" * 62 + "\n")
+        return self
+
+    # ── Interpretación Automática ─────────────────────────────────────────
+
+    @registrar_ejecucion
+    def interpretar_resultados(self) -> "PipelineRiesgo":
+        if self.df is None or self.df.empty:
+            print("    ⚠ No hay datos para interpretar")
+            return self
+
+        df = self.df
+        n = len(df)
+        ri_mediana = df["indice_riesgo"].median() * 100
+        riesgo_alto_critico = df[df["nivel_riesgo"].isin(["riesgo_alto", "riesgo_critico"])]
+        pct_peligro = (len(riesgo_alto_critico) / n) * 100
+        
+        print("\n" + "💡 " * 31)
+        print("  INTERPRETACIÓN AUTOMATIZADA DE RESULTADOS")
+        print("💡 " * 31)
+        
+        # 1. Análisis de tendencia central
+        print(f"\n  ▶ 1. MEDIANA DE RIESGO: El índice de mora representativo es de {ri_mediana:.2f}%.")
+        if ri_mediana < 5.0:
+            print("       Interpretación: El sistema en general muestra un comportamiento SANO,")
+            print("       con el municipio promedio manteniendo sus niveles de mora controlados.")
+        elif ri_mediana < 10.0:
+            print("       Interpretación: El sistema muestra un comportamiento de ALERTA MODERADA.")
+            print("       Se recomienda monitoreo constante de la cartera vigente.")
         else:
-            reporte.append("   🔴 ALERTA: Alto porcentaje de cartera deteriorada")
-    
-    if 'liquidez' in metricas_analisis:
-        liq_mediana = metricas_analisis['liquidez']['mediana']
-        if liq_mediana > 1.1:
-            reporte.append("   💧 ALTA LIQUIDEZ: Exceso de captaciones")
-        elif liq_mediana > 0.9:
-            reporte.append("   ⚖️ LIQUIDEZ EQUILIBRADA")
+            print("       Interpretación: El sistema está en un estado CRÍTICO generalizado,")
+            print("       la cartera irrecuperable de los municipios evaluados es muy alta.")
+
+        # 2. Análisis de concentración de riesgo
+        print(f"\n  ▶ 2. CONCENTRACIÓN DE PELIGRO: {pct_peligro:.1f}% de los municipios están en nivel Alto o Crítico.")
+        if pct_peligro > 30.0:
+            print("       Alerta: Una proporción alarmante del sistema está comprometida.")
+            print("       Se deben priorizar políticas de salvamento o reestructuración de deuda urgentemente.")
+        elif pct_peligro > 0.0:
+            print("       Atención: La mayoría del sistema está estable, pero existen bolsas de riesgo focalizadas.")
+            print("       (Ver gráficas en carpeta 'outputs' para identificar los municipios específicos).")
         else:
-            reporte.append("   🔴 TENSIÓN DE LIQUIDEZ: Colocaciones superan captaciones")
-    
-    reporte.append("\n" + "="*80)
-    reporte.append(" 🎯 ANÁLISIS COMPLETADO EXITOSAMENTE ".center(80, "="))
-    reporte.append("="*80)
-    
-    reporte_texto = "\n".join(reporte)
-    
-    # Guardar reporte
-    with open('outputs/reportes/reporte_final.txt', 'w', encoding='utf-8') as f:
-        f.write(reporte_texto)
-    
-    return reporte_texto
+            print("       Excelente: No se registran municipios en niveles de riesgo preocupantes.")
+
+        # 3. Análisis de liquidez
+        df_liq = df.dropna(subset=["ratio_liquidez"])
+        if not df_liq.empty:
+            liq_mediana = df_liq["ratio_liquidez"].median()
+            print(f"\n  ▶ 3. RATIO DE LIQUIDEZ: La mediana de captaciones vs cartera es {liq_mediana:.2f}x.")
+            if liq_mediana < 0.8:
+                print("       Riesgo Estructural: Hay un déficit general de fondeo. Los municipios prestan más")
+                print("       dinero del que logran captar de ahorradores, dependiendo de fondeo externo.")
+            elif liq_mediana < 1.0:
+                print("       Situación Ajustada: El nivel de préstamos está a la par con el ahorro.")
+            else:
+                print("       Sistema Líquido: Existe un colchón saludable de captaciones frente a la cartera total.")
+        
+        print("\n" + "💡 " * 31 + "\n")
+        return self
+
+    # ── Datos sintéticos (fallback) ───────────────────────────────────────
+
+    @staticmethod
+    def _datos_sinteticos() -> list[dict]:
+        rng = np.random.default_rng(42)
+        muns = [
+            "Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena",
+            "Cúcuta", "Bucaramanga", "Pereira", "Santa Marta", "Ibagué",
+            "Manizales", "Pasto", "Neiva", "Villavicencio", "Armenia",
+            "Sincelejo", "Valledupar", "Montería", "Popayán", "Tunja",
+            "Florencia", "Quibdó", "Riohacha", "Mocoa", "Yopal",
+            "Leticia", "Puerto Carreño", "San Andrés", "Inírida", "Mitú",
+        ] * 2
+
+        data = []
+        for mun in muns:
+            cartera = rng.uniform(5e8, 8e11)
+            mora = rng.uniform(0, 0.18) * cartera
+            data.append({
+                COLUMNAS["municipio"]: mun,
+                COLUMNAS["cartera_a"]: cartera * rng.uniform(0.60, 0.80),
+                COLUMNAS["cartera_b"]: cartera * rng.uniform(0.05, 0.15),
+                COLUMNAS["cartera_c"]: mora * 0.40,
+                COLUMNAS["cartera_d"]: mora * 0.35,
+                COLUMNAS["cartera_e"]: mora * 0.25,
+                COLUMNAS["cartera_tot"]: cartera,
+                COLUMNAS["captaciones"]: cartera * rng.uniform(0.40, 2.0),
+            })
+        return data
 
 
-# =============================================================================
-# 7. FUNCIÓN PRINCIPAL
-# =============================================================================
+# ══════════════════════════════════════════════════════════════════════════
+# PUNTO DE ENTRADA
+# ══════════════════════════════════════════════════════════════════════════
 
-@timer
 def main():
     """
-    Función principal que orquesta todo el análisis.
+    Orden correcto del pipeline:
+      Ingesta → DataFrame → EDA → Limpieza → Análisis → Visualización → Export
     """
-    print("\n" + "="*80)
-    print(" 🏦 ANÁLISIS DE RIESGO CREDITICIO ".center(80, "="))
-    print(" Sistema Financiero Colombiano - Datos Abiertos ".center(80))
-    print("="*80 + "\n")
-    
-    # 7.1 DESCARGA DE DATOS
-    print("\n📥 FASE 1: DESCARGA DE DATOS")
-    print("-" * 40)
-    df = descargar_datos()
-    if df is None:
-        print("❌ No se pudo descargar los datos. Abortando.")
-        return
-    
-    # 7.2 ANÁLISIS EXPLORATORIO (JUSTIFICA LIMPIEZA)
-    print("\n🔍 FASE 2: ANÁLISIS EXPLORATORIO (EDA)")
-    print("-" * 40)
-    insights_eda = analisis_exploratorio_inicial(df)
-    
-    # 7.3 LIMPIEZA DE DATOS (BASADA EN EDA)
-    print("\n🧹 FASE 3: LIMPIEZA DE DATOS")
-    print("-" * 40)
-    df_clean, cols_numericas, metricas_limpieza = preparar_datos(df)
-    
-    # 7.4 CÁLCULO DE MÉTRICAS
-    print("\n📊 FASE 4: CÁLCULO DE MÉTRICAS")
-    print("-" * 40)
-    metricas = calcular_metricas(df_clean)
-    
-    # 7.5 VISUALIZACIONES
-    print("\n🎨 FASE 5: VISUALIZACIONES")
-    print("-" * 40)
-    generar_graficos(df_clean, metricas)
-    
-    # 7.6 REPORTE FINAL
-    print("\n📋 FASE 6: GENERACIÓN DE REPORTE")
-    print("-" * 40)
-    reporte = generar_reporte(insights_eda, metricas_limpieza, metricas, df_clean)
-    print(reporte)
-    
-    # 7.7 EXPORTAR DATOS PROCESADOS
-    df_clean.to_csv('outputs/datos/datos_procesados.csv', index=False, encoding='utf-8-sig')
-    print("\n💾 Datos guardados en outputs/datos/datos_procesados.csv")
-    
-    print("\n" + "="*80)
-    print(" ✅ ANÁLISIS COMPLETADO EXITOSAMENTE ".center(80, "="))
-    print("="*80 + "\n")
-    
-    return df_clean, metricas
+    import sys
+    sys.stdout.reconfigure(encoding='utf-8')
+    print("\n🏦  Sistema de Análisis de Riesgo Crediticio")
+    print("    Colombia — Datos Abiertos Gov.co\n")
 
+    cliente = ClienteAPIFinanciero(base_url=API_BASE, timeout=10)
 
-# =============================================================================
-# 8. EJECUCIÓN
-# =============================================================================
+    try:
+        pipeline = PipelineRiesgo(cliente)
+
+        # Solo métodos encadenables (retornan self)
+        (pipeline
+            .ingestar(limite=350)
+            .construir_dataframe()
+            .eda()
+            .limpiar()
+        )
+
+        # Métodos no encadenables / con retornos distintos
+        pipeline.analizar_distribucion()   # ← corregido (sin pasar data)
+        pipeline.visualizar()
+        pipeline.exportar_json()
+        pipeline.exportar_pickle()
+        pipeline.imprimir_reporte()
+        pipeline.interpretar_resultados()
+
+        # ── Demo de Pattern Matching ──────────────────────────────────────
+        print("\n📋  Demo: Pattern Matching — clasificar_riesgo()")
+        print("─" * 52)
+        casos = [
+            ({"indice_riesgo": None},  "sin_datos"),
+            ({"indice_riesgo": 0.0},   "sin_riesgo"),
+            ({"indice_riesgo": 0.003}, "riesgo_bajo"),
+            ({"indice_riesgo": 0.025}, "riesgo_moderado"),
+            ({"indice_riesgo": 0.08},  "riesgo_alto"),
+            ({"indice_riesgo": 0.22},  "riesgo_critico"),
+            ({},                       "sin_datos"),
+        ]
+        for obs, esperado in casos:
+            resultado = clasificar_riesgo(obs)
+            ok = "✓" if resultado == esperado else "✗"
+            print(f"  {ok} {str(obs):38} → {resultado}")
+
+        print(f"\n✅  Análisis completado. Outputs en: {RUTA_SALIDA.resolve()}")
+        print("   · eda_datos_crudos.png    — hallazgos EDA H1–H6")
+        print("   · panel_analisis.png      — riesgo crediticio")
+        print("   · panel_composicion.png   — composición de cartera")
+        print("   · resultado_analisis.json")
+        print("   · municipios.pkl\n")
+
+    finally:
+        cliente.cerrar()
+
 
 if __name__ == "__main__":
-    df_resultado, metricas_resultado = main()
+    main()
