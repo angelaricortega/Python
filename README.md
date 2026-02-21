@@ -1,7 +1,6 @@
 # 🏦 Sistema de Análisis de Riesgo Crediticio
 ### Sistema Financiero Colombiano — Datos Abiertos Gov.co
 
-![Python](https://img.shields.io/badge/python-5.11+-blue.svg)
 ![Pydantic](https://img.shields.io/badge/pydantic-v0-blue.svg)
 ![Estado](https://img.shields.io/badge/estado-producción--lista-success.svg)
 
