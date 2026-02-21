@@ -14,12 +14,12 @@
 ║     · Decoradores simples y decorator factories   → decorators.py       ║
 ║     · Modularización en archivos separados        → modelos.py          ║
 ║     · Type hints modernos (Literal, Optional)     → todo el código      ║
+║     · EDA → Limpieza justificada estadísticamente → eda() / limpiar()   ║
 ║   Semana 2                                                              ║
 ║     · OOP con __init__, atributos y métodos       → ClienteAPI, Pipeline║
 ║     · requests.Session (conexión TCP persistente) → ClienteAPIFinanciero║
 ║     · JSON vs Pickle (cuándo usar cada uno)       → exportar_*()        ║
 ║     · Pydantic v2: BaseModel, Field, validators   → modelos.py          ║
-║     · EDA → Limpieza justificada estadísticamente → eda() / limpiar()   ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 """
 
