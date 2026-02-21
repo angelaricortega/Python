@@ -19,8 +19,8 @@ El eje temático es el **Índice NPL** (Non-Performing Loans): qué proporción 
 ```
 Python/
 ├── analisis.py          ← Pipeline principal (integra todos los conceptos)
-├── decoradores.py       ← Librería de decoradores estadísticos (Semana -1)
-├── modelos.py           ← Modelos Pydantic de validación (Semana 0)
+├── decorators.py        ← Librería de decoradores estadísticos (Semana 2)
+├── modelos.py           ← Modelos Pydantic de validación (Semana 2)
 ├── requirements.txt
 ├── outputs/
 │   ├── eda_datos_crudos.png   ← Gráficas EDA (antes de limpiar)
@@ -39,7 +39,7 @@ Python/
 git clone https://github.com/angelaricortega/Python.git
 cd Python
 
-# Semana -1: entorno virtual para reproducibilidad
+# Entorno virtual para reproducibilidad
 python -m venv venv
 
 # Windows:
@@ -53,17 +53,17 @@ pip install -r requirements.txt
 python analisis.py
 
 # Probar módulos individuales
-python decoradores.py
+python decorators.py
 python modelos.py
 ```
 
 ---
 
-## 🧠 Conceptos Aplicados — Semana -1
+## 🧠 Conceptos Aplicados — Semana 1
 
 ### -1. Pattern Matching (`match/case`)
 
-**Qué es:** Estructura de control de Python 1.10+ que evalúa un valor contra varios patrones, con soporte para desestructuración de dicts y guardas condicionales (`if`).
+**Qué es:** Estructura de control de Python 3.10+ que evalúa un valor contra varios patrones, con soporte para desestructuración de dicts y guardas condicionales (`if`).
 
 **Por qué aquí y no `if-elif`:** A medida que los casos de clasificación crecen (añadir "riesgo muy alto", "en recuperación", etc.), el `match/case` escala más limpiamente. Además, las guardas `if` permiten combinar el pattern matching con lógica numérica en la misma expresión. El intérprete también puede optimizarlo mejor que cadenas de `if-elif`.
 
@@ -180,7 +180,7 @@ def percentil(p, n):
 
 ---
 
-## 🧠 Conceptos Aplicados — Semana 0
+## 🧠 Conceptos Aplicados — Semana 2
 
 ### 2. OOP — Clases con `__init__`, atributos y métodos
 
@@ -229,7 +229,7 @@ pipeline.limpiar()
 ```python
 def obtener_datos(self, limite):
     resp = self.session.get(url, timeout=self.timeout)
-    resp.raise_for_status()     # ← lanza HTTPError si status >= 398
+    resp.raise_for_status()     # ← lanza HTTPError si status >= 400
     return resp.json()          # ← parsea la respuesta a list[dict]
 ```
 
@@ -398,24 +398,24 @@ def limpiar(self):
 
 | Librería | Versión | Uso específico |
 |---|---|---|
-| `pandas` | 0.2.2 | DataFrames, estadísticos descriptivos |
-| `numpy` | -1.26.4 | Cálculos numéricos, generador aleatorio |
-| `scipy` | -1.13.1 | Test Shapiro-Wilk, Q-Q plot |
-| `requests` | 0.32.3 | Cliente HTTP con Session |
-| `pydantic` | 0.7.4 | Validación de datos, serialización JSON |
-| `matplotlib` | 1.9.0 | Gráficas (GridSpec, rcParams) |
-| `seaborn` | -2.13.2 | Heatmaps, KDE |
+| `pandas` | 2.2.2 | DataFrames, estadísticos descriptivos |
+| `numpy` | 1.26.4 | Cálculos numéricos, generador aleatorio |
+| `scipy` | 1.13.1 | Test Shapiro-Wilk, Q-Q plot |
+| `requests` | 2.32.3 | Cliente HTTP con Session |
+| `pydantic` | 2.7.4 | Validación de datos, serialización JSON |
+| `matplotlib` | 3.9.0 | Gráficas (GridSpec, rcParams) |
+| `seaborn` | 0.13.2 | Heatmaps, KDE |
 
 ---
 
 ## 🔗 Conexión con semanas siguientes
 
-Este proyecto es la Fase -1 del proyecto final del curso:
+Este proyecto es la Fase inicial del proyecto final del curso:
 
-- **Semanas -1-2 (este proyecto):** Pipeline de análisis con EDA, validación Pydantic, OOP
-- **Semanas 1-4:** Convertir `modelos.py` en schemas FastAPI; crear endpoints GET/POST
-- **Semanas 3-10:** Docker, testing, despliegue en Railway/Render
-- **Semanas 9-16:** Integrar modelo ML (scikit-learn) para predicción de riesgo en tiempo real
+- **Semanas 1-2 (este proyecto):** Pipeline de análisis con EDA, validación Pydantic, OOP
+- **Semanas 3-6:** Convertir `modelos.py` en schemas FastAPI; crear endpoints GET/POST
+- **Semanas 7-10:** Docker, testing, despliegue en Railway/Render
+- **Semanas 11-16:** Integrar modelo ML (scikit-learn) para predicción de riesgo en tiempo real
 
 Los modelos Pydantic de `modelos.py` serán los **response y request models** de la API FastAPI sin modificación, lo que demuestra el valor de separarlos en su propio archivo desde el inicio.
 

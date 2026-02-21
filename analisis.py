@@ -11,7 +11,7 @@
 ║   CONCEPTOS APLICADOS                                                   ║
 ║   Semana 1                                                              ║
 ║     · Pattern Matching (match/case con guardas)   → clasificar_riesgo() ║
-║     · Decoradores simples y decorator factories   → decoradores.py      ║
+║     · Decoradores simples y decorator factories   → decorators.py       ║
 ║     · Modularización en archivos separados        → modelos.py          ║
 ║     · Type hints modernos (Literal, Optional)     → todo el código      ║
 ║   Semana 2                                                              ║
@@ -29,7 +29,6 @@ import pickle
 import functools
 from datetime import datetime
 from pathlib import Path
-from typing import Literal, Optional, List
 
 # ── Terceros ─────────────────────────────────────────────────────────────
 import numpy as np
@@ -39,7 +38,6 @@ import matplotlib.gridspec as gridspec
 import seaborn as sns
 import requests
 from scipy import stats
-from pydantic import BaseModel, Field, field_validator, ValidationError
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -177,118 +175,17 @@ def validar_normalidad(alpha: float = 0.05):
 # 2. SEMANA 1 — PATTERN MATCHING
 # ══════════════════════════════════════════════════════════════════════════
 
-TipoRiesgo = Literal[
-    "sin_riesgo", "riesgo_bajo", "riesgo_moderado",
-    "riesgo_alto", "riesgo_critico", "sin_datos",
-]
-
-
-def clasificar_riesgo(obs: dict) -> TipoRiesgo:
-    """
-    Clasifica el nivel de riesgo crediticio de un municipio usando Pattern Matching.
-    """
-    if not isinstance(obs, dict) or "indice_riesgo" not in obs:
-        return "sin_datos"
-        
-    val = obs.get("indice_riesgo")
-    
-    if val is None or pd.isna(val):
-        return "sin_datos"
-        
-    try:
-        idx = float(val)
-    except (ValueError, TypeError):
-        return "sin_datos"
-        
-    match idx:
-        case 0.0:
-            return "sin_riesgo"
-        case default if default < 0.05:
-            return "riesgo_bajo"
-        case default if default < 0.10:
-            return "riesgo_moderado"
-        case default if default < 0.20:
-            return "riesgo_alto"
-        case _:
-            return "riesgo_critico"
-
+# Nota: clasificar_riesgo() y NivelRiesgo se importan desde modelos.py
+# para evitar código duplicado. Ver modelos.py para la implementación.
+from modelos import clasificar_riesgo, NivelRiesgo as TipoRiesgo
 
 # ══════════════════════════════════════════════════════════════════════════
 # 3. SEMANA 2 — PYDANTIC: Modelos de Validación
 # ══════════════════════════════════════════════════════════════════════════
 
-class MunicipioFinanciero(BaseModel):
-    """
-    Contrato Pydantic para cada registro del sistema financiero colombiano.
-    """
-
-    municipio: str = Field(..., min_length=2, description="Nombre del municipio")
-
-    cartera_a: Optional[float] = Field(None, ge=0, description="Cartera normal (COP)")
-    cartera_b: Optional[float] = Field(None, ge=0, description="Cartera en observación (COP)")
-    cartera_c: Optional[float] = Field(None, ge=0, description="Cartera subestándar (COP)")
-    cartera_d: Optional[float] = Field(None, ge=0, description="Cartera dudosa (COP)")
-    cartera_e: Optional[float] = Field(None, ge=0, description="Cartera pérdida (COP)")
-    total_cartera: Optional[float] = Field(None, ge=0)
-    total_captaciones: Optional[float] = Field(None, ge=0)
-
-    indice_riesgo: Optional[float] = Field(None, ge=0, le=1)
-    ratio_liquidez: Optional[float] = Field(None, ge=0)
-    nivel_riesgo: Optional[str] = None
-
-    @field_validator("municipio", mode="before")
-    @classmethod
-    def normalizar_nombre(cls, v) -> str:
-        return str(v).strip().title() if v else "Desconocido"
-
-    @field_validator(
-        "cartera_a", "cartera_b", "cartera_c",
-        "cartera_d", "cartera_e", "total_cartera", "total_captaciones",
-        mode="before",
-    )
-    @classmethod
-    def convertir_numerico(cls, v) -> Optional[float]:
-        # Nota: esta versión funciona bien con floats y strings simples.
-        # Si luego la API trae separadores mixtos regionales, conviene reemplazar
-        # por la función robusta que ya usaste en `modelos.py`.
-        if v is None or v == "":
-            return None
-        if isinstance(v, (int, float, np.floating, np.integer)):
-            return float(v)
-        limpio = (
-            str(v)
-            .replace("$", "")
-            .replace(" ", "")
-            .replace(",", ".")
-        )
-        return float(limpio)
-
-    def calcular_indicadores(self) -> "MunicipioFinanciero":
-        mora = sum(filter(None, [self.cartera_c, self.cartera_d, self.cartera_e]))
-
-        if self.total_cartera and self.total_cartera > 0:
-            self.indice_riesgo = mora / self.total_cartera
-            if self.total_captaciones is not None:
-                self.ratio_liquidez = self.total_captaciones / self.total_cartera
-
-        self.nivel_riesgo = clasificar_riesgo({"indice_riesgo": self.indice_riesgo})
-        return self
-
-
-class ResultadoAnalisis(BaseModel):
-    """
-    Modelo de salida para serialización.
-    """
-    fecha_analisis: datetime = Field(default_factory=datetime.now)
-    version: str = "1.0.0"
-    n_municipios: int = Field(..., ge=0)
-    cartera_total_billones: float
-    indice_riesgo_promedio: float = Field(..., ge=0, le=1)
-    pct_sin_riesgo: float = Field(..., ge=0, le=100)
-    municipios: List[MunicipioFinanciero] = Field(default_factory=list)
-
-    model_config = {"arbitrary_types_allowed": True}
-
+# Nota: Los modelos Pydantic se importan desde modelos.py para evitar
+# duplicación. Este archivo (analisis.py) es el único consumidor.
+from modelos import MunicipioFinanciero, ResultadoAnalisis
 
 # ══════════════════════════════════════════════════════════════════════════
 # 4. SEMANA 2 — OOP: Cliente API
@@ -1050,8 +947,6 @@ def main():
     Orden correcto del pipeline:
       Ingesta → DataFrame → EDA → Limpieza → Análisis → Visualización → Export
     """
-    import sys
-    sys.stdout.reconfigure(encoding='utf-8')
     print("\n🏦  Sistema de Análisis de Riesgo Crediticio")
     print("    Colombia — Datos Abiertos Gov.co\n")
 

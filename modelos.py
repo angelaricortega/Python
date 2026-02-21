@@ -138,6 +138,13 @@ def clasificar_riesgo(obs: dict) -> NivelRiesgo:
     """
     Clasifica el nivel de riesgo a partir de `indice_riesgo`.
     Usa match/case (Python 3.10+).
+
+    Umbrales basados en Circular 98 Superfinanciera y Basel II/III:
+      - sin_riesgo    : NPL = 0%
+      - riesgo_bajo   : NPL < 1%   (cartera sana)
+      - riesgo_mod    : NPL < 5%   (alerta temprana)
+      - riesgo_alto   : NPL < 15%  (deterioro)
+      - riesgo_crit   : NPL >= 15% (crítico)
     """
     match obs:
         case {"indice_riesgo": None} | {}:
@@ -373,8 +380,6 @@ def validar_dataframe(
 # ══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    import sys
-    sys.stdout.reconfigure(encoding='utf-8')
     print("=" * 58)
     print("  DEMO — modelos.py")
     print("  Semana 2: Validación con Pydantic v2")

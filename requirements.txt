@@ -1,7 +1,11 @@
-pandas
-numpy
-matplotlib
-seaborn
-requests
-scipy
-pydantic
+# Dependencias del Sistema de Análisis de Riesgo Crediticio
+# Sistema Financiero Colombiano — Datos Abiertos Gov.co
+# Curso: Python para APIs e IA Aplicada — Universidad Santo Tomás · 2026
+
+pandas==2.2.2
+numpy==1.26.4
+matplotlib==3.9.0
+seaborn==0.13.2
+requests==2.32.3
+scipy==1.13.1
+pydantic==2.7.4

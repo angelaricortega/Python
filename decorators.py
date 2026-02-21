@@ -1,7 +1,7 @@
 """
-decoradores.py — Librería de Decoradores Estadísticos
+decorators.py — Librería de Decoradores Estadísticos
 ======================================================
-Semana 0: Decoradores como guardianes del análisis de datos.
+Semana 2: Decoradores como guardianes del análisis de datos.
 
 Un decorador es una función que recibe otra función como argumento,
 le agrega comportamiento, y retorna la función "mejorada".
@@ -9,10 +9,14 @@ Son el mecanismo de Python para extender funcionalidad sin modificar
 el código original (principio Open/Closed de diseño de software).
 
 Esta librería contiene cuatro patrones:
-  0. Decorador simple         → @registrar_ejecucion
-  1. Decorator factory        → @validar_normalidad(alpha=0.05)
-  2. Decorator factory        → @muestra_minima(n_min=30)
-  3. Decorador con estado     → @cachear (memoización)
+  0. Decorador simple         → @registrar_ejecucion       (USADO en pipeline)
+  1. Decorator factory        → @validar_normalidad()      (USADO en pipeline)
+  2. Decorator factory        → @muestra_minima()          (DISPONIBLE, no usado)
+  3. Decorador con estado     → @cachear()                 (DISPONIBLE, no usado)
+
+Los decoradores marcados como "DISPONIBLE" están implementados para futura
+extensión del pipeline (ej: análisis con requisitos de muestra mínima o
+cálculos costosos que requieran memoización).
 
 Al importar este módulo en analisis.py, los decoradores están disponibles
 sin duplicar código — esto es exactamente la ventaja de la modularización.
@@ -279,11 +283,9 @@ def cachear(func):
 # ══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    import sys
-    sys.stdout.reconfigure(encoding='utf-8')
     print("=" * 57)
-    print("  DEMO — decoradores.py")
-    print("  Semana 0: Decoradores Estadísticos")
+    print("  DEMO — decorators.py")
+    print("  Semana 2: Decoradores Estadísticos")
     print("=" * 57)
 
     rng = np.random.default_rng(41)
