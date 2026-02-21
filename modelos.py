@@ -146,16 +146,26 @@ def clasificar_riesgo(obs: dict) -> NivelRiesgo:
       - riesgo_alto   : NPL < 15%  (deterioro)
       - riesgo_crit   : NPL >= 15% (crítico)
     """
-    match obs:
-        case {"indice_riesgo": None} | {}:
-            return "sin_datos"
-        case {"indice_riesgo": idx} if idx == 0:
+    # Caso especial: diccionario vacío
+    if not obs:
+        return "sin_datos"
+    
+    # Obtener valor
+    idx = obs.get("indice_riesgo")
+    
+    # Caso: valor None o NaN
+    if idx is None or (isinstance(idx, float) and idx != idx):  # NaN check
+        return "sin_datos"
+    
+    # Pattern matching para clasificación
+    match idx:
+        case 0.0:
             return "sin_riesgo"
-        case {"indice_riesgo": idx} if idx < 0.01:
+        case default if default < 0.01:
             return "riesgo_bajo"
-        case {"indice_riesgo": idx} if idx < 0.05:
+        case default if default < 0.05:
             return "riesgo_moderado"
-        case {"indice_riesgo": idx} if idx < 0.15:
+        case default if default < 0.15:
             return "riesgo_alto"
         case _:
             return "riesgo_critico"

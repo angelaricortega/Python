@@ -99,15 +99,15 @@ plt.rcParams.update({
 
 def registrar_ejecucion(func):
     """
-    Decorador simple de logging de timestamp y duración.
+    Decorador simple de logging de timestamp y duracion.
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         ts = datetime.now()
-        print(f"\n  ┌─ [{ts:%H:%M:%S}] {func.__name__}()")
+        print(f"\n  [+-> [{ts:%H:%M:%S}] {func.__name__}()")
         resultado = func(*args, **kwargs)
         duracion = (datetime.now() - ts).total_seconds()
-        print(f"  └─ Completado en {duracion:.2f}s")
+        print(f"  [+-] Completado en {duracion:.2f}s")
         return resultado
     return wrapper
 
@@ -947,8 +947,8 @@ def main():
     Orden correcto del pipeline:
       Ingesta → DataFrame → EDA → Limpieza → Análisis → Visualización → Export
     """
-    print("\n🏦  Sistema de Análisis de Riesgo Crediticio")
-    print("    Colombia — Datos Abiertos Gov.co\n")
+    print("\n[PIPELINE] Sistema de Analisis de Riesgo Crediticio")
+    print("  Colombia - Datos Abiertos Gov.co\n")
 
     cliente = ClienteAPIFinanciero(base_url=API_BASE, timeout=10)
 
