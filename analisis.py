@@ -245,6 +245,14 @@ class PipelineRiesgo:
 
     @registrar_ejecucion
     def ingestar(self, limite: int = 400) -> "PipelineRiesgo":
+        """
+        Etapa 1: Ingesta + Validación Pydantic
+        
+        Pydantic valida cada fila en este punto:
+          1. Convierte strings a números (ej: "1,500,000" → 1500000.0)
+          2. Valida restricciones (ge=0, min_length=2, etc.)
+          3. Ejecuta field_validators antes de crear el objeto
+        """
         raw = self.cliente.obtener_datos(limite)
 
         if not raw:
@@ -253,7 +261,34 @@ class PipelineRiesgo:
 
         validos, errores = [], []
 
-        for fila in raw:
+        print("\n    [PYDANTIC] Validando registros uno por uno:")
+        for i, fila in enumerate(raw[:5]):  # Solo primeros 5 para demo
+            try:
+                print(f"      [{i+1}/{5}] {fila.get(COLUMNAS['municipio'], 'N/A')[:25]}")
+                muni = MunicipioFinanciero(
+                    municipio=fila.get(COLUMNAS["municipio"], "Desconocido"),
+                    cartera_a=fila.get(COLUMNAS["cartera_a"]),
+                    cartera_b=fila.get(COLUMNAS["cartera_b"]),
+                    cartera_c=fila.get(COLUMNAS["cartera_c"]),
+                    cartera_d=fila.get(COLUMNAS["cartera_d"]),
+                    cartera_e=fila.get(COLUMNAS["cartera_e"]),
+                    total_cartera=fila.get(COLUMNAS["cartera_tot"]),
+                    total_captaciones=fila.get(COLUMNAS["captaciones"]),
+                )
+                print(f"           ✓ Validado: cartera_a={muni.cartera_a:,.0f}")
+                muni.calcular_indicadores()
+                print(f"           ✓ KPIs: riesgo={muni.indice_riesgo:.4f}, nivel={muni.nivel_riesgo}")
+                validos.append(muni)
+
+            except ValidationError as e:
+                print(f"           ✗ Error: {e.errors()[0]['msg'][:50]}")
+                errores.append({
+                    "municipio": fila.get(COLUMNAS["municipio"]),
+                    "error": str(e)
+                })
+        
+        # Procesar resto sin logging detallado
+        for fila in raw[5:]:
             try:
                 muni = MunicipioFinanciero(
                     municipio=fila.get(COLUMNAS["municipio"], "Desconocido"),
@@ -266,7 +301,6 @@ class PipelineRiesgo:
                     total_captaciones=fila.get(COLUMNAS["captaciones"]),
                 ).calcular_indicadores()
                 validos.append(muni)
-
             except ValidationError as e:
                 errores.append({
                     "municipio": fila.get(COLUMNAS["municipio"]),
@@ -274,7 +308,7 @@ class PipelineRiesgo:
                 })
 
         self.municipios = validos
-        print(f"    ✓ {len(validos)} válidos | ✗ {len(errores)} rechazados por Pydantic")
+        print(f"\n    [PYDANTIC] Total: {len(validos)} válidos | {len(errores)} rechazados")
         return self
 
     # ── Etapa 2: DataFrame ────────────────────────────────────────────────
