@@ -76,7 +76,7 @@ Entrega/
 
 ```bash
 git clone https://github.com/angelaricortega/Python.git
-cd "Python/Entrega"
+cd Python
 ```
 
 ### Paso 2: Crear entorno virtual
@@ -96,7 +96,7 @@ source venv/bin/activate
 ### Paso 3: Instalar dependencias
 
 ```bash
-pip install -r requirements.txt
+pip install -r Entrega/requirements.txt
 ```
 
 ### Paso 4: Verificar instalación
@@ -111,22 +111,22 @@ python -c "import pandas, pydantic, fastapi; print('✅ Todo instalado')"
 
 ### 🎯 PARA LA ACTIVIDAD APLICADA (Semana III)
 
-El archivo principal para evaluación es `main.py`. Este archivo contiene TODO lo requerido para la actividad:
+El archivo principal para evaluación es `main.py`. Este archivo contiene TODO lo requerido para la actividad y debe ejecutarse desde la carpeta `Entrega`:
 
 ```bash
-# 1. Activar entorno virtual
+# 1. Crear y activar entorno virtual (desde la raíz o la carpeta principal)
 python -m venv venv
 venv\Scripts\activate  # Windows
 # o: source venv/bin/activate  # Mac/Linux
 
-# 2. Instalar dependencias
-pip install -r requirements.txt
+# 2. Instalar dependencias (con ruta a la carpeta Entrega)
+pip install -r Entrega/requirements.txt
 
-# 3. Iniciar API para evaluación
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# 3. Iniciar API para evaluación (indicando a uvicorn dónde buscar la aplicación)
+uvicorn main:app --app-dir Entrega --reload --host 0.0.0.0 --port 8000
 ```
 
-Luego visite **http://127.0.0.1:8000/docs** para las 5 pruebas requeridas.
+Luego visite **http://127.0.0.1:8000/docs** para las pruebas requeridas.
 
 ---
 
@@ -135,6 +135,7 @@ Luego visite **http://127.0.0.1:8000/docs** para las 5 pruebas requeridas.
 #### Pipeline completo (análisis de datos)
 
 ```bash
+cd Entrega
 python pipeline.py
 ```
 
@@ -143,13 +144,14 @@ Esto ejecutará las 6 etapas del pipeline de análisis.
 #### Notebook interactivo
 
 ```bash
+cd Entrega
 jupyter notebook analisis.ipynb
 ```
 
 #### API alternativa (api_fastapi.py)
 
 ```bash
-uvicorn api_fastapi:app --reload --host 0.0.0.0 --port 8000
+uvicorn api_fastapi:app --app-dir Entrega --reload --host 0.0.0.0 --port 8000
 ```
 
 ---
