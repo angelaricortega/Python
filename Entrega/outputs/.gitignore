@@ -1,0 +1,11 @@
+# Mantener esta carpeta en el repositorio
+# pero ignorar todos los archivos generados
+
+*.png
+*.json
+*.pkl
+*.csv
+*.log
+
+# Excepto este archivo
+!.gitignore

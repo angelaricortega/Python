@@ -1,0 +1,22 @@
+# Dependencias del Sistema de Análisis de Riesgo Crediticio
+# Sistema Financiero Colombiano — Datos Abiertos Gov.co
+# Curso: Python para APIs e IA Aplicada — Universidad Santo Tomás · 2026
+# 
+# Este proyecto integra TODOS los conceptos de las Semanas 1, 2 y 3:
+#   Semana 1: Pattern Matching, Decoradores, Entornos Virtuales
+#   Semana 2: Pydantic, HTTP/JSON, OOP, requests.Session
+#   Semana 3: FastAPI, endpoints CRUD, Swagger UI
+
+# ── Core Científico ─────────────────────────────────────────────────────
+pandas>=2.2.2            # DataFrames, EDA, estadísticos descriptivos
+numpy>=1.26.4            # Cálculos numéricos, generador aleatorio
+
+# ── HTTP y APIs ──────────────────────────────────────────────────────────
+requests>=2.32.3         # Cliente HTTP con Session (conexión persistente)
+fastapi>=0.115.0         # Framework web moderno (ASGI, docs automáticos)
+uvicorn>=0.30.6          # Servidor ASGI para ejecutar FastAPI
+pydantic>=2.7.4          # Validación de datos con BaseModel, Field
+
+# ── Utilidades ───────────────────────────────────────────────────────────
+python-dotenv>=1.0.1     # Variables de entorno (.env)
+
