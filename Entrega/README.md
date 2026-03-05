@@ -400,32 +400,37 @@ Visite **http://127.0.0.1:8000/docs** para:
 
 ## 📊 Gráficas Generadas
 
-### 1. `eda_datos_crudos.png` (6 subgráficas)
+### 1. `eda_datos_crudos.png` (Análisis Exploratorio)
 
-| Subgráfica | Qué documenta | Hallazgo clave |
-|------------|---------------|----------------|
-| Histograma cartera | Asimetría de distribución | H3: CV>100% → heterogeneidad alta |
-| Boxplot | Outliers visuales | H4: Outliers IQR detectados |
-| Heatmap completitud | % nulos por columna | H2: Campos críticos con nulos |
-| Histograma + KDE | Forma del índice | H5: Cola derecha → no normal |
-| Q-Q Plot | Test visual normalidad | H5: R² < 0.96 → no normal |
-| Correlación | Relaciones entre variables | H6: Multicolinearidad |
+![EDA Datos Crudos](outputs/eda_datos_crudos.png)
 
-### 2. `panel_analisis.png` (4 subgráficas)
+**Interpretación de Hallazgos Clave:**
+- **Distribución de Cartera:** Se observa una gran heterogeneidad en los saldos (CV > 100%), con alta asimetría positiva.
+- **Outliers:** Múltiples municipios exceden los límites del Rango Intercuartílico (IQR), indicando concentración financiera en pocas regiones.
+- **Completitud:** Existen campos críticos con valores nulos, especialmente en el `total_captaciones`, requiriendo imputaciones o filtrado justificado.
+- **Normalidad:** Tanto el Histograma + KDE como el Q-Q plot demuestran que el índice NPL **no sigue una distribución normal** (cola larga hacia la derecha), justificando el uso de estadísticas robustas (mediana) en vez de promedios para imputación.
 
-| Subgráfica | Contenido | Interpretación |
-|------------|-----------|----------------|
-| Histograma índice | Media vs Mediana | Diferencia → no normalidad |
-| Barras por nivel | Pattern Matching | Distribución por categoría |
-| Top 8 municipios | Cartera por riesgo | Ciudades principales |
-| Scatter liquidez vs riesgo | Cuadrantes | Relación inversa esperada |
+---
 
-### 3. `panel_composicion.png` (2 subgráficas)
+### 2. `panel_analisis.png` (Resultados del Modelo)
 
-| Subgráfica | Contenido | Uso regulatorio |
-|------------|-----------|-----------------|
-| Stacked bars | Composición A-E (%) | Circular 100 Superfinanciera |
-| Ratio liquidez | Captaciones / Cartera | Línea equilibrio = 1.0 |
+![Panel Análisis](outputs/panel_analisis.png)
+
+**Interpretación de Resultados:**
+- **Índice NPL:** La diferencia observada entre la Media y la Mediana del índice confirma la no-normalidad estadística.
+- **Niveles de Riesgo:** Gracias al Pattern Matching, vemos la categorización poblacional. La inmensa mayoría de los municipios entran en riesgo bajo o nulo, pero la 'cola' de la distribución revela casos críticos.
+- **Top Municipios:** Las barras muestran los 8 municipios con mayor concentración de deterioro crediticio, un insight crucial para decisiones de política pública.
+- **Liquidez vs Riesgo:** El gráfico de dispersión revela una relación esperada: a mayor riesgo NPL, la liquidez suele estresarse, indicando menor cobertura (captaciones/cartera).
+
+---
+
+### 3. `panel_composicion.png` (Salud del Portafolio)
+
+![Panel Composición](outputs/panel_composicion.png)
+
+**Interpretación Regulatoria:**
+- **Composición A-E:** Permite validar el cumplimiento de la Circular 100 de la Superfinanciera midiendo la proporción exacta de cartera sana (A) vs deteriorada (B-E). 
+- **Ratio de Liquidez:** Idealmente, la proporción debe ser ≥ 1.0 (Línea de equilibrio). Permite identificar de golpe si una entidad territorial tiene más cartera colocada que captaciones, lo que representaría un riesgo de fondeo de corto plazo.
 
 ---
 
