@@ -1,11 +1,54 @@
-# Dependencias del Sistema de Análisis de Riesgo Crediticio
-# Sistema Financiero Colombiano — Datos Abiertos Gov.co
-# Curso: Python para APIs e IA Aplicada — Universidad Santo Tomás · 2026
+# ════════════════════════════════════════════════════════════════════════════════
+# requirements.txt — Python para APIs e IA Aplicada
+# Universidad Santo Tomás · 2026
+# ════════════════════════════════════════════════════════════════════════════════
+#
+# Este archivo congela las dependencias del proyecto para garantizar
+# reproducibilidad total en cualquier máquina o entorno.
+#
+# INSTALACIÓN:
+#   1. Crear entorno virtual: python -m venv venv
+#   2. Activar: venv\Scripts\activate (Windows) o source venv/bin/activate (Mac/Linux)
+#   3. Instalar: pip install -r requirements.txt
+#
+# ════════════════════════════════════════════════════════════════════════════════
 
-pandas==2.2.2
-numpy==1.26.4
-matplotlib==3.9.0
-seaborn==0.13.2
-requests==2.32.3
-scipy==1.13.1
-pydantic==2.7.4
+# ── Core Científico ─────────────────────────────────────────────────────────────
+# Librerías para análisis estadístico y científico
+pandas==2.2.2           # DataFrames, EDA, estadísticos descriptivos
+numpy==1.26.4           # Cálculos numéricos, generador aleatorio
+scipy==1.13.1           # Test estadísticos (Shapiro-Wilk, t-test, etc.)
+
+# ── Visualización ────────────────────────────────────────────────────────────────
+# Librerías para gráficas profesionales
+matplotlib==3.9.0       # Gráficas de publicación (GridSpec, rcParams)
+seaborn==0.13.2         # Heatmaps, KDE, estilos estadísticos
+
+# ── HTTP y APIs ─────────────────────────────────────────────────────────────────
+# Librerías para comunicación HTTP y creación de APIs
+requests==2.32.3        # Cliente HTTP con Session (conexión persistente)
+fastapi==0.115.0        # Framework web moderno (ASGI, docs automáticos)
+uvicorn==0.30.6         # Servidor ASGI para ejecutar FastAPI
+
+# ── Validación de Datos ─────────────────────────────────────────────────────────
+# Librerías para validación y serialización de datos
+pydantic==2.7.4         # Validación con BaseModel, Field, validators
+pydantic-settings==2.4.0  # Configuración con variables de entorno
+
+# ── Utilidades ──────────────────────────────────────────────────────────────────
+# Librerías auxiliares para desarrollo y documentación
+python-dotenv==1.0.1    # Variables de entorno (.env)
+jupyter==1.0.0          # Notebooks .ipynb para documentación ejecutable
+ipykernel==6.29.5       # Kernel de Python para Jupyter
+
+# ── Testing (Opcional) ──────────────────────────────────────────────────────────
+# Librerías para pruebas automáticas (semanas avanzadas)
+# pytest==8.3.3         # Framework de testing
+# httpx==0.27.2         # Cliente HTTP asíncrono para tests de FastAPI
+
+# ════════════════════════════════════════════════════════════════════════════════
+# NOTAS:
+#   - Las versiones están congeladas para reproducibilidad
+#   - Para testing, descomentar las librerías opcionales
+#   - Este archivo se genera con: pip freeze > requirements.txt
+# ════════════════════════════════════════════════════════════════════════════════

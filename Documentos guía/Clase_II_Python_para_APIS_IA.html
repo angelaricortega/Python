@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Curso intensivo de Python 3.11 para estadísticos: Pattern Matching, entornos virtuales, Git y decoradores para validación de datos.">
+    <meta name="author" content="Javier Mauricio Sierra">
+    <meta name="keywords"
+        content="Python, estadística, data science, pattern matching, entornos virtuales, Git, decoradores, scipy, pandas">
+    <title>Python para APIs e IA - Clase II</title>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3D008D',
+                        secondary: '#ED1E79',
+                        navy: '#001A4D',
+                        gold: '#FDB913',
+                        bg: '#F8FAFC',
+                        surface: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+            scroll-behavior: smooth;
+        }
+
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* USTA Gradient Background */
+        .usta-gradient {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+        }
+
+        .usta-gradient-hover:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+        }
+
+        /* USTA Navy Header */
+        .usta-header {
+            background: linear-gradient(180deg, #001A4D 0%, #002868 100%);
+        }
+
+        /* USTA Card Style */
+        .usta-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .usta-card:hover {
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        /* USTA Button Style */
+        .usta-button {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .usta-button:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(61, 0, 141, 0.35);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        /* Custom scrollbar for code blocks */
+        .code-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-scroll::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .code-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3D008D, #ED1E79);
+            border-radius: 4px;
+        }
+
+        .step-connector::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #3D008D, #ED1E79);
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        .step-connector:last-child::after {
+            display: none;
+        }
+
+        .active-step .step-circle {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+            color: white;
+            border-color: #3D008D;
+            box-shadow: 0 4px 15px rgba(61, 0, 141, 0.4);
+        }
+
+        .completed-step .step-circle {
+            background-color: #10B981;
+            color: white;
+            border-color: #10B981;
+        }
+
+        /* Fade-in animation for content transitions */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Focus styles for accessibility */
+        button:focus-visible {
+            outline: 2px solid #ED1E79;
+            outline-offset: 2px;
+        }
+
+        /* Skip link for keyboard users */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+            color: white;
+            padding: 8px;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Scroll to top button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+            color: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(61, 0, 141, 0.4);
+            transition: all 0.3s ease;
+            z-index: 50;
+            border: none;
+        }
+
+        .scroll-to-top.visible {
+            display: flex;
+        }
+
+        .scroll-to-top:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(61, 0, 141, 0.5);
+        }
+
+        /* Sidebar active state */
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(61, 0, 141, 0.1) 0%, transparent 100%);
+            border-left: 4px solid #ED1E79;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(90deg, rgba(61, 0, 141, 0.05) 0%, transparent 100%);
+        }
+
+        /* Tip box USTA style */
+        .tip-box {
+            background: linear-gradient(135deg, rgba(61, 0, 141, 0.08) 0%, rgba(237, 30, 121, 0.08) 100%);
+            border: 1px solid rgba(61, 0, 141, 0.2);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+    <!-- Header & Pipeline Map -->
+    <header class="usta-header sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="usta-gradient p-3 rounded-xl shadow-md">
+                        <i class="fab fa-python text-xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white leading-tight tracking-tight">Python para APIs e IA
+                            Aplicada</h1>
+                        <p class="text-xs text-white/70 font-medium tracking-wide">CLASE II • ESTADÍSTICA • USTA</p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex items-center gap-4 text-sm mt-4 md:mt-0">
+                    <div
+                        class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm hover:bg-white/20 transition-all">
+                        <i class="fab fa-python text-yellow-400"></i>
+                        <span class="text-white font-medium">Python 3.11</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm hover:bg-white/20 transition-all">
+                        <i class="fas fa-code-branch text-green-400"></i>
+                        <span class="text-white font-medium">Git</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm hover:bg-white/20 transition-all">
+                        <i class="fab fa-docker text-cyan-400"></i>
+                        <span class="text-white font-medium">Docker</span>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Visual Progress Map -->
+            <div class="relative flex justify-between items-center max-w-3xl mx-auto" id="pipeline-container">
+                <!-- Steps injected via JS -->
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-grow flex flex-col md:flex-row max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 gap-8">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 flex-shrink-0">
+            <nav class="space-y-2 sticky top-32" id="module-nav">
+                <!-- Nav items injected via JS -->
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div id="content-area" class="p-6 md:p-10">
+                <!-- Content injected via JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Tip Pedagógico Fijo -->
+    <div class="fixed bottom-4 left-4 md:w-72 tip-box p-4 rounded-xl shadow-lg z-40" id="tip-pedagogico">
+        <div class="flex justify-between items-start">
+            <div>
+                <h4 class="font-bold text-primary text-sm mb-1 flex items-center gap-2">
+                    <i class="fas fa-lightbulb text-secondary"></i> Tip Pedagógico
+                </h4>
+                <p class="text-xs text-gray-700">
+                    Este material está diseñado para estadísticos. No nos enfocamos en desarrollo web, sino en
+                    reproducibilidad y análisis robusto.
+                </p>
+            </div>
+            <button onclick="document.getElementById('tip-pedagogico').style.display='none'"
+                class="text-primary hover:text-secondary text-lg ml-2 transition-colors"
+                aria-label="Cerrar tip">×</button>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Volver arriba">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Footer -->
+    <footer class="usta-header mt-auto">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-white/80">
+            <p class="font-medium">Diseñado por <span class="text-white">Javier Mauricio Sierra</span></p>
+            <p class="text-xs mt-1 text-white/60">Python 3.11.9 • Enfoque Data-Driven • USTA</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- DATA STORE ---
+        const courseData = {
+            modules: [
+                {
+                    id: "m1",
+                    title: "Módulo 1: Python Moderno (3.11+)",
+                    shortTitle: "Optimización",
+                    objective: "Aprovechar las mejoras de rendimiento y sintaxis expresiva de Python 3.11 para limpieza de datos.",
+                    duration: "25 min",
+                    content: {
+                        concept: {
+                            title: "Pattern Matching & Rendimiento",
+                            text: "En estadística, a menudo clasificamos observaciones basándonos en múltiples condiciones complejas. Python 3.11 introduce <code>match/case</code> (estructural pattern matching), que es mucho más que un 'switch' de otros lenguajes. Imagínalo como una función <code>filter()</code> supervitaminada que entiende la estructura de tus datos.<br><br><strong>¿Por qué Python 3.11 y no una versión más reciente?</strong> Aunque existen Python 3.12 y 3.13, <strong>3.11 representa el equilibrio óptimo</strong> entre rendimiento, estabilidad y compatibilidad de ecosistema. Las librerías científicas críticas (NumPy, Pandas, Scipy, Statsmodels) tienen soporte completo y probado en 3.11, mientras que versiones más nuevas pueden presentar incompatibilidades con extensiones C o binarios precompilados que aún no han sido actualizados.",
+                            analogy: "⚡ <strong>Analogía:</strong> Elegir Python 3.11 es como elegir un auto confiable del año pasado en lugar del modelo recién lanzado. El nuevo puede tener más features, pero el anterior ya tiene todos los repuestos disponibles (librerías compatibles), mecánicos que lo conocen (documentación madura), y se han corregido los defectos de fábrica (bugs resueltos). Para trabajo estadístico serio, la <strong>estabilidad supera a la novedad</strong>.",
+                            warning: "⚠️ <strong>Error Común:</strong> Seguir usando cadenas interminables de <code>if-elif-else</code> para validar la estructura de diccionarios JSON o DataFrames, lo que hace el código ilegible y propenso a errores lógicos. Otro error es usar la última versión de Python sin verificar compatibilidad con el stack científico del proyecto."
+                        },
+                        code: {
+                            title: "Clasificación de Outliers con Pattern Matching",
+                            snippet: `from typing import Literal, Union
+import pandas as pd
+
+# Definimos tipos para claridad (Type Hinting moderno)
+EstadoDato = Literal['valido', 'outlier_severo', 'outlier_leve', 'error']
+
+def clasificar_observacion(obs: dict) -> EstadoDato:
+    """Clasifica una observación estadística usando pattern matching."""
+    match obs:
+        # Caso: Datos faltantes o estructura incorrecta
+        case {'valor': None} | {}:
+            return 'error'
+        
+        # Caso: Outlier severo (> 3 desviaciones estándar)
+        case {'z_score': z} if abs(z) > 3:
+            return 'outlier_severo'
+            
+        # Caso: Outlier leve (> 2 desviaciones estándar)
+        case {'z_score': z} if abs(z) > 2:
+            return 'outlier_leve'
+            
+        # Caso por defecto (Catch-all)
+        case _:
+            return 'valido'
+
+# Simulación de datos
+data = [{'z_score': 0.5}, {'z_score': 3.2}, {'valor': None}, {'z_score': -2.1}]
+resultados = [clasificar_observacion(d) for d in data]
+print(f"Resultados: {resultados}")`,
+                            output: "Resultados: ['valido', 'outlier_severo', 'error', 'outlier_leve']"
+                        },
+                        quiz: {
+                            question: "¿Cuál es la principal ventaja estadística de usar `match` sobre `if-elif` en este contexto?",
+                            options: [
+                                "Es marginalmente más rápido en ejecución.",
+                                "Permite desestructurar y validar la 'forma' de los datos simultáneamente.",
+                                "Reemplaza completamente a la librería Pandas.",
+                                "Solo funciona con números enteros."
+                            ],
+                            correct: 1,
+                            feedback: "✅ ¡Correcto! La capacidad de verificar la estructura (ej: si existe la clave 'valor') y el contenido (ej: z > 3) en un solo paso reduce bugs en pipelines de limpieza."
+                        },
+                        bonus: {
+                            title: " Bonus: Limpieza en Pandas y Modularización",
+                            content: `<strong>¿Por qué modularizar la limpieza de datos?</strong><br>
+                            En proyectos reales, los pipelines de limpieza pueden tener cientos de líneas. Mantenerlos en el mismo script que el análisis genera caos. La solución es crear <strong>módulos reutilizables</strong>.<br><br>
+                            
+                            <strong>Principios clave:</strong><br>
+                            • <strong>Funciones puras:</strong> Reciben datos, retornan datos limpios. Sin efectos secundarios.<br>
+                            • <strong>Un archivo por responsabilidad:</strong> <code>limpieza.py</code>, <code>validacion.py</code>, <code>transformaciones.py</code>.<br>
+                            • <strong>Documentación con docstrings:</strong> Explica qué hace cada función, qué recibe y qué retorna.<br>
+                            • <strong>Type hints:</strong> Declara tipos de entrada/salida para detectar errores antes de ejecutar.`,
+                            code: {
+                                title: "limpieza.py - Módulo Reutilizable",
+                                snippet: `# ═══════════════════════════════════════════════════════════
+# ARCHIVO: limpieza.py
+# Funciones puras para limpieza de DataFrames
+# ═══════════════════════════════════════════════════════════
+
+import pandas as pd
+import numpy as np
+from typing import List, Optional
+
+def eliminar_duplicados(df: pd.DataFrame, subset: Optional[List[str]] = None) -> pd.DataFrame:
+    """
+    Elimina filas duplicadas del DataFrame.
+    
+    Args:
+        df: DataFrame de entrada
+        subset: Columnas a considerar para duplicados (None = todas)
+    
+    Returns:
+        DataFrame sin duplicados
+    """
+    n_antes = len(df)
+    df_limpio = df.drop_duplicates(subset=subset, keep='first')
+    n_despues = len(df_limpio)
+    print(f"✅ Eliminados {n_antes - n_despues} duplicados")
+    return df_limpio
+
+def imputar_nulos(df: pd.DataFrame, columnas: List[str], estrategia: str = 'mediana') -> pd.DataFrame:
+    """
+    Imputa valores nulos con la estrategia especificada.
+    
+    Args:
+        df: DataFrame de entrada
+        columnas: Lista de columnas numéricas a imputar
+        estrategia: 'media', 'mediana' o 'moda'
+    
+    Returns:
+        DataFrame con valores imputados
+    """
+    df_limpio = df.copy()
+    for col in columnas:
+        if estrategia == 'media':
+            valor = df_limpio[col].mean()
+        elif estrategia == 'mediana':
+            valor = df_limpio[col].median()
+        else:
+            valor = df_limpio[col].mode()[0]
+        
+        n_nulos = df_limpio[col].isna().sum()
+        df_limpio[col] = df_limpio[col].fillna(valor)
+        print(f"✅ {col}: {n_nulos} nulos imputados con {estrategia}={valor:.2f}")
+    
+    return df_limpio
+
+def detectar_outliers_iqr(df: pd.DataFrame, columna: str, factor: float = 1.5) -> pd.Series:
+    """
+    Detecta outliers usando el método IQR.
+    
+    Returns:
+        Serie booleana (True = outlier)
+    """
+    Q1, Q3 = df[columna].quantile([0.25, 0.75])
+    IQR = Q3 - Q1
+    limite_inf = Q1 - factor * IQR
+    limite_sup = Q3 + factor * IQR
+    
+    outliers = (df[columna] < limite_inf) | (df[columna] > limite_sup)
+    print(f"⚠️ {columna}: {outliers.sum()} outliers detectados (IQR x{factor})")
+    return outliers
+
+# ═══════════════════════════════════════════════════════════
+# USO EN TU ANÁLISIS PRINCIPAL
+# ═══════════════════════════════════════════════════════════
+
+# En analisis_principal.py:
+# from limpieza import eliminar_duplicados, imputar_nulos, detectar_outliers_iqr
+#
+# df = pd.read_csv("datos.csv")
+# df = eliminar_duplicados(df)
+# df = imputar_nulos(df, ['edad', 'ingreso'], estrategia='mediana')
+# outliers = detectar_outliers_iqr(df, 'ingreso')`
+                            }
+                        },
+                        chartData: {
+                            type: 'bar',
+                            label: 'Mejora de Rendimiento (Tiempo Relativo)',
+                            labels: ['Python 3.9', 'Python 3.10', 'Python 3.11'],
+                            data: [1.0, 0.9, 0.65], // Normalized execution time
+                            description: "Tiempo de ejecución normalizado para operaciones matemáticas estándar (menor es mejor)."
+                        }
+                    }
+                },
+                {
+                    id: "m2",
+                    title: "Módulo 2: Entornos Virtuales",
+                    shortTitle: "Aislamiento",
+                    objective: "Configurar entornos reproducibles para evitar conflictos entre versiones de librerías como numpy o scipy.",
+                    duration: "25 min",
+                    content: {
+                        concept: {
+                            title: "Venv vs Conda: Eligiendo la herramienta",
+                            text: "La reproducibilidad es el pilar de la ciencia de datos. Si un análisis funciona hoy pero falla mañana porque una librería se actualizó, el estudio pierde validez.<br><br><strong>¿Qué es un entorno virtual?</strong> Es un espacio aislado donde se instalan versiones específicas de Python y sus librerías, sin afectar otros proyectos. Esto garantiza que el código produzca los mismos resultados en cualquier momento y máquina.<br><br><strong>Dos filosofías, un objetivo:</strong><br>• <code>venv</code>: Herramienta nativa de Python (desde 3.3). Ligera, simple, solo gestiona paquetes Python vía pip.<br>• <code>conda</code>: Ecosistema completo (Anaconda/Miniconda). Gestiona Python + dependencias de sistema (compiladores C/C++, librerías BLAS/LAPACK, CUDA para GPU).<br><br><strong>Regla práctica para estadísticos:</strong> Al usar NumPy, SciPy, Pandas, Matplotlib y poco más → <code>venv</code> es suficiente. Si se requiere TensorFlow/PyTorch con GPU, GeoPandas, o librerías con binarios complejos → <code>conda</code> ahorra horas de frustración.",
+                            analogy: "🧪 <strong>Analogía:</strong> Un entorno virtual es como un <strong>laboratorio estéril y aislado</strong>. Si se tiene un experimento que requiere temperatura bajo cero (Librería A versión 1.0) y otro que requiere calor extremo (Librería A versión 2.0), no es posible realizarlos en la misma sala. Se necesitan dos laboratorios separados. <code>venv</code> es un laboratorio básico; <code>conda</code> es un laboratorio con equipamiento industrial.",
+                            warning: `⚠️ <strong>Error Común:</strong> Instalar todo en el entorno base (<code>pip install</code> directo en consola). Esto es como mezclar reactivos químicos aleatorios en un solo vaso; eventualmente, explotará. Otro error frecuente: mezclar <code>pip</code> y <code>conda</code> en el mismo entorno sin precaución, lo cual corrompe el gestor de dependencias.`
+                        },
+                        comparison: [
+                            { tool: "venv + pip", use: "Proyectos Puros Python", detail: "✅ Nativo, sin instalación extra. ✅ Entornos ultra-ligeros (~10MB). ✅ Compatible con cualquier servidor/CI. ❌ No resuelve dependencias de sistema (compiladores). ❌ Puede fallar con librerías que requieren compilación (ej: lxml, psycopg2).", icon: "🐍" },
+                            { tool: "conda/mamba", use: "Ciencia de Datos Pesada", detail: "✅ Gestiona Python + binarios + CUDA. ✅ Resuelve conflictos de versiones automáticamente. ✅ Instalación precompilada (sin compilar nada). ❌ Entornos más pesados (~500MB+). ❌ Puede ser lento (usa <code>mamba</code> como alternativa rápida).", icon: "🐼" }
+                        ],
+                        code: {
+                            title: "Workflow Completo: Crear, Compartir y Activar Entornos",
+                            snippet: `# ═══════════════════════════════════════════════════════════
+# PASO 1: CREAR UN ENTORNO VIRTUAL
+# ═══════════════════════════════════════════════════════════
+
+# Crear el entorno (carpeta aislada con Python limpio)
+python -m venv mi_proyecto_env
+
+# Activar el entorno:
+# Windows:
+mi_proyecto_env\\Scripts\\activate
+# Mac/Linux:
+# source mi_proyecto_env/bin/activate
+
+# Verificar que estás en el entorno (aparece el nombre al inicio)
+(mi_proyecto_env) $ which python  # Debe mostrar ruta del entorno
+
+# ═══════════════════════════════════════════════════════════
+# PASO 2: INSTALAR DEPENDENCIAS Y GUARDAR "RECETA"
+# ═══════════════════════════════════════════════════════════
+
+# Instalar librerías con versiones específicas
+pip install pandas==2.0.3 scipy==1.10.1 matplotlib==3.7.1
+
+# Guardar la lista exacta de dependencias
+pip freeze > requirements.txt
+
+# ═══════════════════════════════════════════════════════════
+# PASO 3: COMPARTIR EL ENTORNO (enviar requirements.txt)
+# ═══════════════════════════════════════════════════════════
+
+# Solo compartes el archivo requirements.txt (NO la carpeta del env)
+# Tu colega recibe: tu código + requirements.txt
+
+# ═══════════════════════════════════════════════════════════
+# PASO 4: RECREAR ENTORNO DESDE ARCHIVO COMPARTIDO
+# ═══════════════════════════════════════════════════════════
+
+# Tu colega ejecuta:
+python -m venv env_compartido
+source env_compartido/bin/activate  # o Scripts\\activate en Windows
+pip install -r requirements.txt  # Instala EXACTAMENTE las mismas versiones
+
+# ¡El colaborador ahora tiene el mismo entorno!`,
+                            output: "✅ Entorno recreado exitosamente. 15 paquetes instalados desde requirements.txt"
+                        },
+                        quiz: {
+                            question: "Se está trabajando en una tesis que usa una librería de optimización bayesiana antigua incompatible con el último numpy. ¿Cuál es la solución correcta?",
+                            options: [
+                                "Desinstalar numpy del sistema y poner la versión vieja.",
+                                "Crear un entorno virtual específico para la tesis e instalar las versiones compatibles allí.",
+                                "Actualizar el código de la librería antigua manualmente.",
+                                "Usar Excel."
+                            ],
+                            correct: 1,
+                            feedback: "✅ Exacto. El aislamiento permite que la tesis 'viva' en una cápsula del tiempo con sus dependencias exactas sin afectar otros proyectos."
+                        }
+                    }
+                },
+                {
+                    id: "m3",
+                    title: "Módulo 3: Docker vs Entornos Virtuales",
+                    shortTitle: "Contenedores",
+                    objective: "Comprender cuándo usar Docker frente a venv/conda para garantizar reproducibilidad total del análisis.",
+                    duration: "25 min",
+                    content: {
+                        concept: {
+                            title: "Docker: Reproducibilidad Total",
+                            text: "<strong>¿Qué es Docker?</strong> Mientras que <code>venv</code> y <code>conda</code> aíslan librerías Python, Docker aísla <strong>todo el sistema operativo</strong>: Python, librerías, configuraciones del sistema, variables de entorno, e incluso versiones específicas de utilidades del sistema.<br><br><strong>El problema que resuelve:</strong> 'En mi máquina funciona' es la pesadilla de la reproducibilidad. Aunque se comparta <code>requirements.txt</code>, si el colaborador tiene una versión diferente de sistema operativo, compiladores, o configuraciones, el código puede fallar.<br><br><strong>Docker garantiza:</strong> Que el análisis produzca exactamente los mismos resultados en cualquier computadora del mundo, hoy y dentro de 10 años. El contenedor es una 'fotografía' completa del ambiente de ejecución.<br><br><strong>¿Cuándo usar cada uno?</strong><br>• <code>venv/conda</code>: Desarrollo diario, exploración, proyectos personales.<br>• <code>Docker</code>: Publicación de papers, pipelines de producción, colaboración entre equipos con diferentes sistemas operativos.",
+                            analogy: "🐳 <strong>Analogía:</strong> Si un entorno virtual es un <strong>laboratorio aislado</strong>, Docker es <strong>empaquetar todo el edificio del laboratorio</strong> —incluyendo la electricidad, plomería, y equipamiento— en una caja que se puede enviar a cualquier parte del mundo. Al abrirla, funciona exactamente igual sin importar la ubicación.",
+                            warning: "⚠️ <strong>Consideración:</strong> Docker tiene una curva de aprendizaje más pronunciada y requiere más recursos (disco, memoria). Para análisis exploratorios simples, puede ser excesivo. Úsalo cuando la reproducibilidad sea crítica (papers, producción, auditorías)."
+                        },
+                        comparison: [
+                            { tool: "venv/conda", use: "Desarrollo Ágil", detail: "✅ Rápido de crear (~segundos). ✅ Bajo consumo de recursos. ✅ Fácil de entender. ❌ Solo aísla Python/librerías. ❌ Depende del SO del usuario. ❌ 'En mi máquina funciona'.", icon: "🐍" },
+                            { tool: "Docker", use: "Reproducibilidad Total", detail: "✅ Aísla TODO (SO, config, libs). ✅ Mismo resultado en cualquier máquina. ✅ Ideal para CI/CD y papers. ❌ Mayor curva de aprendizaje. ❌ Imágenes pesadas (GB). ❌ Requiere Docker instalado.", icon: "🐳" }
+                        ],
+                        code: {
+                            title: "Dockerfile Básico para Análisis Estadístico",
+                            snippet: `# ═══════════════════════════════════════════════════════════
+# DOCKERFILE: Imagen reproducible para análisis
+# ═══════════════════════════════════════════════════════════
+
+# Usar imagen base oficial de Python 3.11
+FROM python:3.11.9-slim
+
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Copiar archivo de dependencias
+COPY requirements.txt .
+
+# Instalar dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el código del análisis
+COPY . .
+
+# Comando por defecto al ejecutar el contenedor
+CMD ["python", "analisis.py"]
+
+# ═══════════════════════════════════════════════════════════
+# COMANDOS PARA USAR EL DOCKERFILE
+# ═══════════════════════════════════════════════════════════
+
+# 1. Construir la imagen
+# docker build -t mi-analisis:v1.0 .
+
+# 2. Ejecutar el contenedor
+# docker run mi-analisis:v1.0
+
+# 3. Compartir la imagen (subir a Docker Hub)
+# docker push usuario/mi-analisis:v1.0
+
+# 4. Tu colega descarga y ejecuta (¡mismo resultado garantizado!)
+# docker pull usuario/mi-analisis:v1.0
+# docker run usuario/mi-analisis:v1.0`,
+                            output: "✅ Imagen construida: mi-analisis:v1.0 (245MB)\\n🚀 Contenedor ejecutado: Análisis completado en 3.2s"
+                        },
+                        quiz: {
+                            question: "Se va a publicar un paper y el revisor necesita replicar exactamente los resultados. ¿Qué herramienta garantiza mejor la reproducibilidad?",
+                            options: [
+                                "Compartir solo el código Python (.py files).",
+                                "Compartir código + requirements.txt (venv/conda).",
+                                "Compartir código + Dockerfile o imagen Docker.",
+                                "Enviar capturas de pantalla de los resultados."
+                            ],
+                            correct: 2,
+                            feedback: "✅ ¡Correcto! Docker garantiza que el revisor tenga exactamente el mismo entorno (SO, librerías, configuraciones) utilizado originalmente, eliminando el 'en mi máquina funciona'."
+                        }
+                    }
+                },
+                {
+                    id: "m4",
+                    title: "Módulo 4: Git y GitHub para Investigadores",
+                    shortTitle: "Control",
+                    objective: "Implementar control de versiones con Git y colaboración/respaldo con GitHub.",
+                    duration: "30 min",
+                    content: {
+                        concept: {
+                            title: "Git y GitHub: Control de Versiones y Colaboración",
+                            text: "<strong>Git ≠ GitHub:</strong> Son herramientas diferentes pero complementarias.<br><br><strong>Git</strong> (herramienta local):<br>• Software que se instala en la computadora.<br>• Rastrea cambios en los archivos localmente.<br>• Funciona sin internet.<br>• Comandos: <code>git init</code>, <code>git add</code>, <code>git commit</code>.<br><br><strong>GitHub</strong> (servicio en la nube):<br>• Plataforma web para almacenar repositorios Git.<br>• Permite compartir código con colegas o el mundo.<br>• Respaldo automático en servidores de Microsoft.<br>• Funciones extras: Issues, Pull Requests, Actions (CI/CD).<br><br><strong>Flujo básico:</strong><br>1. <code>git commit</code> → Guarda cambios localmente.<br>2. <code>git push</code> → Sube cambios a GitHub.<br>3. <code>git pull</code> → Descarga cambios de GitHub (en colaboración).<br>4. <code>git clone</code> → El colaborador descarga todo el proyecto.",
+                            analogy: "📋 <strong>Analogía para investigadores:</strong> <strong>Git</strong> es como un <strong>cuaderno de laboratorio personal</strong>: se registra cada experimento, modificación y resultado con fecha y descripción. Si algo sale mal, es posible revisar qué cambió. <strong>GitHub</strong> es el <strong>archivo institucional</strong>: una copia oficial del cuaderno resguardada en la biblioteca, accesible para colaboradores y auditores, con respaldo ante pérdidas.<br><br>• <code>commit</code> = Registrar un experimento en el cuaderno<br>• <code>push</code> = Depositar copia en el archivo institucional<br>• <code>pull</code> = Sincronizar con cambios de colaboradores<br>• <code>clone</code> = Obtener copia completa del proyecto de un colega",
+                            warning: "⚠️ <strong>Errores Comunes:</strong><br>• Confundir Git con GitHub (Git funciona sin internet, GitHub no).<br>• Hacer commits gigantes con el mensaje 'cambios finales'.<br>• Subir datos sensibles o datasets grandes (usar .gitignore).<br>• Nunca hacer push (si el disco falla, se pierde todo).<br>• Hacer <code>git pull</code> sin antes hacer <code>commit</code> de los cambios locales."
+                        },
+                        comparison: [
+                            { tool: "Git", use: "Control Local", detail: "✅ Funciona offline. ✅ Historial completo de cambios. ✅ Viajar en el tiempo (revert). ✅ Gratis y open source. ❌ Solo en la máquina local. ❌ Sin respaldo automático.", icon: "🔧" },
+                            { tool: "GitHub", use: "Colaboración y Respaldo", detail: "✅ Respaldo en la nube. ✅ Compartir con colegas/público. ✅ Issues para tracking. ✅ GitHub Pages (web gratis). ❌ Requiere internet. ❌ Repos privados limitados (plan free).", icon: "☁️" }
+                        ],
+                        code: {
+                            title: "Workflow Completo: Desde Cero hasta GitHub",
+                            snippet: `# ═══════════════════════════════════════════════════════════
+# PASO 1: CONFIGURACIÓN INICIAL (solo una vez)
+# ═══════════════════════════════════════════════════════════
+
+git config --global user.name "Tu Nombre"
+git config --global user.email "tu@email.com"
+
+# ═══════════════════════════════════════════════════════════
+# PASO 2: CREAR REPOSITORIO LOCAL
+# ═══════════════════════════════════════════════════════════
+
+cd mi_proyecto_tesis
+git init  # Convierte la carpeta en un repositorio Git
+
+# ═══════════════════════════════════════════════════════════
+# PASO 3: CREAR .gitignore (¡MUY IMPORTANTE!)
+# ═══════════════════════════════════════════════════════════
+
+# Crear archivo .gitignore con contenido:
+echo "# Datos (muy grandes para GitHub)
+datos/*.csv
+datos/*.xlsx
+*.parquet
+
+# Outputs regenerables
+outputs/
+figuras/
+
+# Entornos virtuales
+venv/
+.env
+
+# Archivos del sistema
+.DS_Store
+__pycache__/" > .gitignore
+
+# ═══════════════════════════════════════════════════════════
+# PASO 4: PRIMER COMMIT
+# ═══════════════════════════════════════════════════════════
+
+git add .                    # Añadir todos los archivos al staging
+git status                   # Verificar qué se va a commitear
+git commit -m "Estructura inicial del proyecto de tesis"
+
+# ═══════════════════════════════════════════════════════════
+# PASO 5: CONECTAR CON GITHUB (respaldo en la nube)
+# ═══════════════════════════════════════════════════════════
+
+# 1. Crear repositorio vacío en github.com
+# 2. Conectar tu repo local con el remoto:
+git remote add origin https://github.com/usuario/mi-tesis.git
+git push -u origin main      # Subir todo al servidor
+
+# ═══════════════════════════════════════════════════════════
+# FLUJO DIARIO DE TRABAJO
+# ═══════════════════════════════════════════════════════════
+
+# Haces cambios en tu código...
+git add analisis_cap2.py     # Preparar archivo específico
+git commit -m "Implementado test de normalidad Shapiro-Wilk"
+git push                     # Sincronizar con GitHub
+
+# Ver historial de cambios
+git log --oneline -5         # Últimos 5 commits
+
+# Crear versión estable (ej: entregas)
+git tag -a v1.0 -m "Entrega capítulo 2 al tutor"
+git push --tags              # Subir tags a GitHub`,
+                            output: "✅ [main a1b2c3d] Estructura inicial del proyecto\\n🚀 Pushed to origin/main\\n🏷️ Tag v1.0 created"
+                        },
+                        quiz: {
+                            question: "¿Cuándo deberías hacer un commit?",
+                            options: [
+                                "Al final del día, pase lo que pase.",
+                                "Cuando completas una unidad lógica de trabajo (ej: limpiar una columna, generar un gráfico).",
+                                "Solo cuando el código no tiene ningún error.",
+                                "Cuando terminas toda la tesis."
+                            ],
+                            correct: 1,
+                            feedback: "✅ Correcto. Los commits pequeños y frecuentes actúan como una red de seguridad. Si rompes algo, solo pierdes 15 minutos de trabajo, no 8 horas."
+                        }
+                    }
+                },
+                {
+                    id: "m5",
+                    title: "Módulo 5: Decoradores Estadísticos",
+                    shortTitle: "Validación",
+                    objective: "Automatizar la verificación de supuestos estadísticos (normalidad, homocedasticidad) antes de ejecutar pruebas.",
+                    duration: "25 min",
+                    content: {
+                        concept: {
+                            title: "Decoradores como Guardianes",
+                            text: "<strong>¿Qué es un decorador?</strong> Es una función que 'envuelve' a otra función para añadirle comportamiento adicional sin modificar su código original. En Python se aplican con <code>@nombre_decorador</code> antes de la definición de la función.<br><br><strong>¿Por qué son útiles para estadísticos?</strong><br>• <strong>Validación automática:</strong> Verificar supuestos (normalidad, homocedasticidad) antes de ejecutar tests.<br>• <strong>Logging:</strong> Registrar automáticamente qué tests se ejecutaron y con qué parámetros.<br>• <strong>Timing:</strong> Medir cuánto tarda cada análisis.<br>• <strong>Caché:</strong> Evitar recalcular resultados costosos.<br><br><strong>¿Cómo funciona internamente?</strong><br>1. El decorador recibe la función original como argumento.<br>2. Crea una función 'wrapper' que puede ejecutar código ANTES y DESPUÉS de la función original.<br>3. Retorna el wrapper, que reemplaza a la función original.<br><br><strong>Sintaxis:</strong><br><code>@decorador<br>def mi_funcion():<br>    ...</code><br><br>Es equivalente a: <code>mi_funcion = decorador(mi_funcion)</code>",
+                            analogy: "🛡️ <strong>Analogía para investigadores:</strong> Un decorador es como un <strong>protocolo de control de calidad</strong> en un laboratorio. Antes de que una muestra (datos) entre al equipo de análisis (la función estadística), pasa por un checkpoint que verifica si cumple los requisitos del experimento. Si la muestra no cumple los criterios (p.ej., no es normal), se rechaza automáticamente y se sugiere un procedimiento alternativo, evitando resultados espurios.",
+                            warning: "⚠️ <strong>Errores Comunes:</strong><br>• Aplicar pruebas paramétricas (T-test, ANOVA) sin verificar normalidad → p-values inválidos.<br>• No usar <code>@functools.wraps</code> → se pierde el nombre y docstring de la función original.<br>• Decorar funciones que reciben argumentos diferentes sin manejarlos correctamente con <code>*args, **kwargs</code>."
+                        },
+                        comparison: [
+                            { tool: "Validación Manual", use: "Ad-hoc", detail: "❌ Repetir código en cada test. ❌ Fácil olvidarse. ❌ Código difícil de mantener. ✅ Simple para casos únicos.", icon: "✍️" },
+                            { tool: "Decoradores", use: "Automatización", detail: "✅ Escribes la lógica UNA vez. ✅ Aplicas con una línea (@decorador). ✅ Código limpio y DRY. ✅ Fácil de testear. ❌ Curva de aprendizaje inicial.", icon: "🛡️" }
+                        ],
+                        code: {
+                            title: "Decoradores para Validación Estadística",
+                            snippet: `from scipy import stats
+import numpy as np
+import functools
+
+# ═══════════════════════════════════════════════════════════
+# DECORADOR 1: VALIDAR NORMALIDAD (Shapiro-Wilk)
+# ═══════════════════════════════════════════════════════════
+
+def validar_normalidad(alpha=0.05):
+    """Decorador configurable que verifica normalidad."""
+    def decorator(func):
+        @functools.wraps(func)  # Preserva nombre y docstring
+        def wrapper(data, *args, **kwargs):
+            stat, p_value = stats.shapiro(data)
+            
+            if p_value < alpha:
+                print(f"⚠️ ALERTA: Datos NO normales (p={p_value:.4f})")
+                print(f"   Test de Shapiro-Wilk: W={stat:.4f}")
+                print("💡 Sugerencia: Use Mann-Whitney U o Kruskal-Wallis")
+                return None  # Bloquea ejecución
+            
+            print(f"✅ Normalidad OK (p={p_value:.4f}). Ejecutando {func.__name__}...")
+            return func(data, *args, **kwargs)
+        return wrapper
+    return decorator
+
+# ═══════════════════════════════════════════════════════════
+# DECORADOR 2: VALIDAR HOMOCEDASTICIDAD (Levene)
+# ═══════════════════════════════════════════════════════════
+
+def validar_homocedasticidad(alpha=0.05):
+    """Verifica igualdad de varianzas antes de ANOVA."""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*groups, **kwargs):
+            stat, p_value = stats.levene(*groups)
+            
+            if p_value < alpha:
+                print(f"⚠️ Varianzas NO homogéneas (p={p_value:.4f})")
+                print("💡 Sugerencia: Use Welch ANOVA o Kruskal-Wallis")
+                return None
+            
+            print(f"✅ Homocedasticidad OK (p={p_value:.4f})")
+            return func(*groups, **kwargs)
+        return wrapper
+    return decorator
+
+# ═══════════════════════════════════════════════════════════
+# APLICACIÓN DE LOS DECORADORES
+# ═══════════════════════════════════════════════════════════
+
+@validar_normalidad(alpha=0.05)
+def ttest_una_muestra(data, mu=0):
+    """T-test protegido por validación de normalidad."""
+    t_stat, p_val = stats.ttest_1samp(data, popmean=mu)
+    return {"t_statistic": t_stat, "p_value": p_val}
+
+@validar_homocedasticidad(alpha=0.05)
+def anova_grupos(*groups):
+    """ANOVA protegido por validación de homocedasticidad."""
+    f_stat, p_val = stats.f_oneway(*groups)
+    return {"F_statistic": f_stat, "p_value": p_val}
+
+# ═══════════════════════════════════════════════════════════
+# EJEMPLO DE USO
+# ═══════════════════════════════════════════════════════════
+
+# Datos que violan normalidad
+datos_sesgados = np.random.exponential(scale=2.0, size=100)
+resultado = ttest_una_muestra(datos_sesgados, mu=1.5)
+
+# Grupos con varianzas diferentes
+grupo_a = np.random.normal(0, 1, 50)   # σ = 1
+grupo_b = np.random.normal(0, 5, 50)   # σ = 5 (¡diferente!)
+resultado_anova = anova_grupos(grupo_a, grupo_b)`,
+                            output: "⚠️ ALERTA: Datos NO normales (p=0.0001)\\n   Test de Shapiro-Wilk: W=0.8234\\n💡 Sugerencia: Use Mann-Whitney U o Kruskal-Wallis"
+                        },
+                        quiz: {
+                            question: "¿Qué sucede si aplicas el decorador @validar_normalidad a una función y pasas datos con una distribución claramente no normal?",
+                            options: [
+                                "La función se ejecuta de todas formas pero lanza un warning.",
+                                "El decorador intercepta la ejecución, imprime la alerta y la función original NO se ejecuta.",
+                                "Python da un error de sintaxis.",
+                                "Los datos se transforman automáticamente a normales."
+                            ],
+                            correct: 1,
+                            feedback: "✅ ¡Excelente! Esta es la potencia de los decoradores: evitan la ejecución de código estadísticamente inválido, protegiendo la integridad de tus conclusiones."
+                        }
+                    }
+                },
+                {
+                    id: "synth",
+                    title: "Síntesis e Integración",
+                    shortTitle: "Resumen",
+                    objective: "Integrar los conceptos en un pipeline mental robusto.",
+                    duration: "15 min",
+                    content: {
+                        concept: {
+                            title: "Pipeline Completo: De Idea a Análisis Reproducible",
+                            text: "<strong>Resumen del flujo de trabajo profesional:</strong><br><br><strong>1. Configuración del Entorno (una vez por proyecto)</strong><br>• Crear repositorio Git: <code>git init</code><br>• Crear entorno virtual: <code>python -m venv env</code> o <code>conda create</code><br>• Definir <code>.gitignore</code> (datos, outputs, env)<br>• Primer commit: <code>git add . && git commit -m 'Estructura inicial'</code><br>• Conectar GitHub: <code>git remote add origin URL && git push</code><br><br><strong>2. Desarrollo Iterativo (ciclo diario)</strong><br>• Activar entorno → Escribir código → Probar → Commit atómico → Push<br>• Usar decoradores para validar supuestos estadísticos<br>• Actualizar <code>requirements.txt</code> al añadir dependencias<br><br><strong>3. Entrega/Publicación</strong><br>• Crear tag de versión: <code>git tag -a v1.0 -m 'Entrega final'</code><br>• Opcional: Crear Dockerfile para reproducibilidad total<br>• Compartir: repositorio + requirements.txt (o imagen Docker)",
+                            analogy: "🎯 <strong>El estadístico moderno:</strong> Domina tanto la teoría estadística como las herramientas de ingeniería de software. Esto no significa convertirse en programador, sino adoptar prácticas que garantizan que tus análisis sean <strong>reproducibles</strong>, <strong>versionados</strong>, y <strong>validados automáticamente</strong>. Un análisis que no se puede reproducir es, científicamente, un análisis que no existe.",
+                            warning: "� <strong>Checklist antes de entregar cualquier análisis:</strong><br>☐ ¿El código corre desde cero en un entorno limpio?<br>☐ ¿Existe requirements.txt o environment.yml actualizado?<br>☐ ¿Los datos sensibles están en .gitignore?<br>☐ ¿Hay commits descriptivos (no 'cambios finales')?<br>☐ ¿Se verifican supuestos estadísticos antes de cada test?<br>☐ ¿El repositorio está sincronizado con GitHub?"
+                        },
+                        comparison: [
+                            { tool: "Python 3.11+", use: "Rendimiento", detail: "Pattern matching, mejor velocidad, mensajes de error claros. Base sólida para análisis modernos.", icon: "🐍" },
+                            { tool: "venv/conda", use: "Aislamiento", detail: "Entornos reproducibles. requirements.txt para compartir. Evita conflictos de dependencias.", icon: "📦" },
+                            { tool: "Docker", use: "Reproducibilidad Total", detail: "Empaqueta SO + Python + libs. Ideal para papers y producción.", icon: "🐳" },
+                            { tool: "Git + GitHub", use: "Versionado y Respaldo", detail: "Historial de cambios, colaboración, respaldo en nube. Esencial para cualquier proyecto.", icon: "📋" },
+                            { tool: "Decoradores", use: "Validación Automática", detail: "Verifican supuestos antes de ejecutar tests. Código DRY y robusto.", icon: "🛡️" }
+                        ],
+                        code: {
+                            title: "Plantilla: Inicio de Proyecto de Análisis",
+                            snippet: `# ═══════════════════════════════════════════════════════════
+# SCRIPT DE INICIO RÁPIDO PARA NUEVO PROYECTO
+# Copia y ejecuta estos comandos en tu terminal
+# ═══════════════════════════════════════════════════════════
+
+# 1. Crear estructura de carpetas
+mkdir mi_proyecto_tesis
+cd mi_proyecto_tesis
+mkdir datos scripts outputs figuras
+
+# 2. Inicializar Git
+git init
+
+# 3. Crear .gitignore
+cat > .gitignore << 'EOF'
+# Datos (no subir a GitHub)
+datos/
+*.csv
+*.xlsx
+*.parquet
+
+# Outputs regenerables
+outputs/
+figuras/
+*.png
+*.pdf
+
+# Entornos
+venv/
+env/
+.env
+*.pyc
+__pycache__/
+
+# Sistema
+.DS_Store
+Thumbs.db
+EOF
+
+# 4. Crear entorno virtual
+python -m venv env
+source env/bin/activate  # Windows: env\\Scripts\\activate
+
+# 5. Instalar dependencias base
+pip install pandas numpy scipy matplotlib statsmodels
+pip freeze > requirements.txt
+
+# 6. Crear archivo principal
+cat > scripts/analisis_principal.py << 'EOF'
+"""
+Análisis Principal - Mi Proyecto
+Autor: Tu Nombre
+Fecha: $(date +%Y-%m-%d)
+"""
+import pandas as pd
+import numpy as np
+from scipy import stats
+
+def main():
+    # Tu código aquí
+    print("Proyecto iniciado correctamente")
+
+if __name__ == "__main__":
+    main()
+EOF
+
+# 7. Primer commit
+git add .
+git commit -m "Estructura inicial del proyecto"
+
+# 8. Conectar con GitHub (reemplaza URL)
+# git remote add origin https://github.com/usuario/mi_proyecto.git
+# git push -u origin main
+
+echo "✅ Proyecto listo para trabajar"`,
+                            output: "✅ Proyecto listo para trabajar\\n📁 Estructura: datos/ scripts/ outputs/ figuras/\\n🐍 Entorno: env/ activado\\n📋 Git: Repositorio inicializado"
+                        },
+                        resources: [
+                            { name: "Real Python - Virtual Environments", desc: "Guía completa de entornos virtuales en Python.", url: "https://realpython.com/python-virtual-environments-a-primer/" },
+                            { name: "Git - Pro Git Book (Español)", desc: "Libro oficial de Git, gratuito y en español.", url: "https://git-scm.com/book/es/v2" },
+                            { name: "Docker para Data Science (DataCamp)", desc: "Tutorial completo de Docker para proyectos de datos.", url: "https://www.datacamp.com/tutorial/docker-for-data-science-introduction" },
+                            { name: "Scipy Lecture Notes", desc: "Tutoriales del stack científico Python (NumPy, Pandas, Scipy).", url: "https://scipy-lectures.org/" },
+                            { name: "The Missing Semester (MIT)", desc: "Curso de MIT sobre herramientas esenciales: Git, Shell, etc.", url: "https://missing.csail.mit.edu/" }
+                        ],
+                        chartData: {
+                            type: 'radar',
+                            label: 'Competencias Desarrolladas',
+                            labels: ['Rendimiento (Py3.11)', 'Aislamiento (Venv/Conda)', 'Contenedores (Docker)', 'Control Versiones (Git)', 'Validación (Decoradores)'],
+                            data: [85, 90, 70, 80, 85],
+                            description: "Mapa de competencias técnicas cubiertas en este curso."
+                        }
+                    }
+                }
+            ]
+        };
+
+        // --- STATE MANAGEMENT ---
+        let currentModuleIndex = 0;
+        let completedModules = new Set();
+
+        // --- DOM ELEMENTS ---
+        const pipelineContainer = document.getElementById('pipeline-container');
+        const moduleNav = document.getElementById('module-nav');
+        const contentArea = document.getElementById('content-area');
+        const timeDisplay = document.getElementById('time-remaining');
+
+        // --- INIT ---
+        function init() {
+            renderPipeline();
+            renderNav();
+            loadModule(0);
+            startTimer();
+        }
+
+        // --- RENDERING ---
+        function renderPipeline() {
+            pipelineContainer.innerHTML = '';
+            courseData.modules.forEach((mod, index) => {
+                const step = document.createElement('div');
+                step.className = `relative flex flex-col items-center z-10 flex-1 step-connector cursor-pointer group`;
+                if (index === courseData.modules.length - 1) step.classList.remove('step-connector');
+
+                // State classes
+                const isActive = index === currentModuleIndex;
+                const isDone = completedModules.has(index);
+
+                step.innerHTML = `
+                    <div class="step-circle w-10 h-10 rounded-full flex items-center justify-center border-2 bg-white transition-all duration-300 
+                        ${isActive ? 'border-orange-600 bg-orange-600 text-white shadow-lg scale-110' :
+                        isDone ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 text-gray-400 group-hover:border-gray-400'}">
+                        ${isDone ? '✓' : index + 1}
+                    </div>
+                    <span class="mt-2 text-xs font-semibold ${isActive ? 'text-orange-700' : 'text-gray-500'}">
+                        ${mod.shortTitle}
+                    </span>
+                `;
+
+                step.onclick = () => loadModule(index);
+                pipelineContainer.appendChild(step);
+            });
+        }
+
+        function renderNav() {
+            moduleNav.innerHTML = '';
+            courseData.modules.forEach((mod, index) => {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors mb-1 flex items-center justify-between
+                    ${index === currentModuleIndex
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`;
+
+                btn.innerHTML = `
+                    <span>${mod.title}</span>
+                    ${completedModules.has(index) ? '<span class="text-emerald-500">✓</span>' : ''}
+                `;
+                btn.onclick = () => loadModule(index);
+                moduleNav.appendChild(btn);
+            });
+        }
+
+        function loadModule(index) {
+            currentModuleIndex = index;
+            renderPipeline();
+            renderNav();
+
+            const mod = courseData.modules[index];
+
+            // Generate HTML based on module content
+            let contentHTML = `
+                <div class="animate-fade-in space-y-8">
+                    <!-- Header -->
+                    <div class="border-b border-gray-100 pb-6">
+                        <div class="flex items-center space-x-2 text-sm text-orange-600 font-semibold mb-2 uppercase tracking-wide">
+                            <span>Módulo ${index + 1}</span>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">${mod.title}</h2>
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 flex items-start gap-3">
+                            <span class="text-xl">🎯</span>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-sm">Objetivo</h3>
+                                <p class="text-gray-600 text-sm">${mod.objective}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Concept Section -->
+                    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 space-y-4">
+                            <h3 class="text-xl font-bold text-gray-800">${mod.content.concept.title}</h3>
+                            <p class="text-gray-600 leading-relaxed">${mod.content.concept.text}</p>
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r text-sm text-blue-800" role="note" aria-label="Analogía pedagógica">
+                                ${mod.content.concept.analogy}
+                            </div>
+                            ${mod.content.concept.warning ? `
+                            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r text-sm text-yellow-800" role="alert" aria-label="Error común a evitar">
+                                ${mod.content.concept.warning}
+                            </div>` : ''}
+                        </div>
+            `;
+
+            // Chart Injection for regular modules (not synthesis which has its own section)
+            if (mod.content.chartData && !mod.content.resources) {
+                contentHTML += `
+                    <div class="lg:col-span-1 bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                        <div class="text-xs font-bold text-gray-400 text-center mb-2 uppercase">Visualización de Datos</div>
+                        <div class="chart-container">
+                            <canvas id="moduleChart"></canvas>
+                        </div>
+                        <p class="text-xs text-center text-gray-500 mt-2 italic">${mod.content.chartData.description}</p>
+                    </div>
+                `;
+            } else if (mod.content.comparison) {
+                // Comparison Cards for Module 2
+                contentHTML += `
+                    <div class="lg:col-span-1 space-y-3">
+                         <div class="text-xs font-bold text-gray-400 text-center uppercase">Comparativa</div>
+                         ${mod.content.comparison.map(c => `
+                            <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xl">${c.icon}</span>
+                                    <span class="font-bold text-gray-800">${c.tool}</span>
+                                </div>
+                                <div class="text-xs font-semibold text-orange-600 mb-1">${c.use}</div>
+                                <p class="text-xs text-gray-500">${c.detail}</p>
+                            </div>
+                         `).join('')}
+                    </div>
+                `;
+            }
+
+            contentHTML += `</section>`;
+
+            // Code Section (if exists)
+            if (mod.content.code) {
+                contentHTML += `
+                    <section class="bg-gray-900 rounded-xl overflow-hidden shadow-lg border border-gray-700">
+                        <div class="bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-700">
+                            <span class="text-gray-300 text-xs font-mono">main.py</span>
+                            <span class="text-xs text-gray-500">Python 3.11</span>
+                        </div>
+                        <div class="p-6 overflow-x-auto code-scroll">
+                            <h4 class="text-gray-400 text-sm font-bold mb-3 border-b border-gray-700 pb-2">${mod.content.code.title}</h4>
+                            <pre class="code-font text-sm text-gray-300 whitespace-pre"><code id="code-block">${escapeHtml(mod.content.code.snippet)}</code></pre>
+                        </div>
+                        <div class="bg-black bg-opacity-50 p-4 border-t border-gray-800 flex items-center justify-between">
+                            <button onclick="runSimulation('${mod.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2 transition-colors">
+                                <span>▶ Ejecutar Código</span>
+                            </button>
+                            <div id="output-${mod.id}" class="hidden font-mono text-xs text-emerald-400 bg-gray-900 px-3 py-2 rounded border border-gray-700 w-2/3">
+                                >_ Esperando ejecución...
+                            </div>
+                        </div>
+                    </section>
+                `;
+            }
+
+            // Quiz Section (if exists)
+            if (mod.content.quiz) {
+                contentHTML += `
+                    <section class="bg-orange-50 rounded-xl p-6 border border-orange-100">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="bg-orange-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">?</span>
+                            Checkpoint de Comprensión
+                        </h3>
+                        <p class="text-gray-700 font-medium mb-4">${mod.content.quiz.question}</p>
+                        <div class="space-y-2" id="quiz-options" role="radiogroup" aria-label="Opciones de respuesta">
+                            ${mod.content.quiz.options.map((opt, i) => `
+                                <button onclick="checkAnswer(${i}, ${mod.content.quiz.correct}, '${mod.id}')" 
+                                    class="quiz-opt-btn w-full text-left p-3 rounded bg-white border border-orange-200 hover:bg-orange-100 transition-colors text-sm text-gray-700"
+                                    role="radio" aria-checked="false" aria-label="Opción ${i + 1}: ${opt.replace(/<[^>]*>/g, '')}">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div id="quiz-feedback-${mod.id}" class="hidden mt-4 p-3 rounded text-sm font-medium"></div>
+                    </section>
+                `;
+            }
+
+            // Bonus Section (if exists)
+            if (mod.content.bonus) {
+                contentHTML += `
+                    <section class="mt-8 usta-card p-6 border-l-4" style="border-left-color: #ED1E79;">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="usta-gradient text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                                <i class="fas fa-gift text-xs"></i>
+                            </span>
+                            ${mod.content.bonus.title}
+                        </h3>
+                        <div class="text-sm text-gray-700 leading-relaxed mb-6">
+                            ${mod.content.bonus.content}
+                        </div>
+                        ${mod.content.bonus.code ? `
+                            <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto code-scroll">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-medium text-gray-400">${mod.content.bonus.code.title}</span>
+                                    <span class="text-xs text-emerald-400"><i class="fas fa-code"></i> Python</span>
+                                </div>
+                                <pre class="code-font text-sm text-gray-200 whitespace-pre-wrap">${escapeHtml(mod.content.bonus.code.snippet)}</pre>
+                            </div>
+                        ` : ''}
+                    </section>
+                `;
+            }
+
+            // Chart Section for Synthesis Module (full width, before resources)
+            if (mod.content.chartData && mod.content.resources) {
+                contentHTML += `
+                    <section class="mt-8 usta-card p-6">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="usta-gradient text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                                <i class="fas fa-chart-pie text-xs"></i>
+                            </span>
+                            Competencias Desarrolladas
+                        </h3>
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="w-full md:w-1/2" style="height: 320px;">
+                                <canvas id="moduleChart"></canvas>
+                            </div>
+                            <div class="w-full md:w-1/2">
+                                <p class="text-sm text-gray-600 mb-4">${mod.content.chartData.description}</p>
+                                <div class="space-y-2">
+                                    ${mod.content.chartData.labels.map((label, i) => `
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-700">${label}</span>
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                    <div class="h-full usta-gradient rounded-full" style="width: ${mod.content.chartData.data[i]}%"></div>
+                                                </div>
+                                                <span class="text-xs font-bold text-primary">${mod.content.chartData.data[i]}%</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                `;
+            }
+
+            // Resources Section (Synthesis only)
+            if (mod.content.resources) {
+                contentHTML += `
+                    <section class="mt-8">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="usta-gradient text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                                <i class="fas fa-rocket text-xs"></i>
+                            </span>
+                            Próximos Pasos
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            ${mod.content.resources.map(res => `
+                                <a href="${res.url}" target="_blank" rel="noopener noreferrer" class="block p-4 rounded-lg border border-gray-200 hover:border-secondary hover:shadow-md transition-all group" aria-label="Recurso externo: ${res.name}">
+                                    <div class="font-bold text-gray-800 group-hover:text-secondary mb-1">${res.name} <span class="text-xs">↗</span></div>
+                                    <div class="text-xs text-gray-500">${res.desc}</div>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </section>
+                `;
+            }
+
+            // Navigation buttons
+            contentHTML += `
+                <div class="mt-10 pt-6 border-t border-gray-200 flex justify-between items-center">
+                    ${index > 0 ? `
+                    <button onclick="loadModule(${index - 1})" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-orange-600 transition-colors" aria-label="Ir al módulo anterior">
+                        <span>←</span> Anterior
+                    </button>` : '<div></div>'}
+                    ${index < courseData.modules.length - 1 ? `
+                    <button onclick="loadModule(${index + 1})" class="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors" aria-label="Ir al siguiente módulo">
+                        Siguiente Módulo <span>→</span>
+                    </button>` : `
+                    <div class="text-center">
+                        <span class="text-emerald-600 font-bold">🎉 Clase Completada!</span>
+                    </div>`}
+                </div>
+            `;
+
+            contentHTML += `</div>`; // Close fade-in wrapper
+            contentArea.innerHTML = contentHTML;
+
+            // Initialize Chart if needed
+            if (mod.content.chartData) {
+                renderChart(mod.content.chartData);
+            }
+        }
+
+        // --- INTERACTION LOGIC ---
+
+        function runSimulation(modId) {
+            const outputDiv = document.getElementById(`output-${modId}`);
+            const mod = courseData.modules.find(m => m.id === modId);
+
+            outputDiv.innerHTML = "<span class='animate-pulse'>Procesando...</span>";
+            outputDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                outputDiv.innerHTML = `>_ ${mod.content.code.output.replace(/\n/g, '<br>>_ ')}`;
+                outputDiv.classList.remove('text-emerald-400', 'bg-gray-900');
+                outputDiv.classList.add('bg-black', 'text-green-400'); // Terminal look
+            }, 800);
+        }
+
+        function checkAnswer(selectedIdx, correctIdx, modId) {
+            const feedbackDiv = document.getElementById(`quiz-feedback-${modId}`);
+            const buttons = document.querySelectorAll('#quiz-options button');
+            const mod = courseData.modules.find(m => m.id === modId);
+
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === correctIdx) {
+                    btn.classList.remove('bg-white', 'border-orange-200');
+                    btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+                } else if (idx === selectedIdx) {
+                    btn.classList.remove('bg-white', 'border-orange-200');
+                    btn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                }
+            });
+
+            feedbackDiv.classList.remove('hidden');
+            if (selectedIdx === correctIdx) {
+                feedbackDiv.className = "mt-4 p-3 rounded text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-200";
+                feedbackDiv.innerHTML = mod.content.quiz.feedback;
+                // Mark module as complete
+                const modIdx = courseData.modules.findIndex(m => m.id === modId);
+                if (!completedModules.has(modIdx)) {
+                    completedModules.add(modIdx);
+                    renderPipeline(); // Update visual progress
+                    renderNav();
+                }
+            } else {
+                feedbackDiv.className = "mt-4 p-3 rounded text-sm font-medium bg-red-50 text-red-800 border border-red-200";
+                feedbackDiv.innerHTML = "❌ Incorrecto. Revisa el concepto clave e intenta de nuevo.";
+                // Re-enable after delay
+                setTimeout(() => {
+                    buttons.forEach(btn => {
+                        btn.disabled = false;
+                        btn.className = "quiz-opt-btn w-full text-left p-3 rounded bg-white border border-orange-200 hover:bg-orange-100 transition-colors text-sm text-gray-700";
+                    });
+                    feedbackDiv.classList.add('hidden');
+                }, 2500);
+            }
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('moduleChart').getContext('2d');
+
+            // Common Options
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: data.type === 'radar' }, // Hide legend for bars
+                }
+            };
+
+            if (data.type === 'bar') {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: data.label,
+                            data: data.data,
+                            backgroundColor: ['#E5E7EB', '#D1D5DB', '#EA580C'], // Highlight Python 3.11
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        ...commonOptions,
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Tiempo Relativo' } }
+                        }
+                    }
+                });
+            } else if (data.type === 'radar') {
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Competencias Logradas',
+                            data: data.data,
+                            backgroundColor: 'rgba(61, 0, 141, 0.15)',
+                            borderColor: '#3D008D',
+                            pointBackgroundColor: '#ED1E79',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#ED1E79',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        ...commonOptions,
+                        scales: {
+                            r: {
+                                angleLines: { display: true, color: 'rgba(0,0,0,0.1)' },
+                                suggestedMin: 0,
+                                suggestedMax: 100,
+                                pointLabels: {
+                                    font: { size: 11 },
+                                    color: '#374151'
+                                },
+                                ticks: {
+                                    stepSize: 20,
+                                    backdropColor: 'transparent',
+                                    color: '#6B7280',
+                                    font: { size: 10 }
+                                },
+                                grid: {
+                                    color: 'rgba(0,0,0,0.08)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: { font: { size: 12 } }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function startTimer() {
+            let mins = 120;
+            setInterval(() => {
+                if (mins > 0) {
+                    mins--;
+                    timeDisplay.innerText = mins;
+                }
+            }, 60000); // Update every minute
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Start App
+        init();
+
+        // Scroll to Top Button functionality
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+
+    </script>
+</body>
+
+</html>

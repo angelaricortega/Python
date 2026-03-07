@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python POO para Estadística — USTA</title>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts: Montserrat y Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3D008D',
+                        secondary: '#ED1E79',
+                        navy: '#001A4D',
+                        gold: '#FDB913',
+                        bg: '#F8FAFC',
+                        surface: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+            scroll-behavior: smooth;
+        }
+
+        code,
+        pre {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* USTA Gradient Background */
+        .usta-gradient {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+        }
+
+        /* USTA Navy Header */
+        .usta-header {
+            background: linear-gradient(180deg, #001A4D 0%, #002868 100%);
+        }
+
+        /* USTA Card Style */
+        .usta-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .usta-card:hover {
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        /* Tip box USTA style */
+        .tip-box {
+            background: linear-gradient(135deg, rgba(61, 0, 141, 0.08) 0%, rgba(237, 30, 121, 0.08) 100%);
+            border: 1px solid rgba(61, 0, 141, 0.2);
+        }
+
+        /* Sidebar active state */
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(61, 0, 141, 0.15) 0%, transparent 100%);
+            border-left: 4px solid #ED1E79;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3D008D, #ED1E79);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #4A00A8, #FF2D8A);
+        }
+
+        /* Code scrollbar */
+        .code-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-scroll::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .code-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3D008D, #ED1E79);
+            border-radius: 4px;
+        }
+
+        /* Fade-in animation */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Focus styles for accessibility */
+        button:focus-visible {
+            outline: 2px solid #ED1E79;
+            outline-offset: 2px;
+        }
+
+        /* Syntax highlighting */
+        .syntax-kwd {
+            color: #c678dd;
+            font-weight: bold;
+        }
+
+        .syntax-cls {
+            color: #e5c07b;
+        }
+
+        .syntax-str {
+            color: #98c379;
+        }
+
+        .syntax-com {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        .syntax-func {
+            color: #61afef;
+        }
+
+        .syntax-self {
+            color: #e06c75;
+            font-style: italic;
+        }
+
+        .syntax-num {
+            color: #d19a66;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Definición de Iconos (SVG Inline para evitar errores de librerías externas) ---
+        const Icons = {
+            BookOpen: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+            ),
+            Box: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+            ),
+            Activity: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+            ),
+            GitBranch: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <line x1="6" y1="3" x2="6" y2="15"></line>
+                    <circle cx="18" cy="6" r="3"></circle>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <path d="M18 9a9 9 0 0 1-9 9"></path>
+                </svg>
+            ),
+            Terminal: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+            ),
+            ChevronLeft: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            ),
+            ChevronRight: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            ),
+            Sparkles: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"></path>
+                    <path d="M19 13l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z"></path>
+                    <path d="M5 17l.5 1.5L7 19l-1.5.5L5 21l-.5-1.5L3 19l1.5-.5L5 17z"></path>
+                </svg>
+            ),
+            Globe: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                    <path d="M2 12h20"></path>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+            )
+        };
+
+        // --- Componentes de UI ---
+
+        const CodeBlock = ({ title, code }) => {
+            const [copied, setCopied] = useState(false);
+            const handleCopy = () => {
+                navigator.clipboard.writeText(code).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                });
+            };
+            return (
+                <div className="my-4 rounded-xl overflow-hidden border border-gray-700 bg-gray-900 text-gray-100 shadow-lg">
+                    <div className="bg-gray-800 px-4 py-2 text-xs font-mono text-gray-400 border-b border-gray-700 flex justify-between items-center">
+                        <span><i className="fab fa-python text-yellow-400 mr-2"></i>{title || 'Código Python'}</span>
+                        <span className="flex items-center gap-3">
+                            <button
+                                onClick={handleCopy}
+                                className="flex items-center gap-1 hover:text-white transition-colors"
+                                title="Copiar código"
+                            >
+                                {copied
+                                    ? <><i className="fas fa-check text-green-400"></i><span className="text-green-400">¡Copiado!</span></>
+                                    : <><i className="far fa-clipboard"></i><span>Copiar</span></>
+                                }
+                            </button>
+                            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500"></div><div className="w-2 h-2 rounded-full bg-yellow-500"></div><div className="w-2 h-2 rounded-full bg-green-500"></div></span>
+                        </span>
+                    </div>
+                    <div className="p-4 overflow-x-auto code-scroll">
+                        <pre className="text-sm leading-relaxed"><code dangerouslySetInnerHTML={{
+                            __html: code.replace(/#.*/g, match => `<span class="text-green-500 italic">${match}</span>`)
+                                .replace(/"""[\s\S]*?"""/g, match => `<span class="text-green-500 italic">${match}</span>`)
+                                .replace(/class /g, '<span class="text-pink-500">class </span>')
+                                .replace(/def /g, '<span class="text-pink-500">def </span>')
+                                .replace(/from /g, '<span class="text-pink-500">from </span>')
+                                .replace(/import /g, '<span class="text-pink-500">import </span>')
+                                .replace(/return /g, '<span class="text-pink-500">return </span>')
+                                .replace(/raise /g, '<span class="text-pink-500">raise </span>')
+                                .replace(/if /g, '<span class="text-pink-500">if </span>')
+                                .replace(/else:/g, '<span class="text-pink-500">else:</span>')
+                                .replace(/elif /g, '<span class="text-pink-500">elif </span>')
+                                .replace(/for /g, '<span class="text-pink-500">for </span>')
+                                .replace(/while /g, '<span class="text-pink-500">while </span>')
+                                .replace(/try:/g, '<span class="text-pink-500">try:</span>')
+                                .replace(/except /g, '<span class="text-pink-500">except </span>')
+                                .replace(/as /g, '<span class="text-pink-500">as </span>')
+                                .replace(/in /g, '<span class="text-pink-500">in </span>')
+                                .replace(/not /g, '<span class="text-pink-500">not </span>')
+                                .replace(/and /g, '<span class="text-pink-500">and </span>')
+                                .replace(/or /g, '<span class="text-pink-500">or </span>')
+                                .replace(/print/g, '<span class="text-blue-400">print</span>')
+                                .replace(/len/g, '<span class="text-blue-400">len</span>')
+                                .replace(/sum/g, '<span class="text-blue-400">sum</span>')
+                                .replace(/sorted/g, '<span class="text-blue-400">sorted</span>')
+                                .replace(/range/g, '<span class="text-blue-400">range</span>')
+                                .replace(/input/g, '<span class="text-blue-400">input</span>')
+                                .replace(/float/g, '<span class="text-blue-400">float</span>')
+                                .replace(/isinstance/g, '<span class="text-blue-400">isinstance</span>')
+                                .replace(/self/g, '<span class="text-orange-400">self</span>')
+                                .replace(/__init__/g, '<span class="text-yellow-400">__init__</span>')
+                                .replace(/__name__/g, '<span class="text-yellow-400">__name__</span>')
+                                .replace(/__main__/g, '<span class="text-yellow-400">__main__</span>')
+                                .replace(/None/g, '<span class="text-purple-400">None</span>')
+                                .replace(/True/g, '<span class="text-purple-400">True</span>')
+                                .replace(/False/g, '<span class="text-purple-400">False</span>')
+                                .replace(/NotImplementedError/g, '<span class="text-yellow-400">NotImplementedError</span>')
+                                .replace(/ValueError/g, '<span class="text-yellow-400">ValueError</span>')
+                                .replace(/Exception/g, '<span class="text-yellow-400">Exception</span>')
+                        }} /></pre>
+                    </div>
+                </div>
+            );
+        };
+
+        const SectionHeader = ({ title, icon: Icon }) => (
+            <div className="flex items-center gap-3 mb-4 border-b border-gray-200 pb-3">
+                <div className="usta-gradient p-2.5 rounded-xl shadow-md text-white">
+                    {Icon && <Icon size={24} />}
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+            </div>
+        );
+
+        // --- Componente: Constructor de Clases con IA ---
+
+        const AIClassBuilder = () => {
+            const [concept, setConcept] = useState('');
+            const [apiKey, setApiKey] = useState('');
+            const [model, setModel] = useState(() => localStorage.getItem('gemini_model') || 'gemini-2.5-flash');
+            const [showKey, setShowKey] = useState(false);
+            const [generatedCode, setGeneratedCode] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+
+            const models = [
+                { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (más reciente)' },
+                { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (rápido)' },
+                { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (estable)' },
+                { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (avanzado)' }
+            ];
+
+            const saveApiKey = (key) => {
+                setApiKey(key);
+            };
+
+            const saveModel = (m) => {
+                setModel(m);
+                localStorage.setItem('gemini_model', m);
+            };
+
+            const generateClass = async () => {
+                if (!apiKey.trim()) { setError('Por favor ingresa tu API Key de Gemini.'); return; }
+                if (!concept.trim()) { setError('Por favor escribe un concepto.'); return; }
+                setLoading(true); setError(null); setGeneratedCode(null);
+
+                const systemInstruction = "Eres un profesor de Python para estudiantes universitarios de estadística en la Universidad Santo Tomás (Colombia). Genera SOLO código Python puro. No uses bloques markdown (no uses ```). No agregues explicaciones fuera del código.";
+
+                const userPrompt = `Genera una clase Python para el concepto: "${concept.trim()}".\nLa clase debe incluir:\n- Un docstring descriptivo\n- Un constructor __init__ con atributos relevantes (al menos 3)\n- Al menos 2 métodos útiles con docstrings\n- Comentarios explicativos en español\n- Un ejemplo de uso al final (como código, no como comentario)`;
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userPrompt }] }],
+                    systemInstruction: { parts: [{ text: systemInstruction }] }
+                };
+
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!res.ok) {
+                            const errData = await res.json().catch(() => ({}));
+                            throw new Error(errData?.error?.message || `Error HTTP ${res.status}`);
+                        }
+
+                        const data = await res.json();
+                        let code = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                        code = code.replace(/^```python\n?/i, '').replace(/^```\n?/i, '').replace(/\n?```$/i, '').trim();
+                        setGeneratedCode(code);
+                        setLoading(false);
+                        return;
+                    } catch (e) {
+                        console.error(`Intento ${attempt + 1}:`, e);
+                        if (attempt === 2) {
+                            const msg = e.message || '';
+                            if (msg.toLowerCase().includes('quota')) {
+                                setError(`⏳ Cuota excedida para ${model}. Espera ~30s y reintenta, o selecciona otro modelo.`);
+                            } else {
+                                setError(`Error al consultar Gemini: ${msg}. Verifica tu API Key.`);
+                            }
+                        } else {
+                            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+                        }
+                    }
+                }
+                setLoading(false);
+            };
+
+            const copyToClipboard = () => {
+                if (generatedCode) { navigator.clipboard.writeText(generatedCode); }
+            };
+
+            return (
+                <div className="flex flex-col h-full">
+                    <div className="p-6 bg-white border-b border-gray-200 shadow-sm z-10 space-y-4">
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                            <Icons.Sparkles size={18} className="text-secondary" /> Constructor IA de Clases
+                        </h3>
+
+                        {/* API Key */}
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">API Key de Gemini</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type={showKey ? 'text' : 'password'}
+                                    value={apiKey}
+                                    onChange={(e) => saveApiKey(e.target.value)}
+                                    className="flex-1 font-mono text-xs p-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none"
+                                    placeholder="Ingresa tu API Key de Gemini..."
+                                />
+                                <button
+                                    onClick={() => setShowKey(prev => !prev)}
+                                    className="px-3 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 text-xs transition-colors"
+                                >
+                                    <i className={`fas ${showKey ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1">No se guarda. Ingresa tu clave en cada sesión.</p>
+                        </div>
+
+                        {/* Modelo */}
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Modelo</label>
+                            <select
+                                value={model}
+                                onChange={(e) => saveModel(e.target.value)}
+                                className="w-full text-sm p-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none bg-white transition-all"
+                            >
+                                {models.map(m => (
+                                    <option key={m.id} value={m.id}>{m.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Concepto */}
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Concepto</label>
+                            <input
+                                type="text"
+                                value={concept}
+                                onChange={(e) => setConcept(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && generateClass()}
+                                className="w-full text-sm p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all"
+                                placeholder="Ej: Banco, Vehículo, Hospital, Estudiante..."
+                            />
+                        </div>
+
+                        {/* Botón */}
+                        <button
+                            onClick={generateClass}
+                            disabled={loading}
+                            className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            style={{ background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' }}
+                        >
+                            {loading ? (
+                                <><i className="fas fa-spinner fa-spin"></i> Generando...</>
+                            ) : (
+                                <><Icons.Sparkles size={16} /> Generar Clase Python</>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Resultados */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                        {error && (
+                            <div className="p-4 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                                <i className="fas fa-exclamation-circle mr-2"></i>{error}
+                            </div>
+                        )}
+
+                        {generatedCode && (
+                            <div className="animate-fade-in">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-bold text-primary uppercase">Clase Generada</span>
+                                    <button
+                                        onClick={copyToClipboard}
+                                        className="text-xs text-gray-500 hover:text-secondary flex items-center gap-1 transition-colors"
+                                    >
+                                        <i className="fas fa-copy"></i> Copiar
+                                    </button>
+                                </div>
+                                <CodeBlock code={generatedCode} />
+                            </div>
+                        )}
+
+                        {!generatedCode && !error && !loading && (
+                            <div className="text-center py-12 text-gray-400">
+                                <Icons.Sparkles size={48} className="mx-auto mb-4 opacity-30" />
+                                <p className="text-sm">Escribe un concepto y presiona<br /><strong>"Generar Clase Python"</strong></p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Lógica del Curso (Data) ---
+
+        const curriculum = [
+            {
+                id: 'intro',
+                title: 'Introducción: El Concepto',
+                codeTitle: 'La Clase Moneda — Tu Primer Objeto',
+                icon: 'BookOpen',
+                content: (
+                    <div>
+                        <p className="mb-4">
+                            La Programación Orientada a Objetos (POO) trata de agrupar datos y funciones en una sola entidad.
+                            Para entenderlo fácilmente, pensemos en algo cotidiano: <strong>Una Moneda</strong>.
+                        </p>
+                        <p className="mb-4">
+                            Si quisiéramos representar una moneda en código, necesitamos definir dos cosas:
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2 mb-4 text-sm">
+                            <li><strong>Estado (Atributos):</strong> ¿Qué <em>es</em> o qué <em>tiene</em>? En este caso, tiene una cara visible (Cara o Cruz).</li>
+                            <li><strong>Comportamiento (Métodos):</strong> ¿Qué puede <em>hacer</em>? Puede ser lanzada al aire (cambiar su estado aleatoriamente).</li>
+                        </ul>
+                        <p className="mb-4">
+                            El siguiente código define la "Idea" (Clase) de una moneda. Cuando decimos <code>Coin()</code>, creamos una moneda real (Objeto) que podemos usar.
+                        </p>
+                        <div className="tip-box p-4 rounded-lg text-sm mt-4 text-gray-800">
+                            <strong className="text-primary">Próximos pasos:</strong> En este curso aplicaremos esta misma lógica para crear un <strong>Analizador Estadístico</strong>. Su "Estado" serán los datos numéricos y su "Comportamiento" serán los cálculos matemáticos.
+                        </div>
+                    </div>
+                ),
+                pythonCode: `import random
+
+class Coin:
+    def __init__(self):
+        # El Constructor: Define el estado inicial
+        # self.sideup es el atributo que guarda "Cara" o "Cruz"
+        self.sideup = "Heads"
+
+    def toss(self):
+        # Un Método: Una acción que cambia el estado
+        if random.randint(0, 1) == 0:
+            self.sideup = "Heads"
+        else:
+            self.sideup = "Tails"
+
+    def get_sideup(self):
+        # Un Método: Una acción para ver el estado
+        return self.sideup
+
+# Crear un objeto (Instanciar)
+mi_moneda = Coin()
+mi_moneda.toss()
+print(mi_moneda.get_sideup())`,
+                interactiveType: 'concept'
+            },
+            {
+                id: 'class_obj',
+                title: 'Clases y el Constructor',
+                codeTitle: 'Constructor __init__ del Analizador',
+                icon: 'Box',
+                content: (
+                    <div>
+                        <p className="mb-4">
+                            Ahora aplicaremos lo aprendido con la moneda a nuestro proyecto: el <code>AnalizadorDatos</code>.
+                        </p>
+                        <p className="mb-4">
+                            Al igual que la moneda iniciaba en "Heads", nuestro analizador necesita iniciar con datos. Usamos el método <code>__init__</code> para esto.
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2 mb-4">
+                            <li><strong>class:</strong> La plantilla para crear objetos.</li>
+                            <li><strong>__init__:</strong> El método que se ejecuta automáticamente al crear el objeto.</li>
+                            <li><strong>self:</strong> Es como el objeto diciéndose "mí mismo". <code>self.datos</code> significa "mis propios datos".</li>
+                        </ul>
+                    </div>
+                ),
+                pythonCode: `class AnalizadorDatos:
+    def __init__(self, lista_numeros):
+        # Guardamos la lista dentro del objeto
+        # como un 'atributo'
+        self.datos = lista_numeros
+        self.n = len(lista_numeros)
+        print(f"Analizador iniciado con {self.n} datos")
+
+# Crear (Instanciar) el objeto
+mi_estudio = AnalizadorDatos([5, 8, 12, 3])
+# Ahora 'mi_estudio' tiene sus propios datos guardados`,
+                interactiveType: 'instantiation'
+            },
+            {
+                id: 'class_components',
+                title: 'Componentes: Atributos de Clase',
+                codeTitle: 'Atributos de Instancia vs Clase',
+                icon: 'Box',
+                content: (
+                    <div>
+                        <p className="mb-4">
+                            Hasta ahora hemos visto atributos que pertenecen a cada objeto (usando <code>self</code>). Pero, ¿qué pasa si queremos un valor compartido por <strong>todos</strong> los analizadores?
+                        </p>
+                        <p className="mb-4">
+                            Aquí entran los <strong>Componentes de Clase</strong>:
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2 mb-4">
+                            <li><strong>Atributos de Instancia:</strong> Se definen en <code>__init__</code>. Son únicos para cada objeto (ej. tus datos).</li>
+                            <li><strong>Atributos de Clase:</strong> Se definen fuera de los métodos. Son compartidos por todas las instancias (ej. una configuración global).</li>
+                        </ul>
+                    </div>
+                ),
+                pythonCode: `class AnalizadorDatos:
+    # Atributo de Clase (Compartido por todos)
+    # Ej: Nivel de confianza por defecto (95%)
+    confianza = 0.95
+
+    def __init__(self, datos):
+        # Atributo de Instancia (Único para este objeto)
+        self.datos = datos
+
+estudio1 = AnalizadorDatos([1, 2, 3])
+estudio2 = AnalizadorDatos([8, 9, 10])
+
+# Ambos comparten la misma confianza
+print(estudio1.confianza) # 0.95
+print(estudio2.confianza) # 0.95`,
+                interactiveType: 'class_components'
+            },
+            {
+                id: 'methods',
+                title: 'Métodos: Dando vida al objeto',
+                codeTitle: 'Métodos de Tendencia Central',
+                icon: 'Activity',
+                content: (
+                    <div>
+                        <p className="mb-4">
+                            Ahora que nuestro objeto tiene datos (atributos), necesita hacer cosas. Las funciones dentro de una clase se llaman <strong>Métodos</strong>.
+                        </p>
+                        <p className="mb-4">
+                            Vamos a añadir métodos para calcular medidas de tendencia central. Observa cómo los métodos usan <code>self.datos</code> para acceder a la información que guardamos en el <code>__init__</code>. No necesitamos pasar la lista como argumento cada vez.
+                        </p>
+                    </div>
+                ),
+                pythonCode: `class AnalizadorDatos:
+    def __init__(self, datos):
+        self.datos = datos
+
+    def media(self):
+        # self.datos es accesible aquí
+        return sum(self.datos) / len(self.datos)
+
+    def mediana(self):
+        sorted_data = sorted(self.datos)
+        n = len(sorted_data)
+        mid = n // 2
+        
+        if n % 2 == 0:
+            return (sorted_data[mid-1] + sorted_data[mid]) / 2
+        else:
+            return sorted_data[mid]`,
+                interactiveType: 'methods'
+            },
+            {
+                id: 'inheritance',
+                title: 'Herencia y Polimorfismo',
+                codeTitle: 'Varianza Poblacional vs Muestral',
+                icon: 'GitBranch',
+                content: (
+                    <div>
+                        <p className="mb-4">
+                            Aquí es donde la POO brilla en Estadística. Imagina que quieres calcular la <strong>Varianza</strong>.
+                        </p>
+                        <p className="mb-4 text-sm text-gray-600">
+                            Recordatorio matemático:
+                            <br />- Varianza Poblacional divide por <strong>N</strong>.
+                            <br />- Varianza Muestral divide por <strong>N - 1</strong> (Corrección de Bessel).
+                        </p>
+                        <p className="mb-4">
+                            En lugar de escribir una función gigante con <code>if tipo == 'poblacion'</code>, usamos <strong>Herencia</strong>.
+                            Creamos una clase base genérica y dos clases hijas que modifican (sobreescriben) el comportamiento específico.
+                        </p>
+
+                        <div className="usta-card p-5 mt-6 mb-4">
+                            <h4 className="font-bold text-lg text-primary mb-3 flex items-center gap-2">
+                                <i className="fas fa-sitemap"></i> ¿Qué es la Herencia?
+                            </h4>
+                            <p className="text-sm mb-3">
+                                La <strong>Herencia</strong> es un mecanismo de la POO que permite crear una nueva clase (<em>clase hija</em>) a partir de una clase existente (<em>clase padre</em>). La clase hija <strong>hereda todos los atributos y métodos</strong> de la clase padre, y puede agregar nuevos o modificar los existentes.
+                            </p>
+                            <p className="text-sm mb-3">
+                                En nuestro ejemplo estadístico:
+                            </p>
+                            <ul className="list-disc pl-5 space-y-2 text-sm mb-3">
+                                <li><code>EstadisticaBase</code> es la <strong>clase padre</strong>. Define lo que todas las estadísticas comparten: recibir datos y calcular la media (<code>self.mu</code>).</li>
+                                <li><code>Poblacion</code> y <code>Muestra</code> son <strong>clases hijas</strong>. Heredan automáticamente el constructor <code>__init__</code> y el atributo <code>self.mu</code> sin necesidad de reescribirlos.</li>
+                            </ul>
+                            <p className="text-sm text-gray-600 italic">
+                                La ventaja es clara: si mañana necesitas agregar un método <code>rango()</code>, lo escribes una sola vez en <code>EstadisticaBase</code> y tanto <code>Poblacion</code> como <code>Muestra</code> lo tendrán disponible.
+                            </p>
+                        </div>
+
+                        <div className="usta-card p-5 mb-4">
+                            <h4 className="font-bold text-lg text-secondary mb-3 flex items-center gap-2">
+                                <i className="fas fa-exchange-alt"></i> ¿Qué es el Polimorfismo?
+                            </h4>
+                            <p className="text-sm mb-3">
+                                <strong>Polimorfismo</strong> (del griego: «muchas formas») significa que un mismo método puede comportarse de manera diferente según el objeto que lo ejecute. Cada clase hija <strong>sobreescribe</strong> (<em>override</em>) el método de la clase padre con su propia implementación.
+                            </p>
+                            <p className="text-sm mb-3">
+                                En nuestro caso, el método <code>.varianza()</code> existe en ambas clases hijas, pero cada una lo calcula distinto:
+                            </p>
+                            <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                                <div className="tip-box rounded-lg p-3">
+                                    <div className="font-bold text-primary text-xs uppercase mb-1">Poblacion.varianza()</div>
+                                    <div>Divide por <strong>N</strong> (total de datos)</div>
+                                </div>
+                                <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                                    <div className="font-bold text-secondary text-xs uppercase mb-1">Muestra.varianza()</div>
+                                    <div>Divide por <strong>N − 1</strong> (corrección de Bessel)</div>
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-600 italic">
+                                Gracias al polimorfismo puedes escribir una función como <code>def reporte(obj): print(obj.varianza())</code> y pasarle cualquier objeto — sea <code>Poblacion</code> o <code>Muestra</code> — y producirá el resultado correcto sin necesidad de preguntar de qué tipo es.
+                            </p>
+                        </div>
+
+                        <div className="tip-box p-4 rounded-lg mt-6 text-gray-800">
+                            <h4 className="font-bold text-primary mb-3 flex items-center gap-2">
+                                <i className="fas fa-lightbulb text-gold"></i> Instrucciones de Uso
+                            </h4>
+                            <ol className="list-decimal pl-5 space-y-2 text-sm mb-4">
+                                <li>
+                                    <strong>Instanciar la subclase correcta:</strong> Usa <code>Poblacion(datos)</code> cuando tengas <em>todos</em> los datos del universo. Usa <code>Muestra(datos)</code> cuando trabajes con un subconjunto representativo.
+                                </li>
+                                <li>
+                                    <strong>Llamar a <code>.varianza()</code>:</strong> El mismo método retorna el cálculo apropiado según la clase elegida (÷ N o ÷ N−1). Ejemplo:
+                                    <br /><code>p = Poblacion([10, 15, 12, 18, 20])</code>
+                                    <br /><code>print(p.varianza())</code>
+                                </li>
+                                <li>
+                                    <strong>Acceder a la media:</strong> Ambas clases heredan el atributo <code>self.mu</code>, calculado automáticamente en el constructor.
+                                </li>
+                                <li>
+                                    <strong>Extender con nuevos métodos:</strong> Puedes agregar <code>desviacion_estandar()</code> en la clase base y cada hija lo heredará:
+                                    <br /><code>def desviacion_estandar(self): return self.varianza() ** 0.5</code>
+                                </li>
+                            </ol>
+                        </div>
+
+                        <div className="tip-box p-4 rounded-lg mt-4 text-gray-800">
+                            <h4 className="font-bold text-secondary mb-3 flex items-center gap-2">
+                                <i className="fas fa-exclamation-triangle text-gold"></i> Recomendaciones
+                            </h4>
+                            <ul className="list-disc pl-5 space-y-2 text-sm">
+                                <li><strong>No instanciar <code>EstadisticaBase</code> directamente.</strong> Su método <code>.varianza()</code> lanza <code>NotImplementedError</code>. Siempre utiliza <code>Poblacion</code> o <code>Muestra</code>.</li>
+                                <li><strong>Validar los datos de entrada:</strong> Asegúrate de pasar una lista con al menos 2 elementos numéricos. Con un solo dato, la varianza muestral genera una división por cero.</li>
+                                <li><strong>Usar la clase adecuada:</strong> En la mayoría de proyectos estadísticos reales, trabajarás con <code>Muestra</code> (N−1), ya que rara vez se tiene acceso a toda la población.</li>
+                                <li><strong>Aprovechar el polimorfismo:</strong> Puedes escribir funciones que reciban cualquier objeto <code>EstadisticaBase</code> y funcionen sin importar si es <code>Poblacion</code> o <code>Muestra</code>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `class EstadisticaBase:
+    def __init__(self, datos):
+        self.datos = datos
+        self.mu = sum(datos) / len(datos)
+
+    def varianza(self):
+        raise NotImplementedError("Usar subclase")
+
+class Poblacion(EstadisticaBase):
+    def varianza(self):
+        # Divide por N
+        numerador = sum((x - self.mu) ** 2 for x in self.datos)
+        return numerador / len(self.datos)
+
+class Muestra(EstadisticaBase):
+    def varianza(self):
+        # Divide por N - 1 (Corrección de Bessel)
+        numerador = sum((x - self.mu) ** 2 for x in self.datos)
+        return numerador / (len(self.datos) - 1)
+
+# Calificaciones de TODOS los estudiantes de un curso pequeño (población)
+calificaciones_curso = [85, 90, 78, 92, 88]
+pob = Poblacion(calificaciones_curso)
+
+print(f"Media del curso: {pob.mu:.2f}")
+print(f"Varianza poblacional: {pob.varianza():.2f}")
+print(f"Desv. estándar poblacional: {pob.varianza()**0.5:.2f}")
+
+# Calificaciones de una muestra aleatoria de estudiantes de toda la universidad
+muestra_uni = [85, 90, 78, 92, 88, 76, 95, 89]
+muest = Muestra(muestra_uni)
+
+print(f"\\nMedia muestral: {muest.mu:.2f}")
+print(f"Varianza muestral: {muest.varianza():.2f}")
+print(f"Desv. estándar muestral: {muest.varianza()**0.5:.2f}")`,
+                interactiveType: 'inheritance'
+            },
+            {
+                id: 'ai_builder',
+                title: 'Constructor IA: Genera tu Clase',
+                codeTitle: 'Ejemplo de Clase Generada por IA',
+                icon: 'Sparkles',
+                content: (
+                    <div>
+                        <p className="mb-4">
+                            Ahora que dominas los conceptos de <strong>Clases</strong>, <strong>Atributos</strong>, <strong>Métodos</strong> y <strong>Herencia</strong>, es momento de poner a prueba tu comprensión con ayuda de la Inteligencia Artificial.
+                        </p>
+                        <div className="usta-card p-5 mb-4">
+                            <h4 className="font-bold text-lg text-primary mb-3 flex items-center gap-2">
+                                <i className="fas fa-robot"></i> ¿Cómo funciona?
+                            </h4>
+                            <ol className="list-decimal pl-5 space-y-2 text-sm">
+                                <li>Ingresa tu <strong>API Key de Gemini</strong> en el panel derecho cuando quieras usar el Constructor IA.</li>
+                                <li>Escribe un <strong>concepto del mundo real</strong> (ej. "Banco", "Hospital", "Estudiante").</li>
+                                <li>La IA generará una <strong>clase Python completa</strong> con constructor, atributos y métodos relevantes.</li>
+                                <li>Analiza el código generado: ¿identificas el <code>__init__</code>? ¿Los atributos de instancia? ¿Los métodos?</li>
+                            </ol>
+                        </div>
+                        <div className="tip-box p-4 rounded-lg text-sm text-gray-800">
+                            <strong className="text-primary">Ejercicio sugerido:</strong> Genera una clase para "Estudiante", analiza su estructura, y luego intenta crear una clase hija <code>EstudianteUsta</code> que herede de ella y agregue un método <code>promedio_semestral()</code>.
+                        </div>
+                        <div className="tip-box p-4 rounded-lg text-sm text-gray-800 mt-4">
+                            <strong className="text-secondary"><i className="fas fa-key mr-1"></i> ¿Cómo obtener tu API Key?</strong>
+                            <ol className="list-decimal pl-5 space-y-1 mt-2">
+                                <li>Visita <a href="https://aistudio.google.com/apikey" target="_blank" className="text-secondary underline hover:text-primary">aistudio.google.com/apikey</a></li>
+                                <li>Inicia sesión con tu cuenta de Google.</li>
+                                <li>Crea una nueva API Key y cópiala en el campo del panel derecho.</li>
+                            </ol>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `# Este módulo genera código dinámicamente con IA.\n# Usa el panel derecho para generar tu propia clase.\n\n# Ejemplo de lo que la IA podría generar:\nclass Vehiculo:\n    """Representa un vehículo con sus características básicas."""\n    \n    def __init__(self, marca, modelo, año, kilometraje=0):\n        self.marca = marca\n        self.modelo = modelo\n        self.año = año\n        self.kilometraje = kilometraje\n    \n    def conducir(self, km):\n        """Registra kilómetros recorridos."""\n        self.kilometraje += km\n        return f"Has recorrido {km} km. Total: {self.kilometraje} km"\n    \n    def descripcion(self):\n        """Retorna una descripción del vehículo."""\n        return f"{self.marca} {self.modelo} ({self.año})"\n\n# Ejemplo de uso\nmi_auto = Vehiculo("Toyota", "Corolla", 2024)\nprint(mi_auto.descripcion())\nmi_auto.conducir(150)`,
+                interactiveType: 'ai_builder'
+            },
+            {
+                id: 'api_python',
+                title: 'Conexión API con Python',
+                codeTitle: 'Script Completo: Generador de Clases con Gemini',
+                icon: 'Globe',
+                content: (
+                    <div>
+                        <p className="mb-4">
+                            En el módulo anterior usaste el navegador para generar clases con IA. Ahora aprenderás a hacer <strong>lo mismo desde Python</strong>, conectándote directamente a la API de Google Gemini.
+                        </p>
+                        <p className="mb-4">
+                            Esto es fundamental para cualquier proyecto de <strong>ciencia de datos</strong>: automatizar tareas con IA desde tus propios scripts.
+                        </p>
+
+                        <div className="usta-card p-5 mb-4">
+                            <h4 className="font-bold text-lg text-primary mb-3 flex items-center gap-2">
+                                <i className="fas fa-download"></i> Paso 1: Instalación
+                            </h4>
+                            <p className="text-sm mb-3">
+                                Primero necesitas instalar la biblioteca oficial de Google para interactuar con Gemini. Ejecuta en tu terminal:
+                            </p>
+                            <div className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-sm mb-3">
+                                pip install google-generativeai
+                            </div>
+                            <p className="text-xs text-gray-500 italic">
+                                Recuerda activar tu entorno virtual antes de instalar paquetes (<code>python -m venv .venv</code>).
+                            </p>
+                        </div>
+
+                        <div className="usta-card p-5 mb-4">
+                            <h4 className="font-bold text-lg text-primary mb-3 flex items-center gap-2">
+                                <i className="fas fa-shield-alt"></i> Paso 2: Proteger tu API Key
+                            </h4>
+                            <p className="text-sm mb-3">
+                                <strong>Nunca escribas tu API Key directamente en el código.</strong> Usa <strong>variables de entorno</strong> para mantenerla segura:
+                            </p>
+                            <div className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-xs mb-3 space-y-1">
+                                <div><span className="text-gray-500"># En macOS/Linux (terminal):</span></div>
+                                <div>export GEMINI_API_KEY="tu_clave_aquí"</div>
+                                <div className="mt-2"><span className="text-gray-500"># En Windows (PowerShell):</span></div>
+                                <div>$env:GEMINI_API_KEY="tu_clave_aquí"</div>
+                            </div>
+                            <p className="text-sm mb-2">
+                                También puedes usar un archivo <code>.env</code> con la librería <code>python-dotenv</code>:
+                            </p>
+                            <div className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-xs mb-3">
+                                <div><span className="text-gray-500"># Archivo .env (NO subir a Git)</span></div>
+                                <div>GEMINI_API_KEY=tu_api_key_aqui</div>
+                            </div>
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+                                <strong><i className="fas fa-exclamation-triangle mr-1"></i> Importante:</strong> Agrega <code>.env</code> a tu <code>.gitignore</code> para que tu clave nunca se suba a repositorios públicos.
+                            </div>
+                        </div>
+
+                        <div className="usta-card p-5 mb-4">
+                            <h4 className="font-bold text-lg text-primary mb-3 flex items-center gap-2">
+                                <i className="fas fa-code"></i> Paso 3: Estructura del Script
+                            </h4>
+                            <p className="text-sm mb-3">
+                                El script completo sigue estas buenas prácticas de POO y programación:
+                            </p>
+                            <ul className="list-disc pl-5 space-y-2 text-sm mb-3">
+                                <li><strong>Separar instrucciones del sistema del prompt del usuario</strong> — El <code>system_instruction</code> define el rol de la IA, y el <code>prompt</code> contiene la solicitud específica.</li>
+                                <li><strong>Manejo de errores con try/except</strong> — Siempre captura excepciones para que tu programa no se detenga inesperadamente.</li>
+                                <li><strong>Reintentos con backoff exponencial</strong> — Si la API falla temporalmente (cuota, red), reintenta automáticamente con esperas crecientes.</li>
+                                <li><strong>Encapsulamiento en una clase</strong> — Agrupamos toda la lógica de la API en una clase <code>GeneradorClases</code> para que sea reutilizable.</li>
+                            </ul>
+                        </div>
+
+                        <div className="usta-card p-5 mb-4">
+                            <h4 className="font-bold text-lg text-secondary mb-3 flex items-center gap-2">
+                                <i className="fas fa-network-wired"></i> ¿Cómo funciona la API?
+                            </h4>
+                            <p className="text-sm mb-3">
+                                La comunicación con Gemini sigue este flujo:
+                            </p>
+                            <ol className="list-decimal pl-5 space-y-2 text-sm mb-3">
+                                <li><strong>Configurar</strong> — Le damos la API Key y elegimos el modelo (<code>gemini-2.5-flash</code>).</li>
+                                <li><strong>Prompt</strong> — Enviamos una instrucción de sistema + un prompt del usuario.</li>
+                                <li><strong>Respuesta</strong> — La API devuelve texto con el código Python generado.</li>
+                                <li><strong>Limpiar</strong> — Removemos posibles bloques de markdown de la respuesta.</li>
+                            </ol>
+                            <p className="text-sm text-gray-600 italic">
+                                Observa en el código cómo la clase <code>GeneradorClases</code> usa exactamente los mismos conceptos de POO que aprendimos: constructor, atributos y métodos.
+                            </p>
+                        </div>
+
+                        <div className="tip-box p-4 rounded-lg text-sm text-gray-800">
+                            <strong className="text-primary">Ejercicio sugerido:</strong> Modifica el script para que el usuario pueda ingresar varios conceptos en un ciclo <code>while</code>, generando múltiples clases en una misma sesión. Luego guarda cada clase en un archivo <code>.py</code> separado usando <code>open()</code> y <code>write()</code>.
+                        </div>
+
+                        <div className="tip-box p-4 rounded-lg text-sm text-gray-800 mt-4">
+                            <strong className="text-secondary"><i className="fas fa-exclamation-triangle mr-1"></i> Recomendaciones de buenas prácticas:</strong>
+                            <ul className="list-disc pl-5 space-y-1 mt-2">
+                                <li>Siempre usa <strong>variables de entorno</strong> para las API Keys, nunca las pongas directamente en el código.</li>
+                                <li>Implementa <strong>reintentos automáticos</strong> para manejar errores temporales de la API.</li>
+                                <li>Usa <strong><code>system_instruction</code></strong> para separar el rol de la IA del contenido de la solicitud.</li>
+                                <li>Valida siempre la <strong>entrada del usuario</strong> antes de enviarla a la API.</li>
+                                <li>Maneja las <strong>excepciones</strong> con mensajes claros para el usuario.</li>
+                            </ul>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `import google.generativeai as genai
+import os
+import re
+import time
+
+from dotenv import load_dotenv
+load_dotenv()
+
+class GeneradorClases:
+    """
+    Genera clases Python usando la API de Google Gemini.
+    Encapsula la configuración, el prompt y la comunicación con la IA.
+    """
+
+    def __init__(self, modelo="gemini-2.5-flash"):
+        # Leer la API Key de variable de entorno (seguro)
+        api_key = os.environ.get("GEMINI_API_KEY")
+
+        if not api_key:
+            raise ValueError(
+                "No se encontró GEMINI_API_KEY. "
+                "Configúrala con: export GEMINI_API_KEY='tu_clave'"
+            )
+
+        # Configurar la librería con la clave
+        genai.configure(api_key=api_key)
+
+        # Crear el modelo con instrucción de sistema
+        self.model = genai.GenerativeModel(
+            model_name=modelo,
+            system_instruction=(
+                "Eres un profesor de Python para estudiantes "
+                "de estadística en la Universidad Santo Tomás. "
+                "Genera SOLO código Python puro, sin markdown."
+            )
+        )
+        self.intentos_max = 3
+
+    def generar(self, concepto):
+        """Genera una clase Python para el concepto dado."""
+        prompt = f"""Genera una clase Python para: "{concepto}".
+Incluye:
+- Docstring descriptivo
+- Constructor __init__ con al menos 3 atributos
+- Al menos 2 métodos útiles con docstrings
+- Comentarios en español
+- Ejemplo de uso al final"""
+
+        # Reintentos con backoff exponencial
+        for intento in range(self.intentos_max):
+            try:
+                respuesta = self.model.generate_content(prompt)
+                codigo = respuesta.text
+
+                # Limpiar posibles bloques markdown
+                codigo = re.sub(
+                    r'^\\x60\\x60\\x60python\\n?', '', codigo
+                )
+                codigo = re.sub(r'\\n?\\x60\\x60\\x60$', '', codigo)
+                return codigo.strip()
+
+            except Exception as e:
+                print(f"Intento {intento + 1} falló: {e}")
+                if intento < self.intentos_max - 1:
+                    espera = 2 ** intento  # 1s, 2s, 4s
+                    print(f"Reintentando en {espera}s...")
+                    time.sleep(espera)
+                else:
+                    return f"Error después de {self.intentos_max} intentos: {e}"
+
+# --- Uso del generador ---
+if __name__ == "__main__":
+    generador = GeneradorClases()
+
+    concepto = input("¿Qué clase quieres generar? ")
+    print(f"\\nGenerando clase para '{concepto}'...\\n")
+
+    resultado = generador.generar(concepto)
+    print(resultado)`,
+                interactiveType: 'concept'
+            },
+            {
+                id: 'references',
+                title: 'Referencia Bibliográfica',
+                codeTitle: 'Fuentes Consultadas',
+                icon: 'BookOpen',
+                isReference: true,
+                content: (
+                    <div className="space-y-6">
+                        <div className="usta-card p-6">
+                            <blockquote className="border-l-4 pl-4" style={{ borderLeftColor: '#ED1E79' }}>
+                                <p className="text-gray-800 font-medium text-lg mb-2">
+                                    "Python OOP Tutorial: How to Create Classes and Objects"
+                                </p>
+                                <p className="text-gray-600 mb-1">
+                                    Por <strong>Costas Andreou</strong>
+                                </p>
+                                <p className="text-gray-600 mb-3">
+                                    Publicado en <strong>Towards Data Science</strong> — Medium
+                                </p>
+                                <a
+                                    href="https://towardsdatascience.com/python-oop-tutorial-how-to-create-classes-and-objects-c36a92b01552/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:text-secondary transition-colors font-medium inline-flex items-center gap-2"
+                                >
+                                    <i className="fas fa-external-link-alt"></i>
+                                    Ver artículo original
+                                </a>
+                            </blockquote>
+                        </div>
+
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r">
+                            <p className="text-sm text-blue-800">
+                                <i className="fas fa-info-circle mr-2"></i>
+                                <strong>Nota:</strong> El contenido fue adaptado para estudiantes de estadística de la Universidad Santo Tomás (USTA), enfatizando la aplicación de POO en análisis de datos y estadística.
+                            </p>
+                        </div>
+
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                <i className="fas fa-lightbulb text-gold"></i>
+                                ¿Te gustaría profundizar?
+                            </h4>
+                            <ul className="list-disc pl-5 space-y-2 text-gray-600 text-sm">
+                                <li>Visita la <a href="https://docs.python.org/3/tutorial/classes.html" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">documentación oficial de Python sobre clases</a> para conocer todos los detalles técnicos.</li>
+                                <li>Explora más artículos en <a href="https://towardsdatascience.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">Towards Data Science</a> sobre programación orientada a objetos aplicada a ciencia de datos.</li>
+                                <li>Practica creando tus propias clases para análisis estadístico con datos reales.</li>
+                            </ul>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `# Recursos adicionales para seguir aprendiendo
+
+# Documentación oficial de Python sobre POO
+# https://docs.python.org/3/tutorial/classes.html
+
+# Tutorial recomendado sobre POO en Python
+# https://realpython.com/python-classes/
+
+# Libro gratuito: Python para Análisis de Datos
+# https://wesmckinney.com/book/
+
+# Repositorio con ejemplos de POO aplicada a estadística
+# Busca en GitHub: python-oop-statistics-examples`
+            }
+        ];
+
+        // --- Componente Principal de la App ---
+
+        const App = () => {
+            const [activeLessonIndex, setActiveLessonIndex] = useState(0);
+            const [userInput, setUserInput] = useState("10, 15, 12, 18, 20");
+            const [simulationResult, setSimulationResult] = useState(null);
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+
+            const activeLesson = curriculum[activeLessonIndex];
+
+            // Renderizado seguro de Iconos
+            const renderIcon = (iconName, size = 20) => {
+                const Icon = Icons[iconName];
+                return Icon ? <Icon size={size} /> : null;
+            };
+
+            // Lógica de simulación estadística en JS para emular Python
+            const runSimulation = () => {
+                try {
+                    const data = userInput.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
+
+                    if (data.length < 2) {
+                        setSimulationResult({ error: "Por favor ingresa al menos 2 números separados por coma." });
+                        return;
+                    }
+
+                    const sum = data.reduce((a, b) => a + b, 0);
+                    const mean = sum / data.length;
+
+                    // Cálculo Mediana
+                    const sorted = [...data].sort((a, b) => a - b);
+                    const mid = Math.floor(sorted.length / 2);
+                    const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+
+                    // Cálculos de Varianza
+                    const sumSqDiff = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0);
+                    const varPop = sumSqDiff / data.length;
+                    const varSample = sumSqDiff / (data.length - 1);
+
+                    setSimulationResult({
+                        data: data,
+                        n: data.length,
+                        mean: mean.toFixed(2),
+                        median: median.toFixed(2),
+                        varPop: varPop.toFixed(2),
+                        varSample: varSample.toFixed(2),
+                        stdPop: Math.sqrt(varPop).toFixed(2),
+                        stdSample: Math.sqrt(varSample).toFixed(2)
+                    });
+
+                } catch (e) {
+                    setSimulationResult({ error: "Error en los datos de entrada." });
+                }
+            };
+
+            useEffect(() => {
+                runSimulation();
+            }, [userInput, activeLessonIndex]);
+
+            return (
+                <div className="flex h-screen overflow-hidden relative">
+
+                    {/* Botón flotante para toggle del sidebar */}
+                    <button
+                        onClick={() => setSidebarOpen(prev => !prev)}
+                        className="fixed top-4 left-4 z-50 p-2.5 rounded-full shadow-lg text-white transition-all hover:scale-110"
+                        style={{ background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' }}
+                        title={sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'}
+                    >
+                        <i className={`fas ${sidebarOpen ? 'fa-times' : 'fa-bars'} text-sm`}></i>
+                    </button>
+
+                    {/* Overlay cuando sidebar está abierto (para cerrar al hacer clic fuera) */}
+                    {sidebarOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/20 z-30 lg:hidden"
+                            onClick={() => setSidebarOpen(false)}
+                        />
+                    )}
+
+                    {/* Sidebar de Navegación */}
+                    <div
+                        className="flex-shrink-0 overflow-y-auto z-40 flex flex-col"
+                        style={{
+                            background: 'linear-gradient(180deg, #001A4D 0%, #002868 100%)',
+                            width: sidebarOpen ? '16rem' : '0',
+                            minWidth: sidebarOpen ? '16rem' : '0',
+                            opacity: sidebarOpen ? 1 : 0,
+                            transition: 'width 0.3s ease, min-width 0.3s ease, opacity 0.25s ease',
+                            overflow: sidebarOpen ? 'visible auto' : 'hidden'
+                        }}
+                    >
+                        <div className="p-6 pt-16 border-b border-white/10">
+                            <h1 className="text-white font-bold text-lg tracking-tight flex items-center gap-2">
+                                <span className="text-secondary">py</span>Stats<span className="text-gold">OOP</span>
+                            </h1>
+                            <p className="text-xs text-white/50 mt-1">Python para APIs e IA Aplicada • USTA</p>
+                        </div>
+                        <nav className="p-4 space-y-2">
+                            {curriculum.map((lesson, idx) => (
+                                <button
+                                    key={lesson.id}
+                                    onClick={() => { setActiveLessonIndex(idx); if (window.innerWidth < 1024) setSidebarOpen(false); }}
+                                    className={`w-full flex items-start gap-3 px-3 py-3 text-sm rounded-lg transition-all text-left ${activeLessonIndex === idx
+                                        ? 'text-white shadow-lg'
+                                        : 'text-white/60 hover:text-white hover:bg-white/10'
+                                        }`}
+                                    style={activeLessonIndex === idx ? { background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' } : {}}
+                                >
+                                    <span className="flex-shrink-0 mt-0.5" style={{ width: 18, height: 18 }}>{renderIcon(lesson.icon, 18)}</span>
+                                    <span className="font-medium leading-tight break-words">{lesson.title.split(':')[0]}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+
+                    {/* Área Principal */}
+                    <main className="flex-1 flex overflow-hidden bg-bg">
+
+                        {/* Panel Izquierdo: Teoría */}
+                        <div className={`flex-1 overflow-y-auto p-8 lg:p-12 ${activeLesson.interactiveType === 'ai_builder' ? 'max-w-3xl' : 'max-w-5xl mx-auto'}`}>
+                            <div className="mb-6 flex items-center justify-between">
+                                <span className="text-xs font-bold tracking-wider text-secondary uppercase">Lección {activeLessonIndex + 1} de {curriculum.length}</span>
+                                <div className="flex gap-2">
+                                    <button
+                                        disabled={activeLessonIndex === 0}
+                                        onClick={() => setActiveLessonIndex(c => c - 1)}
+                                        className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                                    >
+                                        {renderIcon('ChevronLeft')}
+                                    </button>
+                                    <button
+                                        disabled={activeLessonIndex === curriculum.length - 1}
+                                        onClick={() => setActiveLessonIndex(c => c + 1)}
+                                        className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                                    >
+                                        {renderIcon('ChevronRight')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <SectionHeader title={activeLesson.title} icon={Icons[activeLesson.icon]} />
+
+                            <div className="prose prose-lg text-gray-600 leading-relaxed">
+                                {activeLesson.content}
+                            </div>
+
+                            {activeLesson.isReference ? (
+                                <div className="mt-4">
+                                    <div className="mt-8">
+                                        <CodeBlock title={activeLesson.codeTitle} code={activeLesson.pythonCode} />
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="mt-8">
+                                        <CodeBlock title={activeLesson.codeTitle} code={activeLesson.pythonCode} />
+                                    </div>
+
+                                    {/* Footer */}
+                                    <footer className="mt-20 pt-0">
+                                        <div className="usta-header rounded-xl p-6 text-center">
+                                            <p className="text-white font-medium text-sm">Diseñado por <span className="font-bold">Javier Mauricio Sierra</span></p>
+                                            <p className="text-xs mt-1 text-white/60">
+                                                Python para APIs e IA • USTA
+                                            </p>
+                                        </div>
+                                    </footer>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Panel Derecho: Solo visible en Constructor IA */}
+                        {activeLesson.interactiveType === 'ai_builder' && (
+                            <div className="w-96 bg-gray-50 border-l border-gray-200 flex flex-col flex-shrink-0">
+                                {activeLesson.interactiveType === 'ai_builder' ? (
+                                    <AIClassBuilder />
+                                ) : (
+                                    <>
+                                        <div className="p-6 bg-white border-b border-gray-200 shadow-sm z-10">
+                                            <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
+                                                {renderIcon('Terminal', 18)} Laboratorio de Datos
+                                            </h3>
+                                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Ingresa tus datos (CSV)</label>
+                                            <input
+                                                type="text"
+                                                value={userInput}
+                                                onChange={(e) => setUserInput(e.target.value)}
+                                                className="w-full font-mono text-sm p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all"
+                                                placeholder="Ej: 10, 20, 30"
+                                            />
+                                        </div>
+
+                                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                            {simulationResult?.error ? (
+                                                <div className="p-4 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                                                    {simulationResult.error}
+                                                </div>
+                                            ) : simulationResult && (
+                                                <>
+                                                    {/* Visualización del Objeto */}
+                                                    <div className="usta-card p-4 relative overflow-hidden group">
+                                                        <div className="absolute top-0 left-0 w-1 h-full usta-gradient"></div>
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <span className="text-xs font-bold text-primary uppercase">Instancia (Objeto)</span>
+                                                            <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-2 py-0.5 rounded">0x7f...3a</span>
+                                                        </div>
+                                                        <div className="font-mono text-sm text-gray-700">
+                                                            <div className="mb-1"><span className="text-secondary">self</span>.n = {simulationResult.n}</div>
+                                                            <div className="break-words"><span className="text-secondary">self</span>.datos = [{simulationResult.data.join(', ')}]</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Resultados Dinámicos según la lección */}
+                                                    {activeLesson.interactiveType === 'concept' && (
+                                                        <div className="text-sm text-gray-500 text-center italic">
+                                                            Explora las siguientes lecciones para ver cálculos específicos.
+                                                        </div>
+                                                    )}
+
+                                                    {(activeLesson.interactiveType === 'instantiation' || activeLesson.interactiveType === 'methods') && (
+                                                        <div className="space-y-3">
+                                                            <div className="p-3 bg-white rounded-lg border border-gray-200 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                                                                <span className="text-sm text-gray-600">Método <code>.media()</code></span>
+                                                                <span className="font-mono font-bold text-primary">{simulationResult.mean}</span>
+                                                            </div>
+                                                            <div className="p-3 bg-white rounded-lg border border-gray-200 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                                                                <span className="text-sm text-gray-600">Método <code>.mediana()</code></span>
+                                                                <span className="font-mono font-bold text-secondary">{simulationResult.median}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {activeLesson.interactiveType === 'class_components' && (
+                                                        <div className="space-y-3">
+                                                            <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                                                <div className="text-xs font-bold text-amber-800 uppercase mb-1">Atributo de Clase (Compartido)</div>
+                                                                <div className="font-mono text-sm text-amber-900">
+                                                                    AnalizadorDatos.confianza = <span className="font-bold">0.95</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="p-3 rounded-lg tip-box">
+                                                                <div className="text-xs font-bold text-primary uppercase mb-1">Atributo de Instancia (Único)</div>
+                                                                <div className="font-mono text-sm text-gray-800">
+                                                                    self.datos = [{simulationResult.data.join(', ')}]
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 text-center mt-2">
+                                                                Si crearas otro objeto, <code>datos</code> cambiaría, pero <code>confianza</code> seguiría siendo 0.95.
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {activeLesson.interactiveType === 'inheritance' && (
+                                                        <div className="space-y-4 animate-fade-in">
+                                                            <div className="p-4 rounded-lg tip-box">
+                                                                <h4 className="text-xs font-bold text-primary uppercase mb-2">Clase Hija: Poblacion</h4>
+                                                                <div className="flex justify-between text-sm mb-1">
+                                                                    <span>Varianza (÷ N)</span>
+                                                                    <span className="font-mono font-bold">{simulationResult.varPop}</span>
+                                                                </div>
+                                                                <div className="flex justify-between text-sm text-primary">
+                                                                    <span>Desv. Estándar</span>
+                                                                    <span className="font-mono">{simulationResult.stdPop}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                                                <h4 className="text-xs font-bold text-secondary uppercase mb-2">Clase Hija: Muestra</h4>
+                                                                <div className="flex justify-between text-sm mb-1">
+                                                                    <span>Varianza (÷ N-1)</span>
+                                                                    <span className="font-mono font-bold">{simulationResult.varSample}</span>
+                                                                </div>
+                                                                <div className="flex justify-between text-sm text-secondary">
+                                                                    <span>Desv. Estándar</span>
+                                                                    <span className="font-mono">{simulationResult.stdSample}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-xs text-gray-400 text-center">
+                                                                Nota cómo el mismo método <code>.varianza()</code> da resultados diferentes según la clase usada. Eso es <strong>Polimorfismo</strong>.
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

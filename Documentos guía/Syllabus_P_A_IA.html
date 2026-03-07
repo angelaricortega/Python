@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabus: Python para APIs e IA Aplicada</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description"
+        content="Syllabus completo del curso Python para APIs e IA Aplicada. Aprende a crear APIs con FastAPI, integrar modelos de ML y desplegar en la nube. Diseñado para estudiantes de estadística.">
+    <meta name="keywords"
+        content="Python, FastAPI, APIs REST, Machine Learning, IA, Inteligencia Artificial, Scikit-Learn, TensorFlow, Railway, Deployment, Estadística">
+    <meta name="author" content="Curso de Estadística">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Syllabus: Python para APIs e IA Aplicada">
+    <meta property="og:description"
+        content="Curso completo de 16 semanas para transformar scripts de análisis en productos de datos desplegables con FastAPI e IA.">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630/4F46E5/FFFFFF?text=Python+APIs+IA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Syllabus: Python para APIs e IA Aplicada">
+    <meta name="twitter:description"
+        content="16 semanas de aprendizaje: FastAPI, ML, Deep Learning y despliegue en la nube.">
+    <meta name="twitter:image" content="https://via.placeholder.com/1200x630/4F46E5/FFFFFF?text=Python+APIs+IA">
+
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- External Resources -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Chosen Palette: Slate & Indigo -->
+    <!-- Application Structure Plan: 
+         1. Header: Context and high-level goals.
+         2. Dashboard: High-level metrics (Tech stack balance, Complexity trend) using Chart.js.
+         3. Module Navigation: Filterable timeline of the 16 weeks.
+         4. Weekly Detail View: Dynamic cards showing Learning Outcomes, Theory, Practice, and Autonomy.
+         5. Resources & Evaluation: Footer sections for didactic materials and grading.
+         
+         Reasoning: This structure allows the user to see the "big picture" (progression) first, then drill down into specific weekly tasks. 
+         The interactive filtering helps segment the semester into manageable learning blocks.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Progression Line Chart: Visualizes the "Complexity" vs "Autonomy" curve requested.
+         - Tech Stack Donut: Visualizes the 60/30/10 split in AI focus.
+         - Interactive Accordion/Cards: For the 16-week content to avoid wall-of-text.
+         - Javascript Object Data Store: Allows easy editing of the syllabus content without touching HTML structure.
+         - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3D008D', // USTA Indigo
+                        secondary: '#ED1E79', // USTA Magenta
+                        navy: '#001A4D', // USTA Navy
+                        gold: '#FDB913', // USTA Gold
+                        bg: '#F8FAFC',
+                        surface: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F8FAFC;
+            color: #1E293B;
+            scroll-behavior: smooth;
+        }
+
+        /* Skip to main content link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #4F46E5;
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* USTA Gradient Background */
+        .usta-gradient {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+        }
+
+        .usta-gradient-hover:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+        }
+
+        /* USTA Button Style - Pill Shape */
+        .usta-button {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .usta-button:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(61, 0, 141, 0.35);
+        }
+
+        /* USTA Card Style */
+        .usta-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .usta-card:hover {
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        /* USTA Navy Header */
+        .usta-header {
+            background: linear-gradient(180deg, #001A4D 0%, #002868 100%);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .week-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            border-radius: 12px;
+        }
+
+        .week-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        .week-card.active {
+            border-left-color: #ED1E79;
+            background: linear-gradient(90deg, rgba(237, 30, 121, 0.05) 0%, transparent 100%);
+        }
+
+        /* Custom scrollbar for weekly list */
+        .week-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .week-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .week-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3D008D, #ED1E79);
+            border-radius: 4px;
+        }
+
+        .week-list::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #4A00A8, #FF2D8A);
+        }
+
+        /* Scroll to top button - USTA Style */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+            color: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(61, 0, 141, 0.4);
+            transition: all 0.3s ease;
+            z-index: 50;
+            border: none;
+        }
+
+        .scroll-to-top.visible {
+            display: flex;
+        }
+
+        .scroll-to-top:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(61, 0, 141, 0.5);
+        }
+
+        /* Tooltip styles - USTA Theme */
+        .tooltip {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dotted #ED1E79;
+            color: #3D008D;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 220px;
+            background: linear-gradient(140deg, #001A4D 0%, #3D008D 100%);
+            color: #fff;
+            text-align: center;
+            border-radius: 10px;
+            padding: 10px 12px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            box-shadow: 0 8px 20px rgba(0, 26, 77, 0.3);
+        }
+
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1E293B transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Mobile menu */
+        .mobile-menu {
+            display: none;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        /* Hamburger menu icon */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #3D008D, #ED1E79);
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .desktop-nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased min-h-screen flex flex-col">
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+    <!-- Header Section - USTA Style -->
+    <header class="usta-header sticky top-0 z-50 shadow-lg" role="banner">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="usta-gradient p-3 rounded-xl shadow-md" aria-hidden="true">
+                    <i class="fas fa-network-wired text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white leading-tight tracking-tight">Python para APIs e IA Aplicada
+                    </h1>
+                    <p class="text-xs text-white/70 font-medium tracking-wide">SYLLABUS • ESTADÍSTICA • USTA</p>
+                </div>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="desktop-nav hidden md:flex items-center gap-4 text-sm" role="navigation"
+                aria-label="Tecnologías principales">
+                <div
+                    class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm hover:bg-white/20 transition-all">
+                    <i class="fab fa-python text-yellow-400" aria-hidden="true"></i>
+                    <span class="text-white font-medium">FastAPI</span>
+                </div>
+                <div
+                    class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm hover:bg-white/20 transition-all">
+                    <i class="fas fa-brain text-pink-400" aria-hidden="true"></i>
+                    <span class="text-white font-medium">IA Aplicada</span>
+                </div>
+                <div
+                    class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm hover:bg-white/20 transition-all">
+                    <i class="fab fa-docker text-cyan-400" aria-hidden="true"></i>
+                    <span class="text-white font-medium">Docker + Railway</span>
+                </div>
+            </nav>
+
+            <!-- Mobile Menu Button -->
+            <button class="hamburger md:hidden" id="mobileMenuBtn" aria-label="Abrir menú de navegación"
+                aria-expanded="false">
+                <span class="!bg-white"></span>
+                <span class="!bg-white"></span>
+                <span class="!bg-white"></span>
+            </button>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <nav class="mobile-menu bg-navy border-t border-white/10" id="mobileMenu" role="navigation"
+            aria-label="Menú móvil">
+            <div class="max-w-7xl mx-auto px-4 py-4 space-y-3">
+                <div class="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors">
+                    <i class="fab fa-python text-yellow-400" aria-hidden="true"></i>
+                    <span>FastAPI</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors">
+                    <i class="fas fa-brain text-pink-400" aria-hidden="true"></i>
+                    <span>IA Aplicada</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors">
+                    <i class="fab fa-docker text-cyan-400" aria-hidden="true"></i>
+                    <span>Docker + Railway</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full" role="main">
+
+        <!-- Introduction -->
+        <section class="mb-10" aria-labelledby="vision-heading">
+            <h2 id="vision-heading" class="text-2xl font-bold text-gray-800 mb-3">Visión General del Curso</h2>
+            <p class="text-gray-600 max-w-4xl leading-relaxed">
+                Este syllabus está diseñado específicamente para estudiantes de estadística con sólidos conocimientos
+                matemáticos pero sin experiencia en <span class="tooltip">ingeniería de software<span
+                        class="tooltip-text">Diseño, desarrollo y mantenimiento de aplicaciones de
+                        software</span></span>. El objetivo es transformar scripts de
+                análisis aislados en productos de datos desplegables y consumibles, utilizando <strong
+                    class="tooltip">FastAPI<span class="tooltip-text">Framework moderno de Python para crear APIs de
+                        alta performance</span></strong>
+                como eje central y desplegando en infraestructura moderna sin servidor.
+            </p>
+        </section>
+
+        <!-- Dashboard Metrics Grid -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12" aria-label="Métricas del curso">
+
+            <!-- Chart 1: Progression -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Progresión de Complejidad</h3>
+                    <p class="text-sm text-gray-500">Evolución de la carga cognitiva y técnica durante las 16 semanas.
+                    </p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="progressionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Focus Distribution -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Distribución de Contenidos IA</h3>
+                    <p class="text-sm text-gray-500">Balance entre paradigmas de modelado e ingeniería.</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Syllabus Section -->
+        <section class="mb-12" aria-labelledby="cronograma-heading">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-6 gap-4">
+                <div>
+                    <h2 id="cronograma-heading" class="text-2xl font-bold text-gray-800">Cronograma Semanal</h2>
+                    <p class="text-gray-600 text-sm mt-1">Navega por las 16 semanas. Filtra por módulos para enfocar la
+                        vista.</p>
+                </div>
+
+                <!-- Filters -->
+                <nav aria-label="Filtros de módulos">
+                    <div class="flex flex-wrap gap-2" id="moduleFilters">
+                        <button
+                            class="filter-btn active px-4 py-2 text-sm font-medium rounded-full bg-indigo-600 text-white transition-colors"
+                            data-filter="all">
+                            Todo
+                        </button>
+                        <button
+                            class="filter-btn px-4 py-2 text-sm font-medium rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+                            data-filter="Fundamentos">
+                            Fundamentos
+                        </button>
+                        <button
+                            class="filter-btn px-4 py-2 text-sm font-medium rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+                            data-filter="APIs">
+                            APIs REST
+                        </button>
+                        <button
+                            class="filter-btn px-4 py-2 text-sm font-medium rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+                            data-filter="IA">
+                            Integración IA
+                        </button>
+                        <button
+                            class="filter-btn px-4 py-2 text-sm font-medium rounded-full bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+                            data-filter="Proyecto">
+                            Proyecto Final
+                        </button>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[800px]">
+                <!-- Week List (Left Column) -->
+                <div
+                    class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50">
+                        <h3 class="font-semibold text-gray-700">Seleccionar Semana</h3>
+                    </div>
+                    <div class="overflow-y-auto flex-grow week-list p-2" id="weekListContainer">
+                        <!-- Javascript will populate this -->
+                    </div>
+                </div>
+
+                <!-- Week Detail (Right Column - 2 Cols span) -->
+                <div
+                    class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-8 overflow-y-auto h-full relative">
+                    <div id="weekDetailContent" class="h-full flex flex-col">
+                        <!-- Default State -->
+                        <div class="flex-grow flex flex-col items-center justify-center text-gray-400">
+                            <i class="fas fa-hand-pointer text-4xl mb-4"></i>
+                            <p>Selecciona una semana de la lista para ver los detalles.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Project Description - USTA Style -->
+        <section class="mb-12" aria-labelledby="proyecto-heading">
+            <div class="usta-gradient rounded-2xl shadow-xl p-8 text-white">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
+                        <i class="fas fa-rocket text-2xl"></i>
+                    </div>
+                    <h2 id="proyecto-heading" class="text-2xl font-bold tracking-tight">Proyecto Final: API de Datos con
+                        IA</h2>
+                </div>
+                <p class="text-white/90 leading-relaxed mb-6">
+                    A lo largo del semestre, construirás paso a paso una <strong>API REST completa</strong> que sirva
+                    predicciones de un modelo de Machine Learning. Partirás desde un simple script de análisis en Python
+                    y terminarás con un <strong>producto de datos profesional</strong> desplegado en la nube, accesible
+                    desde cualquier parte del mundo.
+                </p>
+
+                <!-- Objectives -->
+                <div class="bg-white/10 rounded-lg p-6 mb-6">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-bullseye"></i> Objetivos del Proyecto
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-start gap-3">
+                            <span
+                                class="bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded mt-0.5">1</span>
+                            <p class="text-sm text-white/90"><strong>Transformar</strong> un análisis estadístico
+                                existente en una API web funcional usando FastAPI y Python 3.11.9.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span
+                                class="bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded mt-0.5">2</span>
+                            <p class="text-sm text-white/90"><strong>Integrar</strong> un modelo de ML (Scikit-Learn o
+                                TensorFlow) que realice predicciones en tiempo real.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span
+                                class="bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded mt-0.5">3</span>
+                            <p class="text-sm text-white/90"><strong>Containerizar</strong> la solución con Docker
+                                usando la imagen python:3.11.9-slim-bookworm (Debian 12).</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span
+                                class="bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded mt-0.5">4</span>
+                            <p class="text-sm text-white/90"><strong>Desplegar</strong> la API en Railway o Render con
+                                documentación Swagger completa y acceso público.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Phases -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-blue-400 text-blue-900 text-xs font-bold px-2 py-1 rounded">Fase 1</span>
+                            <span class="text-sm font-semibold">Semanas 1-4</span>
+                        </div>
+                        <h4 class="font-bold mb-1">Fundamentos</h4>
+                        <p class="text-xs text-white/80">Configurar entorno local con venv, seleccionar dataset, crear
+                            esquemas Pydantic y primera versión de la API con FastAPI.</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-indigo-400 text-indigo-900 text-xs font-bold px-2 py-1 rounded">Fase
+                                2</span>
+                            <span class="text-sm font-semibold">Semanas 5-10</span>
+                        </div>
+                        <h4 class="font-bold mb-1">API + Docker</h4>
+                        <p class="text-xs text-white/80">Validación avanzada, persistencia, testing, containerización
+                            con Docker y primer despliegue en la nube.</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-purple-400 text-purple-900 text-xs font-bold px-2 py-1 rounded">Fase
+                                3</span>
+                            <span class="text-sm font-semibold">Semanas 11-16</span>
+                        </div>
+                        <h4 class="font-bold mb-1">IA + Producción</h4>
+                        <p class="text-xs text-white/80">Integrar modelo ML real, procesamiento asíncrono, seguridad
+                            JWT, documentación final y demo en vivo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deliverables -->
+            <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-box-open text-indigo-500"></i> Entregables del Proyecto
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <i class="fab fa-github text-2xl text-gray-700 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-gray-800 text-sm">Repositorio GitHub</p>
+                            <p class="text-xs text-gray-500">Código fuente completo con README, requirements.txt y
+                                Dockerfile.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <i class="fab fa-docker text-2xl text-blue-500 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-gray-800 text-sm">Dockerfile</p>
+                            <p class="text-xs text-gray-500">Imagen basada en python:3.11.9-slim-bookworm lista para
+                                producción.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <i class="fas fa-cloud text-2xl text-green-500 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-gray-800 text-sm">URL Pública</p>
+                            <p class="text-xs text-gray-500">API desplegada en Railway/Render accesible globalmente.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <i class="fas fa-file-alt text-2xl text-purple-500 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-gray-800 text-sm">Documentación Swagger</p>
+                            <p class="text-xs text-gray-500">Endpoints documentados con ejemplos de request/response.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Evaluation & Resources - USTA Style -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-12" aria-label="Evaluación y recursos">
+            <!-- Evaluation Criteria -->
+            <div class="usta-card p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="usta-gradient p-2 rounded-lg"><i class="fas fa-clipboard-check text-white"></i></span>
+                    Evaluación Proyecto Final
+                </h3>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-l-4"
+                        style="border-left-color: #3D008D;">
+                        <h4 class="font-semibold text-gray-800">1. Arquitectura API (40%)</h4>
+                        <p class="text-sm text-gray-600 mt-1">Implementación correcta de verbos REST, códigos de estado
+                            HTTP, manejo de excepciones (try/except) y validación de datos con Pydantic. Estructura de
+                            proyecto modular.</p>
+                    </div>
+                    <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-l-4"
+                        style="border-left-color: #ED1E79;">
+                        <h4 class="font-semibold text-gray-800">2. Reproducibilidad de IA (30%)</h4>
+                        <p class="text-sm text-gray-600 mt-1">El modelo debe cargar eficientemente (singleton pattern),
+                            manejar la inferencia sin bloquear el servidor, y los resultados deben ser consistentes con
+                            el entrenamiento.</p>
+                    </div>
+                    <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-l-4"
+                        style="border-left-color: #FDB913;">
+                        <h4 class="font-semibold text-gray-800">3. Despliegue & Documentación (30%)</h4>
+                        <p class="text-sm text-gray-600 mt-1">API funcional en Railway/Render (acceso público).
+                            Documentación Swagger/Redoc completa con ejemplos de request/response y autenticación básica
+                            funcional.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Didactic Resources - USTA Style -->
+            <div class="usta-card p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="usta-gradient p-2 rounded-lg"><i class="fas fa-book-reader text-white"></i></span>
+                    Recursos Recomendados
+                </h3>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3">
+                        <span class="mt-1 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded">Libro</span>
+                        <div>
+                            <a href="https://www.oreilly.com/library/view/fastapi/9781098135492/" target="_blank"
+                                rel="noopener noreferrer"
+                                class="font-medium text-gray-800 hover:text-pink-600 transition-colors">
+                                FastAPI Modern Python Web Development <i
+                                    class="fas fa-external-link-alt text-xs ml-1"></i>
+                            </a>
+                            <p class="text-xs text-gray-500">Bill Lubanovic (O'Reilly, 2024) - Excelente para entender
+                                la transición de
+                                scripts a web apps.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="mt-1 bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">Doc</span>
+                        <div>
+                            <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer"
+                                class="font-medium text-gray-800 hover:text-pink-600 transition-colors">
+                                Documentación Oficial de FastAPI <i class="fas fa-external-link-alt text-xs ml-1"></i>
+                            </a>
+                            <p class="text-xs text-gray-500">fastapi.tiangolo.com - Considerada una de las mejores
+                                documentaciones técnicas existentes.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="mt-1 bg-cyan-100 text-cyan-700 text-xs font-bold px-2 py-0.5 rounded">Docker</span>
+                        <div>
+                            <a href="https://docs.docker.com/language/python/" target="_blank" rel="noopener noreferrer"
+                                class="font-medium text-gray-800 hover:text-pink-600 transition-colors">
+                                Docker Docs: Python Guide <i class="fas fa-external-link-alt text-xs ml-1"></i>
+                            </a>
+                            <p class="text-xs text-gray-500">docs.docker.com - Guía oficial para containerizar
+                                aplicaciones Python con mejores prácticas.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span
+                            class="mt-1 bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-0.5 rounded">Python</span>
+                        <div>
+                            <a href="https://docs.python.org/3/whatsnew/3.11.html" target="_blank"
+                                rel="noopener noreferrer"
+                                class="font-medium text-gray-800 hover:text-pink-600 transition-colors">
+                                What's New in Python 3.11 <i class="fas fa-external-link-alt text-xs ml-1"></i>
+                            </a>
+                            <p class="text-xs text-gray-500">docs.python.org - Nuevas características y mejoras de
+                                rendimiento (hasta 60% más rápido).</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span
+                            class="mt-1 bg-purple-100 text-purple-700 text-xs font-bold px-2 py-0.5 rounded">Tutorial</span>
+                        <div>
+                            <a href="https://realpython.com/fastapi-python-web-apis/" target="_blank"
+                                rel="noopener noreferrer"
+                                class="font-medium text-gray-800 hover:text-pink-600 transition-colors">
+                                Real Python: FastAPI Tutorial <i class="fas fa-external-link-alt text-xs ml-1"></i>
+                            </a>
+                            <p class="text-xs text-gray-500">realpython.com - Tutorial completo para construir APIs web
+                                con FastAPI paso a paso.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span
+                            class="mt-1 bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded">Infra</span>
+                        <div>
+                            <a href="https://railway.com/template/fastapi" target="_blank" rel="noopener noreferrer"
+                                class="font-medium text-gray-800 hover:text-pink-600 transition-colors">
+                                Railway FastAPI Template <i class="fas fa-external-link-alt text-xs ml-1"></i>
+                            </a>
+                            <p class="text-xs text-gray-500">railway.com - Template oficial para desplegar FastAPI con
+                                Docker en un clic.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Volver arriba">
+        <i class="fas fa-arrow-up" aria-hidden="true"></i>
+    </button>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data Store ---
+        const syllabusData = [
+            // Fundamentals
+            {
+                week: 1,
+                module: "Fundamentos",
+                title: "Del Script al Entorno de Producción",
+                outcome: "Configurar un entorno de desarrollo aislado y reproducible usando Python 3.11.9 con venv y git.",
+                theory: "¿Por qué Python 3.11.9? (rendimiento, estabilidad). Entornos virtuales (venv vs conda). Control de versiones básico (Git flow para un solo dev). Decoradores en Python (esencial para APIs).",
+                practice: "Instalar Python 3.11.9. Configurar venv local. Crear repositorio Git. Script con type hinting estricto y decoradores personalizados.",
+                autonomous: "Proyecto Fase 1: Seleccionar dataset personal, limpieza básica en Pandas, modularizar limpieza en funciones puras (archivo .py separado).",
+                tools: "Python 3.11.9, venv, Git, VS Code"
+            },
+            {
+                week: 2,
+                module: "Fundamentos",
+                title: "Serialización y el Protocolo HTTP",
+                outcome: "Interpretar peticiones HTTP y serializar objetos de Python a formatos estándar de intercambio.",
+                theory: "El protocolo HTTP (Verbos, Status Codes, Headers). Formatos de intercambio (JSON vs Pickle). Introducción a Pydantic (Validación de datos). requirements.txt y gestión de dependencias.",
+                practice: "Ejercicio de 'API manual': Parsear un string JSON, validarlo con Pydantic y responder con diccionario Python. Crear requirements.txt del proyecto.",
+                autonomous: "Crear esquemas Pydantic para el dataset elegido en Fase 1 (InputSchema y OutputSchema).",
+                tools: "Python 3.11.9, venv, JSON, Pydantic, Requests"
+            },
+            {
+                week: 3,
+                module: "Fundamentos",
+                title: "Introducción a Web Frameworks (Flask)",
+                outcome: "Construir un servidor web síncrono básico para entender el ciclo request-response.",
+                theory: "Concepto de Servidor Web y WSGI. Routing básico. Flask vs Frameworks modernos. Diferencia Síncrono vs Asíncrono.",
+                practice: "Activar venv, instalar Flask. Crear una mini-app con 3 endpoints (GET, POST). Probar con Postman/cURL.",
+                autonomous: "Migrar funciones de limpieza de la Semana 1 a un endpoint '/clean' en Flask.",
+                tools: "Python 3.11.9, venv, Flask, Postman"
+            },
+            {
+                week: 4,
+                module: "Fundamentos",
+                title: "Transición a FastAPI & Modern Python",
+                outcome: "Implementar una API básica usando FastAPI, aprovechando la generación automática de documentación.",
+                theory: "ASGI vs WSGI. Type Hinting como fuente de verdad. Introducción a Swagger UI/Redoc. Async/Await conceptual.",
+                practice: "pip install fastapi uvicorn en venv. Reescribir la app de Flask (Sem 3) en FastAPI. Explorar docs interactivos (/docs).",
+                autonomous: "Migrar endpoint de limpieza a FastAPI. Añadir validación estricta de tipos en el endpoint.",
+                tools: "Python 3.11.9, venv, FastAPI, Uvicorn"
+            },
+            // APIs
+            {
+                week: 5,
+                module: "APIs",
+                title: "Validación Avanzada de Datos",
+                outcome: "Asegurar la integridad de los datos de entrada para modelos de ML usando Pydantic.",
+                theory: "Validadores de campo (@field_validator). Tipos complejos (List, Union, Optional). Modelos anidados. Manejo de errores de validación (HTTP 422).",
+                practice: "Crear validador robusto para un dataset con valores atípicos. Endpoint que rechaza datos fuera de rango estadístico.",
+                autonomous: "Refinar esquemas del proyecto: añadir validaciones de rango lógico (ej: edad > 0) y descripciones de campos.",
+                tools: "Python 3.11.9, venv, Pydantic V2, FastAPI"
+            },
+            {
+                week: 6,
+                module: "APIs",
+                title: "Inyección de Dependencias",
+                outcome: "Desacoplar la lógica de negocio de la lógica de la ruta usando el sistema de dependencias de FastAPI.",
+                theory: "Patrón de Inyección de Dependencias (DI). 'Depends' en FastAPI. Reutilización de código (ej: conexión a BD, carga de configuración). python-dotenv para variables de entorno.",
+                practice: "Crear una dependencia 'common_parameters' para paginación y filtrado. Aplicarla a múltiples rutas. Configurar .env local.",
+                autonomous: "Implementar dependencia para cargar configuración (settings) de la API desde variables de entorno.",
+                tools: "Python 3.11.9, venv, FastAPI Depends, python-dotenv"
+            },
+            {
+                week: 7,
+                module: "APIs",
+                title: "Persistencia Ligera (SQLAlchemy)",
+                outcome: "Almacenar logs de predicciones y resultados en una base de datos relacional simple.",
+                theory: "ORM vs SQL Raw. SQLAlchemy Core vs ORM. Modelos de Base de Datos. SQLite para desarrollo local.",
+                practice: "pip install sqlalchemy en venv. Conectar API a SQLite. Guardar histórico de requests recibidos en un endpoint dummy.",
+                autonomous: "Crear tabla 'PredictionLog' en el proyecto. Guardar cada input y output del modelo (simulado).",
+                tools: "Python 3.11.9, venv, SQLAlchemy, SQLite"
+            },
+            {
+                week: 8,
+                module: "APIs",
+                title: "Testing y Calidad de Código",
+                outcome: "Automatizar la verificación del comportamiento de la API mediante pruebas unitarias y de integración.",
+                theory: "Pirámide de testing. Pytest framework. TestClient de FastAPI. Fixtures. Preparación para reproducibilidad (la importancia sin Docker... aún).",
+                practice: "pip install pytest httpx en venv. Escribir tests para endpoints exitosos (200) y fallidos (422, 404, 500).",
+                autonomous: "Cubrir al menos 3 endpoints del proyecto con tests automáticos. Documentar cómo otro dev podría clonar y correr el proyecto.",
+                tools: "Python 3.11.9, venv, Pytest, Httpx"
+            },
+            {
+                week: 9,
+                module: "APIs",
+                title: "Contenerización con Docker y Debian",
+                outcome: "Empaquetar la aplicación y sus dependencias en un contenedor Docker basado en Debian para garantizar reproducibilidad total.",
+                theory: "Contenedores vs Máquinas Virtuales. ¿Por qué Docker ahora? Dockerfile estructura. Imagen base python:3.11.9-slim-bookworm (Debian 12). Contexto de construcción. Multi-stage builds.",
+                practice: "Instalar Docker Desktop. Escribir Dockerfile usando FROM python:3.11.9-slim-bookworm. Build y Run local. Probar que la API funciona igual dentro del contenedor.",
+                autonomous: "Dockerizar el proyecto personal. Crear docker-compose.yml para desarrollo. Asegurar que funciona idéntico a venv local.",
+                tools: "Docker Desktop, python:3.11.9-slim-bookworm (Debian 12)"
+            },
+            {
+                week: 10,
+                module: "APIs",
+                title: "Despliegue en Nube (Railway/Render)",
+                outcome: "Publicar la API containerizada en internet accesible globalmente mediante servicios PaaS.",
+                theory: "Concepto de PaaS. Variables de entorno en producción vs desarrollo. CI/CD básico (conexión a GitHub). Logs de producción. Railway/Render detectan Dockerfile automáticamente.",
+                practice: "Conectar repo GitHub a Railway/Render. Configurar variables de entorno de producción. Desplegar usando el Dockerfile de Semana 9.",
+                autonomous: "Proyecto Fase 2 (Hito): API desplegada en nube con Docker (aún sin modelo real, solo lógica mock).",
+                tools: "Docker, Railway/Render, GitHub"
+            },
+            // IA Integration
+            {
+                week: 11,
+                module: "IA",
+                title: "Sirviendo Modelos Clásicos (Scikit-Learn)",
+                outcome: "Exponer un modelo de regresión/clasificación entrenado mediante un endpoint REST eficiente.",
+                theory: "Ciclo de vida del modelo (Train -> Pickle/Joblib -> Load -> Predict). Patrón Singleton para carga de modelos (evitar recarga por request). Consideraciones de tamaño de imagen Docker con dependencias ML.",
+                practice: "Entrenar modelo simple (Iris/Titanic). Serializar con joblib. Crear endpoint '/predict' que carga el .pkl al inicio. Actualizar Dockerfile para incluir scikit-learn.",
+                autonomous: "Entrenar modelo final del proyecto. Serializarlo. Crear endpoint real '/prediction' en la API. Reconstruir imagen Docker.",
+                tools: "Docker, Scikit-Learn, Joblib, python:3.11.9-slim-bookworm"
+            },
+            {
+                week: 12,
+                module: "IA",
+                title: "Sirviendo Deep Learning (TensorFlow/Keras)",
+                outcome: "Gestionar la carga y predicción de modelos pesados en contenedores sin GPU.",
+                theory: "Formato H5/SavedModel. Costo computacional de inferencia CPU. Preprocesamiento de tensores en la API. Problemas de concurrencia con TF. Optimización de imagen Docker con TensorFlow.",
+                practice: "Cargar una red neuronal pre-entrenada simple (ej: MobileNet pequeña o modelo tabular custom). Hacer inferencia sobre imagen/datos enviados. Usar tensorflow-cpu en Docker.",
+                autonomous: "Opcional: Si el proyecto usa DL, integrar el modelo en Docker. Si no, optimizar el modelo clásico.",
+                tools: "Docker, TensorFlow (CPU), Numpy, python:3.11.9-slim-bookworm"
+            },
+            {
+                week: 13,
+                module: "IA",
+                title: "Procesamiento Asíncrono & Background Tasks",
+                outcome: "Manejar tareas de inferencia de larga duración sin bloquear al cliente.",
+                theory: "Bloqueo del Event Loop. BackgroundTasks en FastAPI. Concepto de Colas de Tareas (Celery - mención teórica). Volúmenes Docker para persistencia.",
+                practice: "Endpoint que acepta un archivo, responde 'Procesando' (202 Accepted) y ejecuta la simulación/predicción en background. Configurar volumen Docker para archivos.",
+                autonomous: "Implementar endpoint de re-entrenamiento simulado que corre en background. Persistir resultados en volumen.",
+                tools: "Docker, FastAPI BackgroundTasks, Volúmenes"
+            },
+            {
+                week: 14,
+                module: "IA",
+                title: "Integración de LLMs (APIs Externas)",
+                outcome: "Enriquecer la aplicación conectando con APIs de IA Generativa (OpenAI/HuggingFace).",
+                theory: "Ingeniería de Prompts básica. Costos y Latencia de APIs externas. Gestión de API Keys seguras (.env y Docker secrets).",
+                practice: "Crear endpoint '/explain' que toma la predicción numérica del modelo local y pide a GPT/HF una explicación textual. Configurar API keys como variables de entorno en Docker.",
+                autonomous: "Añadir funcionalidad de 'resumen' o 'explicación' al proyecto final usando una API gratuita/trial.",
+                tools: "Docker, OpenAI API / HuggingFace Inference API, python-dotenv"
+            },
+            // Project
+            {
+                week: 15,
+                module: "Proyecto",
+                title: "Seguridad y Documentación Final",
+                outcome: "Proteger los endpoints y pulir la documentación para usuarios finales.",
+                theory: "Autenticación vs Autorización. OAuth2 con Password Flow (Básico). API Keys headers. Mejoras en Swagger (ejemplos, descripciones markdown). Docker security best practices.",
+                practice: "Implementar endpoint '/token'. Proteger endpoint '/predict' requiriendo token JWT simple. Configurar usuario no-root en Dockerfile.",
+                autonomous: "Añadir Auth al proyecto final. Completar documentación OpenAPI con ejemplos claros. Auditoría de seguridad del contenedor.",
+                tools: "Docker, Python-Jose, OAuth2, python:3.11.9-slim-bookworm"
+            },
+            {
+                week: 16,
+                module: "Proyecto",
+                title: "Presentación y Demo Final",
+                outcome: "Defender la arquitectura y funcionalidad del producto de datos containerizado.",
+                theory: "N/A - Sesión de Demos. Retrospectiva: de venv local a Docker en producción.",
+                practice: "Presentación de 10 min por estudiante: Problema, Arquitectura (mostrar Dockerfile), Demo en vivo (Railway + Docker), Documentación Swagger.",
+                autonomous: "Entrega final del repositorio con Dockerfile y URL activa en Railway/Render.",
+                tools: "Docker, Railway, Swagger UI, python:3.11.9-slim-bookworm"
+            }
+        ];
+
+        // --- DOM Elements ---
+        const weekListContainer = document.getElementById('weekListContainer');
+        const weekDetailContent = document.getElementById('weekDetailContent');
+        const filters = document.querySelectorAll('.filter-btn');
+
+        // --- State ---
+        let currentFilter = 'all';
+        let activeWeekId = null;
+
+        // --- Init Functions ---
+        function init() {
+            renderWeekList();
+            renderCharts();
+            setupEventListeners();
+        }
+
+        // --- Render Lists ---
+        function renderWeekList() {
+            weekListContainer.innerHTML = '';
+
+            const filteredData = currentFilter === 'all'
+                ? syllabusData
+                : syllabusData.filter(item => item.module.includes(currentFilter));
+
+            if (filteredData.length === 0) {
+                weekListContainer.innerHTML = '<p class="text-center text-gray-400 py-4">No hay semanas para este filtro.</p>';
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const isActive = item.week === activeWeekId;
+                const card = document.createElement('div');
+                card.className = `week-card p-4 mb-3 rounded-lg cursor-pointer border border-gray-100 ${isActive ? 'bg-indigo-50 border-l-indigo-600 active' : 'bg-white hover:bg-gray-50'}`;
+
+                // Color badge based on module
+                let badgeColor = 'bg-gray-100 text-gray-600';
+                if (item.module === 'Fundamentos') badgeColor = 'bg-blue-100 text-blue-700';
+                if (item.module === 'APIs') badgeColor = 'bg-indigo-100 text-indigo-700';
+                if (item.module === 'IA') badgeColor = 'bg-purple-100 text-purple-700';
+                if (item.module === 'Proyecto') badgeColor = 'bg-green-100 text-green-700';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Semana ${item.week}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${badgeColor}">${item.module}</span>
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-sm leading-tight">${item.title}</h4>
+                    <p class="text-xs text-gray-500 mt-2 truncate"><i class="fas fa-tools mr-1"></i> ${item.tools}</p>
+                `;
+
+                card.addEventListener('click', () => {
+                    activeWeekId = item.week;
+                    renderWeekList(); // Re-render to update active state
+                    renderDetail(item);
+                });
+
+                weekListContainer.appendChild(card);
+            });
+        }
+
+        function renderDetail(item) {
+            let moduleIcon = 'fa-code';
+            if (item.module === 'IA') moduleIcon = 'fa-brain';
+            if (item.module === 'Proyecto') moduleIcon = 'fa-flag-checkered';
+
+            weekDetailContent.innerHTML = `
+                <div class="animate-fade-in">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold">
+                            ${item.week}
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">${item.title}</h2>
+                            <span class="text-sm font-medium text-indigo-600 flex items-center gap-1">
+                                <i class="fas ${moduleIcon}"></i> Módulo: ${item.module}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Outcome -->
+                        <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                            <h3 class="text-sm font-bold text-blue-800 uppercase tracking-wide mb-2">Resultado de Aprendizaje</h3>
+                            <p class="text-blue-900">${item.outcome}</p>
+                        </div>
+
+                        <!-- Content Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                    <i class="fas fa-book-open text-gray-400"></i> Teoría (60 min)
+                                </h4>
+                                <p class="text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded border border-gray-100">${item.theory}</p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                    <i class="fas fa-laptop-code text-gray-400"></i> Práctica Guiada (120 min)
+                                </h4>
+                                <p class="text-sm text-gray-600 leading-relaxed bg-gray-50 p-3 rounded border border-gray-100">${item.practice}</p>
+                            </div>
+                        </div>
+
+                        <!-- Autonomous -->
+                        <div class="mt-2">
+                            <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                <i class="fas fa-user-clock text-gray-400"></i> Trabajo Autónomo (8h)
+                            </h4>
+                            <div class="bg-yellow-50 border border-yellow-100 p-4 rounded-lg flex items-start gap-3">
+                                <i class="fas fa-lightbulb text-yellow-600 mt-1"></i>
+                                <p class="text-sm text-gray-700 italic">${item.autonomous}</p>
+                            </div>
+                        </div>
+
+                        <!-- Tools Footer -->
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <span class="text-xs font-bold text-gray-400 uppercase">Stack Tecnológico:</span>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                ${item.tools.split(',').map(t =>
+                `<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded border border-gray-200">${t.trim()}</span>`
+            ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setupEventListeners() {
+            filters.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Update UI
+                    filters.forEach(b => {
+                        b.classList.remove('bg-indigo-600', 'text-white');
+                        b.classList.add('bg-white', 'text-gray-600');
+                    });
+                    e.target.classList.remove('bg-white', 'text-gray-600');
+                    e.target.classList.add('bg-indigo-600', 'text-white');
+
+                    // Update Logic
+                    currentFilter = e.target.dataset.filter;
+                    renderWeekList();
+                });
+            });
+        }
+
+        // --- Charts Implementation ---
+        function renderCharts() {
+            // Chart 1: Progression (Line)
+            const ctxProg = document.getElementById('progressionChart').getContext('2d');
+            new Chart(ctxProg, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: 16 }, (_, i) => `S${i + 1}`),
+                    datasets: [
+                        {
+                            label: 'Complejidad Técnica',
+                            data: [1, 2, 3, 3, 4, 5, 5, 6, 7, 7, 6, 8, 8, 7, 5, 9], // Estimated values
+                            borderColor: '#4F46E5', // Indigo
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Autonomía Requerida',
+                            data: [1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 9, 10], // Rising autonomy
+                            borderColor: '#F59E0B', // Amber
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: { display: true, text: 'Nivel (1-10)' }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Content Distribution (Doughnut)
+            const ctxDist = document.getElementById('distributionChart').getContext('2d');
+            new Chart(ctxDist, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ML Clásico (Scikit-Learn)', 'Deep Learning (TF/Keras)', 'LLMs/APIs Externas'],
+                    datasets: [{
+                        data: [60, 30, 10],
+                        backgroundColor: [
+                            '#3B82F6', // Blue (Classic)
+                            '#8B5CF6', // Purple (DL)
+                            '#10B981'  // Emerald (LLM)
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // --- Mobile Menu Toggle ---
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('active');
+                const isExpanded = mobileMenu.classList.contains('active');
+                mobileMenuBtn.setAttribute('aria-expanded', isExpanded);
+            });
+        }
+
+        // --- Scroll to Top Button ---
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Start
+        init();
+
+        // Select first week by default on load
+        if (syllabusData.length > 0) {
+            activeWeekId = 1;
+            renderWeekList();
+            renderDetail(syllabusData[0]);
+        }
+
+    </script>
+</body>
+
+</html>

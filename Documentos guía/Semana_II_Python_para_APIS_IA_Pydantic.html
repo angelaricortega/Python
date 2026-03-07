@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Estudio Autónomo: Validación de Datos con Pydantic para estadísticos. Modelos, Field, validadores y DataFrames.">
+    <meta name="author" content="Javier Mauricio Sierra">
+    <title>Estudio Autónomo: Validación de Datos con Pydantic — USTA</title>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts: Montserrat y Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3D008D',
+                        secondary: '#ED1E79',
+                        navy: '#001A4D',
+                        gold: '#FDB913',
+                        bg: '#F8FAFC',
+                        surface: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+            scroll-behavior: smooth;
+        }
+
+        code,
+        pre {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* USTA Gradient Background */
+        .usta-gradient {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+        }
+
+        .usta-gradient-hover:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+        }
+
+        /* USTA Navy Header */
+        .usta-header {
+            background: linear-gradient(180deg, #001A4D 0%, #002868 100%);
+        }
+
+        /* USTA Card Style */
+        .usta-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .usta-card:hover {
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        /* USTA Button Style */
+        .usta-button {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .usta-button:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(61, 0, 141, 0.35);
+        }
+
+        /* Tip box USTA style */
+        .tip-box {
+            background: linear-gradient(135deg, rgba(61, 0, 141, 0.08) 0%, rgba(237, 30, 121, 0.08) 100%);
+            border: 1px solid rgba(61, 0, 141, 0.2);
+        }
+
+        /* Sidebar active state */
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(61, 0, 141, 0.15) 0%, transparent 100%);
+            border-left: 4px solid #ED1E79;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3D008D, #ED1E79);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #4A00A8, #FF2D8A);
+        }
+
+        /* Code scrollbar */
+        .code-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-scroll::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .code-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3D008D, #ED1E79);
+            border-radius: 4px;
+        }
+
+        /* Fade-in animation */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Focus styles for accessibility */
+        button:focus-visible {
+            outline: 2px solid #ED1E79;
+            outline-offset: 2px;
+        }
+
+        /* Syntax highlighting classes */
+        .syntax-kwd {
+            color: #c678dd;
+            font-weight: bold;
+        }
+
+        .syntax-cls {
+            color: #e5c07b;
+        }
+
+        .syntax-str {
+            color: #98c379;
+        }
+
+        .syntax-com {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        .syntax-func {
+            color: #61afef;
+        }
+
+        .syntax-self {
+            color: #e06c75;
+            font-style: italic;
+        }
+
+        .syntax-num {
+            color: #d19a66;
+        }
+
+        /* Scroll to top button */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+            color: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(61, 0, 141, 0.4);
+            transition: all 0.3s ease;
+            z-index: 50;
+            border: none;
+        }
+
+        .scroll-to-top.visible {
+            display: flex;
+        }
+
+        .scroll-to-top:hover {
+            background: linear-gradient(140deg, #4A00A8 0%, #FF2D8A 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(61, 0, 141, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTopBtn" aria-label="Volver arriba">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Icons (SVG Inline para evitar errores de librerías externas) ---
+        const Icons = {
+            Book: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+            ),
+            Code: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+            ),
+            Check: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            ),
+            Alert: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            ),
+            ArrowRight: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            ),
+            Menu: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            ),
+            Database: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                </svg>
+            ),
+            Structure: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            ),
+            Settings: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            ),
+            Help: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            ),
+            Filter: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+            ),
+            Table: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                    <line x1="12" y1="3" x2="12" y2="21"></line>
+                </svg>
+            ),
+            Python: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+            ),
+            BookOpen: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+            ),
+            GraduationCap: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M22 10l-10-5L2 10l10 5 10-5z"></path>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                </svg>
+            ),
+            ChevronLeft: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            ),
+            ChevronRight: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            ),
+        };
+
+        // --- Componentes de UI ---
+
+        const CodeBlock = ({ title, code }) => {
+            const [copied, setCopied] = useState(false);
+            const handleCopy = () => {
+                navigator.clipboard.writeText(code).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                });
+            };
+            return (
+                <div className="my-4 rounded-xl overflow-hidden border border-gray-700 bg-gray-900 text-gray-100 shadow-lg">
+                    <div className="bg-gray-800 px-4 py-2 text-xs font-mono text-gray-400 border-b border-gray-700 flex justify-between items-center">
+                        <span><i className="fab fa-python text-yellow-400 mr-2"></i>{title || 'Python Code'}</span>
+                        <span className="flex items-center gap-3">
+                            <button
+                                onClick={handleCopy}
+                                className="flex items-center gap-1 hover:text-white transition-colors"
+                                title="Copiar código"
+                            >
+                                {copied
+                                    ? <><i className="fas fa-check text-green-400"></i><span className="text-green-400">¡Copiado!</span></>
+                                    : <><i className="far fa-clipboard"></i><span>Copiar</span></>
+                                }
+                            </button>
+                            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500"></div><div className="w-2 h-2 rounded-full bg-yellow-500"></div><div className="w-2 h-2 rounded-full bg-green-500"></div></span>
+                        </span>
+                    </div>
+                    <div className="p-4 overflow-x-auto code-scroll">
+                        <pre className="text-sm leading-relaxed"><code dangerouslySetInnerHTML={{
+                            __html: code.replace(/#.*/g, match => `<span class="text-green-500 italic">${match}</span>`)
+                                .replace(/"""[\s\S]*?"""/g, match => `<span class="text-green-500 italic">${match}</span>`)
+                                .replace(/class /g, '<span class="text-pink-500">class </span>')
+                                .replace(/def /g, '<span class="text-pink-500">def </span>')
+                                .replace(/from /g, '<span class="text-pink-500">from </span>')
+                                .replace(/import /g, '<span class="text-pink-500">import </span>')
+                                .replace(/return /g, '<span class="text-pink-500">return </span>')
+                                .replace(/raise /g, '<span class="text-pink-500">raise </span>')
+                                .replace(/if /g, '<span class="text-pink-500">if </span>')
+                                .replace(/else:/g, '<span class="text-pink-500">else:</span>')
+                                .replace(/elif /g, '<span class="text-pink-500">elif </span>')
+                                .replace(/for /g, '<span class="text-pink-500">for </span>')
+                                .replace(/while /g, '<span class="text-pink-500">while </span>')
+                                .replace(/try:/g, '<span class="text-pink-500">try:</span>')
+                                .replace(/except /g, '<span class="text-pink-500">except </span>')
+                                .replace(/as /g, '<span class="text-pink-500">as </span>')
+                                .replace(/in /g, '<span class="text-pink-500">in </span>')
+                                .replace(/not /g, '<span class="text-pink-500">not </span>')
+                                .replace(/and /g, '<span class="text-pink-500">and </span>')
+                                .replace(/or /g, '<span class="text-pink-500">or </span>')
+                                .replace(/print/g, '<span class="text-blue-400">print</span>')
+                                .replace(/len/g, '<span class="text-blue-400">len</span>')
+                                .replace(/sum/g, '<span class="text-blue-400">sum</span>')
+                                .replace(/sorted/g, '<span class="text-blue-400">sorted</span>')
+                                .replace(/range/g, '<span class="text-blue-400">range</span>')
+                                .replace(/input/g, '<span class="text-blue-400">input</span>')
+                                .replace(/float/g, '<span class="text-blue-400">float</span>')
+                                .replace(/isinstance/g, '<span class="text-blue-400">isinstance</span>')
+                                .replace(/self/g, '<span class="text-orange-400">self</span>')
+                                .replace(/BaseModel/g, '<span class="text-yellow-400">BaseModel</span>')
+                                .replace(/Field/g, '<span class="text-yellow-400">Field</span>')
+                                .replace(/field_validator/g, '<span class="text-yellow-400">field_validator</span>')
+                                .replace(/ValidationError/g, '<span class="text-yellow-400">ValidationError</span>')
+                                .replace(/@classmethod/g, '<span class="text-purple-400">@classmethod</span>')
+                                .replace(/None/g, '<span class="text-purple-400">None</span>')
+                                .replace(/True/g, '<span class="text-purple-400">True</span>')
+                                .replace(/False/g, '<span class="text-purple-400">False</span>')
+                        }} /></pre>
+                    </div>
+                </div>
+            );
+        };
+
+        const SectionHeader = ({ title, icon: Icon }) => (
+            <div className="flex items-center gap-3 mb-4 border-b border-gray-200 pb-3">
+                <div className="usta-gradient p-2.5 rounded-xl shadow-md text-white">
+                    {Icon && <Icon size={24} />}
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+            </div>
+        );
+
+        // --- Lógica del Curso (Data) ---
+
+        const curriculum = [
+            {
+                id: 'intro',
+                title: 'Introducción: El Problema de los Datos',
+                codeTitle: 'Ejemplo de Datos Corruptos',
+                icon: 'Alert',
+                content: (
+                    <div className="space-y-4">
+                        <p className="text-lg leading-relaxed">
+                            En estadística, existe un dicho famoso: <strong>"Garbage In, Garbage Out"</strong> (Entra basura, sale basura).
+                            Si alimentas tu modelo estadístico con datos corruptos, tus conclusiones serán erróneas, sin importar qué tan sofisticado sea tu algoritmo.
+                        </p>
+                        <div className="usta-card p-4">
+                            <h3 className="font-bold text-gray-700 mb-2">¿Qué puede salir mal?</h3>
+                            <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                                <li>Tipos de datos incorrectos (ej. recibir texto "veinte" en lugar del número 20).</li>
+                                <li>Valores faltantes o nulos donde no deberían existir.</li>
+                                <li>Datos fuera de rango (ej. una probabilidad de 1.5 o una edad negativa).</li>
+                            </ul>
+                        </div>
+                        <p>
+                            Python es un lenguaje de tipado dinámico, lo que es genial para prototipar, pero peligroso para la producción de datos. Aquí es donde entra <strong>Pydantic</strong>.
+                        </p>
+                    </div>
+                ),
+                pythonCode: `# Ejemplo de datos corruptos que pueden arruinar un análisis
+
+# Problema: Tipos inconsistentes
+datos_crudos = [
+    {"edad": 25, "peso": 70.5, "altura": 1.75},
+    {"edad": "30", "peso": "80.2", "altura": "1.80"},  # Strings en lugar de números
+    {"edad": None, "peso": -5, "altura": 3.5},  # Valores imposibles
+]
+
+# Sin validación, estos datos pasan desapercibidos
+# y arruinan tus cálculos estadísticos
+promedio_peso = sum(d["peso"] for d in datos_crudos) / len(datos_crudos)
+print(f"Promedio calculado: {promedio_peso}")  # ¡Incorrecto!`
+            },
+            {
+                id: 'pydantic',
+                title: '¿Qué es Pydantic?',
+                codeTitle: 'Instalación y Concepto Básico',
+                icon: 'Database',
+                content: (
+                    <div className="space-y-4">
+                        <p>
+                            <strong>Pydantic</strong> es una librería de Python para el análisis y validación de datos. Utiliza las anotaciones de tipo (type hints) nativas de Python para validar que los datos cumplan con las reglas que definas.
+                        </p>
+                        <div className="tip-box p-4 rounded-lg">
+                            <p className="text-primary font-medium">
+                                <i className="fas fa-lightbulb text-secondary mr-2"></i>
+                                A diferencia de otras librerías, Pydantic no solo valida, sino que intenta <em>parsear</em> (convertir) los datos al tipo correcto si es posible.
+                            </p>
+                        </div>
+                        <p className="text-sm text-gray-500">Para instalarlo: <code className="bg-gray-100 px-2 py-1 rounded text-primary font-semibold">pip install pydantic</code></p>
+                    </div>
+                ),
+                pythonCode: `# Instalación de pydantic
+# pip install pydantic
+
+from pydantic import BaseModel
+
+# Definimos un modelo simple
+class Persona(BaseModel):
+    nombre: str
+    edad: int
+    email: str
+
+# Pydantic valida automáticamente los tipos
+p = Persona(nombre="Ana", edad=25, email="ana@ejemplo.com")
+print(p)
+
+# Intentar crear con datos inválidos lanza error
+try:
+    p_invalida = Persona(nombre="Ana", edad="veinte", email="correo-invalido")
+except Exception as e:
+    print(f"Error capturado: {e}")`
+            },
+            {
+                id: 'models',
+                title: 'Profundizando en los Modelos',
+                codeTitle: 'Anatomía de un Modelo Estadístico',
+                icon: 'Structure',
+                content: (
+                    <div className="space-y-4">
+                        <p>
+                            Un <strong>Modelo</strong> en Pydantic es una clase que define la <em>forma</em> y los <em>tipos</em> de tus datos. Funciona como un contrato estricto.
+                        </p>
+                        <div className="usta-card p-4">
+                            <h4 className="font-bold text-gray-700 mb-2">Conceptos Clave:</h4>
+                            <ul className="list-disc pl-5 space-y-3 text-gray-600">
+                                <li className="tip-box p-3 rounded-md -ml-2 list-none">
+                                    <div className="flex gap-2 items-start">
+                                        <div className="mt-1 text-primary"><Icons.Structure size={18} /></div>
+                                        <div>
+                                            <strong className="text-primary">BaseModel (El Núcleo):</strong>
+                                            <p className="text-sm mt-1 mb-2">
+                                                No es una herencia decorativa. Al heredar de <code>BaseModel</code>, tu clase gana "superpoderes" automáticos sin que escribas código extra:
+                                            </p>
+                                            <ul className="list-disc pl-4 text-sm text-gray-700 space-y-1">
+                                                <li><strong>Constructor automático:</strong> No necesitas escribir <code>__init__</code>. Pydantic lo crea basándose en tus campos.</li>
+                                                <li><strong>Serialización:</strong> Métodos como <code>.model_dump()</code> (para obtener un diccionario) o <code>.model_dump_json()</code> facilitan exportar tus datos limpios a JSON o Pandas.</li>
+                                                <li><strong>Protección:</strong> Impide la asignación de tipos incorrectos en tiempo de ejecución.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <strong>Type Hints (<code>: tipo</code>):</strong> Usamos la sintaxis estándar de Python. No solo sirve para documentar, Pydantic la usa para <em>forzar</em> ese tipo de dato.
+                                </li>
+                                <li>
+                                    <strong>Campos Opcionales:</strong> En estadística, a menudo tenemos datos faltantes. Usar <code>Optional[float] = None</code> permite explícitamente que un valor sea nulo sin romper el código.
+                                </li>
+                                <li>
+                                    <strong>Colecciones (<code>List[float]</code>):</strong> Puedes validar estructuras complejas. Pydantic validará cada uno de los elementos dentro de la lista.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `from pydantic import BaseModel
+from typing import List, Optional
+
+# Un Modelo es el "plano" o contrato de tus datos
+class Experimento(BaseModel):
+    # 1. Campo Obligatorio
+    # Sintaxis: nombre_campo : tipo
+    id_experimento: int 
+    
+    # 2. Campo con Valor por Defecto
+    # Sintaxis: nombre : tipo = valor
+    investigador: str = "Anónimo"
+    
+    # 3. Campo Opcional (puede ser None)
+    # Útil para datos faltantes en estadística
+    temperatura: Optional[float] = None
+    
+    # 4. Listas Tipadas (Series de datos)
+    # Valida que cada elemento de la lista sea un float
+    mediciones: List[float] = []
+
+# --- Probando el modelo ---
+
+# Caso: Datos incompletos pero válidos (usa defaults)
+exp1 = Experimento(id_experimento=101, mediciones=[2.5, 3.1])
+print(exp1)
+# Output: id_experimento=101 investigador='Anónimo' temperatura=None mediciones=[2.5, 3.1]
+
+# Método Útil: Exportar a diccionario (Ideal para Pandas)
+data_dict = exp1.model_dump()
+print(data_dict)
+# Output: {'id_experimento': 101, 'investigador': 'Anónimo', 'temperatura': None, 'mediciones': [2.5, 3.1]}`
+            },
+            {
+                id: 'fields',
+                title: 'El Poder de "Field"',
+                codeTitle: 'Metadatos y Restricciones Numéricas',
+                icon: 'Settings',
+                content: (
+                    <div className="space-y-4">
+                        <p>
+                            A veces, solo con el tipo de dato (<code>int</code>, <code>float</code>) no basta. La función <code>Field</code> te permite personalizar cada campo individualmente con dos propósitos principales:
+                        </p>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="tip-box p-4 rounded-lg">
+                                <h4 className="font-bold text-primary mb-2">1. Restricciones de Validación</h4>
+                                <p className="text-sm text-gray-700 mb-3">
+                                    En lugar de escribir funciones complejas, puedes usar argumentos como <code>gt</code> (mayor que), <code>lt</code> (menor que), <code>ge</code> (mayor o igual), <code>max_length</code>, etc.
+                                </p>
+                                <div className="bg-white/50 p-3 rounded text-xs space-y-1">
+                                    <p><strong>Numéricos:</strong></p>
+                                    <ul className="list-disc pl-4 space-y-0.5 text-gray-600">
+                                        <li><code>gt</code> = greater than (&gt;)</li>
+                                        <li><code>ge</code> = greater/equal (≥)</li>
+                                        <li><code>lt</code> = less than (&lt;)</li>
+                                        <li><code>le</code> = less/equal (≤)</li>
+                                        <li><code>multiple_of</code> = múltiplo de</li>
+                                    </ul>
+                                    <p className="mt-2"><strong>Strings:</strong></p>
+                                    <ul className="list-disc pl-4 space-y-0.5 text-gray-600">
+                                        <li><code>min_length</code> / <code>max_length</code></li>
+                                        <li><code>pattern</code> = regex (ej: <code>r"^[A-Z]+$"</code>)</li>
+                                    </ul>
+                                    <p className="mt-2"><strong>Decimal:</strong></p>
+                                    <ul className="list-disc pl-4 space-y-0.5 text-gray-600">
+                                        <li><code>max_digits</code> = total de dígitos</li>
+                                        <li><code>decimal_places</code> = decimales</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-emerald-200">
+                                <h4 className="font-bold text-emerald-700 mb-2">2. Documentación (Metadatos)</h4>
+                                <p className="text-sm text-emerald-900">
+                                    El argumento <code>description</code> es crucial para generar diccionarios de datos automáticos. Permite que otros entiendan qué significa esa variable.
+                                </p>
+                                <div className="bg-white/50 p-3 rounded mt-3 text-xs">
+                                    <p className="text-emerald-800"><strong>Otros metadatos útiles:</strong></p>
+                                    <ul className="list-disc pl-4 space-y-0.5 text-emerald-700 mt-1">
+                                        <li><code>title</code> = nombre legible</li>
+                                        <li><code>examples</code> = valores de ejemplo</li>
+                                        <li><code>alias</code> = nombre alternativo</li>
+                                        <li><code>frozen</code> = campo inmutable</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="usta-card p-5 mt-4">
+                            <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <i className="fas fa-calculator text-primary"></i>
+                                Ejemplos Prácticos de Restricciones
+                            </h4>
+                            <div className="grid md:grid-cols-2 gap-4 text-sm">
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="font-semibold text-gray-700 mb-1">Edad válida (0-120 años)</p>
+                                    <code className="text-xs text-primary">edad: int = Field(..., ge=0, le=120)</code>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="font-semibold text-gray-700 mb-1">Porcentaje (0-100)</p>
+                                    <code className="text-xs text-primary">porcentaje: float = Field(..., ge=0, le=100)</code>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="font-semibold text-gray-700 mb-1">Código postal (5 dígitos)</p>
+                                    <code className="text-xs text-primary">cp: str = Field(..., min_length=5, max_length=5)</code>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="font-semibold text-gray-700 mb-1">Email válido</p>
+                                    <code className="text-xs text-primary">email: str = Field(..., pattern=r"^\S+@\S+\.\S+$")</code>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="font-semibold text-gray-700 mb-1">Precio positivo con 2 decimales</p>
+                                    <code className="text-xs text-primary">precio: float = Field(..., gt=0, le=999999.99)</code>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                    <p className="font-semibold text-gray-700 mb-1">Múltiplo de 5</p>
+                                    <code className="text-xs text-primary">puntuacion: int = Field(..., multiple_of=5)</code>
+                                </div>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-500 italic">
+                            Nota: Cuando usas <code>Field(...)</code> (con tres puntos), le estás diciendo a Pydantic que el campo es <strong>requerido</strong>.
+                        </p>
+                    </div>
+                ),
+                pythonCode: `from pydantic import BaseModel, Field
+from typing import Optional
+
+class VariableEstadistica(BaseModel):
+    # Field(...) indica que el campo es obligatorio aunque no tenga valor por defecto
+    nombre: str = Field(
+        ..., 
+        description="Nombre de la variable en el dataset",
+        min_length=2,           # Mínimo 2 caracteres
+        max_length=50           # Máximo 50 caracteres
+    )
+    
+    # Restricciones numéricas directas (sin escribir validadores complejos)
+    # gt = greater than (mayor que)
+    desviacion_std: float = Field(
+        ..., 
+        gt=0, 
+        description="La desviación debe ser positiva"
+    )
+    
+    # ge = greater than or equal (mayor o igual que)
+    # le = less than or equal (menor o igual que)
+    probabilidad_exito: float = Field(
+        ..., 
+        ge=0, 
+        le=1, 
+        description="Probabilidad entre 0 y 1"
+    )
+    
+    # default: valor por defecto
+    n_muestras: int = Field(
+        default=30, 
+        ge=1, 
+        le=10000,
+        description="Tamaño de muestra (mínimo 1, máximo 10000)"
+    )
+    
+    # Ejemplo con múltiple_of (múltiplo de)
+    nivel_confianza: int = Field(
+        default=95,
+        ge=90,
+        le=99,
+        multiple_of=5,          # Solo valores múltiplos de 5
+        description="Nivel de confianza: 90, 95 o 99"
+    )
+
+class Paciente(BaseModel):
+    # Validación de strings con pattern (expresión regular)
+    email: str = Field(
+        ...,
+        pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$",
+        description="Correo electrónico válido"
+    )
+    
+    # Edad con rango realista
+    edad: int = Field(
+        ...,
+        ge=0,
+        le=120,
+        description="Edad en años (0-120)"
+    )
+    
+    # Código postal de longitud fija
+    codigo_postal: str = Field(
+        ...,
+        min_length=5,
+        max_length=5,
+        pattern=r"^\d{5}$",     # Exactamente 5 dígitos
+        description="Código postal de 5 dígitos"
+    )
+
+# --- Ejemplos de uso ---
+
+# 1. Datos válidos
+print("=== Ejemplo 1: Datos Válidos ===")
+var = VariableEstadistica(
+    nombre="Temperatura",
+    desviacion_std=2.5,
+    probabilidad_exito=0.85,
+    n_muestras=100,
+    nivel_confianza=95
+)
+print(f"✓ Variable creada: {var.nombre}")
+print(f"  Nivel de confianza: {var.nivel_confianza}%")
+
+# 2. Error: desviación negativa
+print("\n=== Ejemplo 2: Error de validación ===")
+try:
+    v = VariableEstadistica(
+        nombre="Edad", 
+        desviacion_std=-5,      # Error: debe ser > 0
+        probabilidad_exito=0.5
+    )
+except Exception as e:
+    print(f"✗ Error: {e}")
+
+# 3. Error: nivel de confianza no es múltiplo de 5
+print("\n=== Ejemplo 3: Múltiplo inválido ===")
+try:
+    v = VariableEstadistica(
+        nombre="Test",
+        desviacion_std=1.5,
+        probabilidad_exito=0.5,
+        nivel_confianza=93      # Error: debe ser múltiplo de 5
+    )
+except Exception as e:
+    print(f"✗ Error: {e}")
+
+# 4. Error: código postal inválido
+print("\n=== Ejemplo 4: Pattern inválido ===")
+try:
+    p = Paciente(
+        email="paciente@hospital.com",
+        edad=25,
+        codigo_postal="ABC12"   # Error: debe ser 5 dígitos
+    )
+except Exception as e:
+    print(f"✗ Error: {e}")`
+            },
+            {
+                id: 'required_optional',
+                title: 'Obligatorios, Opcionales y Nulos',
+                codeTitle: 'Manejando la Ausencia de Datos',
+                icon: 'Help',
+                content: (
+                    <div className="space-y-4">
+                        <p>
+                            En ciencia de datos, la gestión de valores nulos (<em>missing values</em>) es crítica. Pydantic ofrece un control granular sobre esto para evitar errores silenciosos:
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="usta-card p-4">
+                                <div className="flex items-center gap-2 mb-2 text-secondary font-bold">
+                                    <div className="w-2 h-2 rounded-full" style={{ background: '#ED1E79' }}></div> Required
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">El dato <strong>debe</strong> venir en el input y tener valor.</p>
+                                <code className="text-xs bg-gray-100 px-1 py-0.5 rounded text-primary">a: int</code>
+                            </div>
+                            <div className="usta-card p-4">
+                                <div className="flex items-center gap-2 mb-2 text-primary font-bold">
+                                    <div className="w-2 h-2 rounded-full" style={{ background: '#3D008D' }}></div> Optional (Default)
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">Si no viene, usa un valor por defecto. No es None.</p>
+                                <code className="text-xs bg-gray-100 px-1 py-0.5 rounded text-primary">a: int = 0</code>
+                            </div>
+                            <div className="usta-card p-4">
+                                <div className="flex items-center gap-2 mb-2 font-bold" style={{ color: '#FDB913' }}>
+                                    <div className="w-2 h-2 rounded-full" style={{ background: '#FDB913' }}></div> Nullable
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">El dato puede ser explícitamente <code>None</code> (NaN).</p>
+                                <code className="text-xs bg-gray-100 px-1 py-0.5 rounded text-primary">a: int | None</code>
+                            </div>
+                        </div>
+                        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 text-sm text-yellow-800 rounded-r">
+                            <strong>Nota Estadística:</strong> Diferenciar entre <code>0</code> (valor observado) y <code>None</code> (valor perdido) es vital para no sesgar promedios.
+                        </div>
+                    </div>
+                ),
+                pythonCode: `from pydantic import BaseModel, Field
+from typing import Optional
+
+class RegistroPaciente(BaseModel):
+    # 1. OBLIGATORIO (Required)
+    # Debe estar presente y no puede ser None
+    id_paciente: int
+
+    # 2. OPCIONAL con valor por defecto
+    # Si no se envía, asume el valor 0. Nunca será None.
+    hijos: int = 0
+
+    # 3. NULLABLE (Puede ser None) - Estilo Clásico
+    # Puede ser un float o None. Por defecto es None.
+    # Útil para datos faltantes (NaN en estadística).
+    peso: Optional[float] = None
+
+    # 4. NULLABLE - Estilo Moderno (Python 3.10+)
+    # Exactamente lo mismo que arriba, sintaxis más limpia.
+    altura: float | None = None
+
+    # 5. OBLIGATORIO pero NULLABLE (Caso Especial)
+    # El campo DEBE enviarse en el JSON, pero se permite que el valor sea null.
+    # Diferencia entre "no medido" (no enviado) y "medido pero nulo".
+    diagnostico_previo: str | None = Field(...)
+
+# --- Ejemplos ---
+
+# Correcto: id es obligatorio. hijos usa default. peso es None.
+p1 = RegistroPaciente(id_paciente=1, diagnostico_previo=None)
+print(p1)
+# Output: id_paciente=1 hijos=0 peso=None altura=None diagnostico_previo=None
+
+# Error: Falta diagnostico_previo (aunque permitimos que sea None, EXIGIMOS que se envíe la clave)
+# p2 = RegistroPaciente(id_paciente=2) -> ValidationError`
+            },
+            {
+                id: 'field_validators',
+                title: 'Validadores de Campo (@field_validator)',
+                codeTitle: 'Limpieza y Lógica Personalizada',
+                icon: 'Filter',
+                content: (
+                    <div className="space-y-4">
+                        <p>
+                            Mientras que <code>Field</code> define <em>restricciones simples</em> (rangos, longitud), el decorador <code>@field_validator</code> es para <strong>lógica compleja y limpieza de datos</strong>.
+                        </p>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="tip-box p-4 rounded-lg">
+                                <h4 className="font-bold text-primary mb-2"><i className="fas fa-broom mr-1"></i> Limpieza (mode='before')</h4>
+                                <p className="text-sm text-gray-700">
+                                    Crucial en estadística. Permite recibir datos "sucios" (como formatos de fecha exóticos o decimales europeos) y transformarlos antes de que Pydantic lance un error de tipo.
+                                </p>
+                            </div>
+                            <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-200">
+                                <h4 className="font-bold text-orange-700 mb-2"><i className="fas fa-clipboard-check mr-1"></i> Reglas de Negocio (mode='after')</h4>
+                                <p className="text-sm text-orange-900">
+                                    Verifica lógica que Pydantic no conoce, como comprobar si un valor existe en una lista específica o si cumple una fórmula matemática compleja.
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-500 italic mt-2">
+                            <strong>Nota técnica:</strong> Los validadores suelen ser métodos de clase (<code>@classmethod</code>) porque no necesitan una instancia del modelo creada para funcionar.
+                        </p>
+                    </div>
+                ),
+                pythonCode: `from pydantic import BaseModel, field_validator
+
+class MedicionLab(BaseModel):
+    concentracion: float
+    estado: str
+
+    # 1. MODO 'BEFORE' (Limpieza de Datos)
+    # Se ejecuta ANTES de que Pydantic intente validar el tipo.
+    # Ideal para arreglar "datos sucios" (ej. coma decimal).
+    @field_validator('concentracion', mode='before')
+    @classmethod
+    def corregir_decimales(cls, v):
+        # Si recibimos un string "10,5", lo convertimos a 10.5
+        if isinstance(v, str):
+            return float(v.replace(',', '.'))
+        return v
+
+    # 2. MODO 'AFTER' (Validación Lógica - Default)
+    # Se ejecuta DESPUÉS de asegurar que el tipo es correcto.
+    @field_validator('estado')
+    @classmethod
+    def validar_estado(cls, v):
+        estados_validos = ['solido', 'liquido', 'gas']
+        if v.lower() not in estados_validos:
+            raise ValueError(f"Estado desconocido. Use: {estados_validos}")
+        return v.lower() # Normalizamos a minúsculas
+
+# --- Prueba ---
+# Input sucio: coma decimal y mayúsculas
+dato = MedicionLab(concentracion="12,5", estado="LIQUIDO")
+print(dato)
+# Output: concentracion=12.5 estado='liquido'`
+            },
+            {
+                id: 'dataframe_validation',
+                title: 'Validación de DataFrames (Pandas)',
+                codeTitle: 'Integración con Pandas para Big Data',
+                icon: 'Table',
+                content: (
+                    <div className="space-y-4">
+                        <p>
+                            En ciencia de datos, raramente trabajamos con objetos individuales. Lo normal es procesar archivos CSV o DataFrames con miles de filas.
+                        </p>
+                        <p>
+                            El patrón de diseño más común es utilizar Pydantic como un <strong>filtro de calidad</strong> dentro de un bucle sobre tu DataFrame.
+                        </p>
+                        <div className="usta-card p-4 border-l-4" style={{ borderLeftColor: '#ED1E79' }}>
+                            <h4 className="font-bold text-gray-700 mb-2"><i className="fas fa-check-double text-secondary mr-2"></i>Ventajas de este enfoque:</h4>
+                            <ul className="list-disc pl-5 space-y-1 text-gray-600 text-sm">
+                                <li><strong>Reporte de Errores Detallado:</strong> Sabes exactamente en qué fila y columna falló el dato.</li>
+                                <li><strong>No detiene la ejecución:</strong> Usando <code>try/except</code>, puedes descartar las filas malas y seguir procesando las buenas.</li>
+                                <li><strong>Coerción de Tipos:</strong> Pydantic arreglará automáticamente los tipos de datos compatibles (ej. "200" -&gt; 200) antes de guardarlos en el nuevo DataFrame.</li>
+                            </ul>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `import pandas as pd
+from pydantic import BaseModel, ValidationError
+
+# 1. Definimos el Modelo de Calidad
+class Transaccion(BaseModel):
+    id_tx: int
+    monto: float
+    categoria: str
+
+# 2. Leemos datos crudos (Simulando un CSV con errores)
+df = pd.DataFrame([
+    {'id_tx': 1, 'monto': 100.50, 'categoria': 'comida'},     # Correcto
+    {'id_tx': '2', 'monto': 200, 'categoria': 'transporte'},  # Coerción OK (str->int)
+    {'id_tx': 3, 'monto': 'error', 'categoria': 'ocio'},      # ERROR (Monto inválido)
+])
+
+# 3. Validamos Fila por Fila
+registros_limpios = []
+errores = []
+
+# Iteramos sobre el DF convirtiendo a dict
+for i, fila in df.iterrows():
+    try:
+        # Convertimos la fila (Series) a diccionario y validamos
+        # **fila.to_dict() desempaqueta los valores en el modelo
+        dato = Transaccion(**fila.to_dict())
+        registros_limpios.append(dato.model_dump())
+    except ValidationError as e:
+        errores.append({'indice_fila': i, 'error': str(e)})
+
+# 4. Resultados
+print(f"Registros válidos: {len(registros_limpios)}")
+print(f"Registros fallidos: {len(errores)}")
+
+# Creamos el DF final solo con datos confiables
+df_final = pd.DataFrame(registros_limpios)
+print(df_final)`
+            },
+            {
+                id: 'quiz',
+                title: 'Autoevaluación',
+                codeTitle: 'Pon a prueba tus conocimientos',
+                icon: 'Book',
+                isQuiz: true,
+                content: null,
+                pythonCode: null
+            },
+            {
+                id: 'references',
+                title: 'Referencia Bibliográfica',
+                codeTitle: 'Fuentes Consultadas',
+                icon: 'BookOpen',
+                isReference: true,
+                content: (
+                    <div className="space-y-6">
+                        <p className="text-lg leading-relaxed text-gray-700">
+                            El presente documento de estudio autónomo fue elaborado con base en el siguiente artículo:
+                        </p>
+
+                        <div className="usta-card p-6">
+                            <blockquote className="border-l-4 pl-4" style={{ borderLeftColor: '#ED1E79' }}>
+                                <p className="text-gray-800 font-medium text-lg mb-2">
+                                    "Data Reliability 101: A Practical Guide to Data Validation Using Pydantic in Data Science Projects"
+                                </p>
+                                <p className="text-gray-600 mb-3">
+                                    Publicado en <strong>Towards AI</strong> — Medium
+                                </p>
+                                <a
+                                    href="https://pub.towardsai.net/data-reliability-101-a-practical-guide-to-data-validation-using-pydantic-in-data-science-projects-3392968c3646"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:text-secondary transition-colors font-medium inline-flex items-center gap-2"
+                                >
+                                    <i className="fas fa-external-link-alt"></i>
+                                    Ver artículo original
+                                </a>
+                            </blockquote>
+                        </div>
+
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r">
+                            <p className="text-sm text-blue-800">
+                                <i className="fas fa-info-circle mr-2"></i>
+                                <strong>Nota:</strong> El contenido fue adaptado para estudiantes de estadística de la Universidad Santo Tomás (USTA), manteniendo los ejemplos prácticos y el enfoque en validación de datos científicos.
+                            </p>
+                        </div>
+
+                        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                            <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                <i className="fas fa-lightbulb text-gold"></i>
+                                ¿Te gustaría profundizar?
+                            </h4>
+                            <ul className="list-disc pl-5 space-y-2 text-gray-600 text-sm">
+                                <li>Visita la <a href="https://docs.pydantic.dev/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">documentación oficial de Pydantic</a> para conocer todas las funcionalidades avanzadas.</li>
+                                <li>Explora más artículos en <a href="https://towardsdatascience.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">Towards Data Science</a> sobre validación de datos.</li>
+                                <li>Practica con datasets reales de <a href="https://www.kaggle.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">Kaggle</a> aplicando los conceptos aprendidos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `# Recursos adicionales para seguir aprendiendo
+
+# Documentación oficial de Pydantic
+# https://docs.pydantic.dev/
+
+# Instalación de Pydantic
+pip install pydantic
+
+# Para validación con Pandas (ejemplo adicional)
+pip install pandas pydantic
+
+# Repositorio de ejemplos prácticos
+# Busca en GitHub: pydantic-examples-data-science`
+            }
+        ];
+
+        const quizQuestions = [
+            {
+                question: "¿Qué sucede si pasas el string '10' a un campo definido como int en Pydantic?",
+                options: [
+                    "Lanza un error inmediatamente.",
+                    "Convierte el string '10' al número entero 10.",
+                    "Ignora el campo y lo deja vacío.",
+                    "Convierte el campo a string."
+                ],
+                correct: 1,
+                explanation: "Correcto. Pydantic intenta 'coaccionar' (convertir) los tipos. Como '10' es un string numérico válido, lo transforma automáticamente a entero."
+            },
+            {
+                question: "¿Para qué sirve la función 'Field' en Pydantic?",
+                options: [
+                    "Solo para añadir documentación.",
+                    "Para convertir tipos de datos.",
+                    "Para añadir metadatos (descripción) y validaciones numéricas (rangos).",
+                    "Para conectar con bases de datos."
+                ],
+                correct: 2,
+                explanation: "Exacto. Field es una herramienta poderosa que combina documentación (description) con validación declarativa (gt, le, etc.)."
+            },
+            {
+                question: "En estadística, ¿por qué preferimos `int | None = None` sobre `int = 0` para datos faltantes?",
+                options: [
+                    "Porque `None` ocupa menos memoria.",
+                    "Porque 0 es un valor numérico real y puede sesgar el promedio si el dato en realidad faltaba.",
+                    "Porque Python prefiere None.",
+                    "No hay diferencia."
+                ],
+                correct: 1,
+                explanation: "Crucial. Si un paciente no responde cuántos cigarrillos fuma y ponemos 0 (default), bajamos el promedio falsamente. Si ponemos None, podemos excluirlo del cálculo."
+            },
+            {
+                question: "¿Cuál es la utilidad de `@field_validator(..., mode='before')`?",
+                options: [
+                    "Validar datos después de crearlos.",
+                    "Limpiar o transformar datos crudos antes de que Pydantic verifique su tipo.",
+                    "Hacer que la validación sea más rápida.",
+                    "Ignorar los errores de validación."
+                ],
+                correct: 1,
+                explanation: "Correcto. Es ideal para 'Data Cleaning'. Puedes convertir formatos extraños (ej. '1,000') a tipos nativos antes de que Pydantic lance un error."
+            },
+            {
+                question: "¿Cuál es la mejor estrategia para validar un DataFrame de Pandas con Pydantic?",
+                options: [
+                    "Convertir todo el DataFrame a un solo objeto Pydantic.",
+                    "No se puede usar Pydantic con Pandas.",
+                    "Iterar sobre las filas, validar cada una con try/except y separar los registros válidos de los errores.",
+                    "Usar Pandas para validar tipos."
+                ],
+                correct: 2,
+                explanation: "Exacto. Iterar permite capturar errores fila por fila sin detener todo el proceso, creando un pipeline de datos robusto."
+            }
+        ];
+
+        // --- Componente Quiz ---
+
+        const Quiz = ({ onFinish }) => {
+            const [answers, setAnswers] = useState({});
+            const [submitted, setSubmitted] = useState(false);
+            const [score, setScore] = useState(0);
+
+            const handleSelect = (qIndex, optIndex) => {
+                if (submitted) return;
+                setAnswers(prev => ({ ...prev, [qIndex]: optIndex }));
+            };
+
+            const checkAnswers = () => {
+                let correctCount = 0;
+                quizQuestions.forEach((q, i) => {
+                    if (answers[i] === q.correct) correctCount++;
+                });
+                setScore(correctCount);
+                setSubmitted(true);
+                if (onFinish) onFinish(correctCount, quizQuestions.length);
+            };
+
+            const resetQuiz = () => {
+                setAnswers({});
+                setSubmitted(false);
+                setScore(0);
+            };
+
+            return (
+                <div className="space-y-8">
+                    {quizQuestions.map((q, i) => (
+                        <div key={i} className="space-y-3 pb-6 border-b border-gray-100 last:border-0 last:pb-0">
+                            <p className="font-medium text-gray-800 text-lg">{i + 1}. {q.question}</p>
+                            <div className="space-y-2">
+                                {q.options.map((opt, optIndex) => {
+                                    let btnClass = "w-full text-left px-4 py-3 rounded-lg text-sm border transition-all ";
+                                    if (submitted) {
+                                        if (optIndex === q.correct) btnClass += "bg-emerald-100 border-emerald-500 text-emerald-800 font-semibold";
+                                        else if (answers[i] === optIndex) btnClass += "bg-rose-50 border-rose-300 text-rose-800 opacity-60";
+                                        else btnClass += "bg-gray-50 border-gray-200 opacity-50";
+                                    } else {
+                                        btnClass += answers[i] === optIndex
+                                            ? "border-secondary text-secondary font-semibold"
+                                            : "bg-white border-gray-200 hover:bg-gray-50 text-gray-600";
+                                    }
+
+                                    if (!submitted && answers[i] === optIndex) {
+                                        btnClass += " bg-gradient-to-r from-purple-50 to-pink-50";
+                                    }
+
+                                    return (
+                                        <button
+                                            key={optIndex}
+                                            onClick={() => handleSelect(i, optIndex)}
+                                            className={btnClass}
+                                        >
+                                            {opt}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {submitted && (
+                                <div className={`mt-3 p-4 rounded-lg text-sm animate-fade-in flex gap-3 items-start ${answers[i] === q.correct
+                                    ? 'bg-emerald-50 text-emerald-900 border border-emerald-100'
+                                    : 'bg-rose-50 text-rose-900 border border-rose-100'
+                                    }`}>
+                                    <div className="mt-0.5 shrink-0">
+                                        {answers[i] === q.correct
+                                            ? <i className="fas fa-check-circle text-emerald-600 text-lg"></i>
+                                            : <i className="fas fa-times-circle text-rose-600 text-lg"></i>
+                                        }
+                                    </div>
+                                    <div>
+                                        <p className="font-bold mb-1">
+                                            {answers[i] === q.correct ? '¡Respuesta Correcta!' : 'Respuesta Incorrecta'}
+                                        </p>
+                                        <p className="leading-relaxed opacity-90">{q.explanation}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+
+                    <div className="mt-8 pt-4 border-t flex items-center justify-between">
+                        {!submitted ? (
+                            <button
+                                onClick={checkAnswers}
+                                disabled={Object.keys(answers).length !== quizQuestions.length}
+                                className="usta-button disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
+                            >
+                                Verificar Respuestas <Icons.ArrowRight size={16} />
+                            </button>
+                        ) : (
+                            <div className="flex items-center justify-between w-full animate-fade-in usta-card p-4">
+                                <div className="text-lg">
+                                    Tu puntuación: <span className="font-bold text-primary">{score}</span> de {quizQuestions.length}
+                                    {score === quizQuestions.length && <span className="ml-2">🎉 ¡Excelente trabajo!</span>}
+                                    {score < quizQuestions.length && <span className="ml-2 text-sm text-gray-500">(Revisa la retroalimentación arriba)</span>}
+                                </div>
+                                <button
+                                    onClick={resetQuiz}
+                                    className="text-secondary font-bold hover:text-primary transition-colors px-4 py-2 hover:bg-pink-50 rounded-full"
+                                >
+                                    Intentar de nuevo
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Componente Principal de la App ---
+
+        const App = () => {
+            const [activeLessonIndex, setActiveLessonIndex] = useState(0);
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+
+            const activeLesson = curriculum[activeLessonIndex];
+
+            // Renderizado seguro de Iconos
+            const renderIcon = (iconName, size = 20) => {
+                const Icon = Icons[iconName];
+                return Icon ? <Icon size={size} /> : null;
+            };
+
+            return (
+                <div className="flex h-screen overflow-hidden relative">
+
+                    {/* Botón flotante para toggle del sidebar */}
+                    <button
+                        onClick={() => setSidebarOpen(prev => !prev)}
+                        className="fixed top-4 left-4 z-50 p-2.5 rounded-full shadow-lg text-white transition-all hover:scale-110"
+                        style={{ background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' }}
+                        title={sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'}
+                    >
+                        <i className={`fas ${sidebarOpen ? 'fa-times' : 'fa-bars'} text-sm`}></i>
+                    </button>
+
+                    {/* Overlay cuando sidebar está abierto (para cerrar al hacer clic fuera) */}
+                    {sidebarOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/20 z-30 lg:hidden"
+                            onClick={() => setSidebarOpen(false)}
+                        />
+                    )}
+
+                    {/* Sidebar de Navegación */}
+                    <div
+                        className="flex-shrink-0 overflow-y-auto z-40 flex flex-col"
+                        style={{
+                            background: 'linear-gradient(180deg, #001A4D 0%, #002868 100%)',
+                            width: sidebarOpen ? '16rem' : '0',
+                            minWidth: sidebarOpen ? '16rem' : '0',
+                            opacity: sidebarOpen ? 1 : 0,
+                            transition: 'width 0.3s ease, min-width 0.3s ease, opacity 0.25s ease',
+                            overflow: sidebarOpen ? 'visible auto' : 'hidden'
+                        }}
+                    >
+                        <div className="p-6 pt-16 border-b border-white/10">
+                            <h1 className="text-white font-bold text-lg tracking-tight flex items-center gap-2">
+                                <span className="text-secondary">py</span>Data<span className="text-gold">Valid</span>
+                            </h1>
+                            <p className="text-xs text-white/50 mt-1">Python para APIs e IA Aplicada • USTA</p>
+                        </div>
+                        <nav className="p-4 space-y-2">
+                            {curriculum.map((lesson, idx) => (
+                                <button
+                                    key={lesson.id}
+                                    onClick={() => { setActiveLessonIndex(idx); if (window.innerWidth < 1024) setSidebarOpen(false); }}
+                                    className={`w-full flex items-start gap-3 px-3 py-3 text-sm rounded-lg transition-all text-left ${activeLessonIndex === idx
+                                        ? 'text-white shadow-lg'
+                                        : 'text-white/60 hover:text-white hover:bg-white/10'
+                                        }`}
+                                    style={activeLessonIndex === idx ? { background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' } : {}}
+                                >
+                                    <span className="flex-shrink-0 mt-0.5" style={{ width: 18, height: 18 }}>{renderIcon(lesson.icon, 18)}</span>
+                                    <span className="font-medium leading-tight break-words">{lesson.title.split(':')[0]}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+
+                    {/* Área Principal */}
+                    <main className="flex-1 flex overflow-hidden bg-bg">
+
+                        {/* Panel Izquierdo: Teoría */}
+                        <div className="flex-1 overflow-y-auto p-8 lg:p-12 max-w-5xl mx-auto">
+                            <div className="mb-6 flex items-center justify-between">
+                                <span className="text-xs font-bold tracking-wider text-secondary uppercase">Lección {activeLessonIndex + 1} de {curriculum.length}</span>
+                                <div className="flex gap-2">
+                                    <button
+                                        disabled={activeLessonIndex === 0}
+                                        onClick={() => setActiveLessonIndex(c => c - 1)}
+                                        className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                                    >
+                                        {renderIcon('ChevronLeft')}
+                                    </button>
+                                    <button
+                                        disabled={activeLessonIndex === curriculum.length - 1}
+                                        onClick={() => setActiveLessonIndex(c => c + 1)}
+                                        className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                                    >
+                                        {renderIcon('ChevronRight')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <SectionHeader title={activeLesson.title} icon={Icons[activeLesson.icon]} />
+
+                            {activeLesson.isQuiz ? (
+                                <div className="mt-8">
+                                    <div className="mb-6 flex items-center gap-3">
+                                        <div className="usta-gradient p-2 rounded-lg text-white">
+                                            <Icons.Book size={20} />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-800">Pon a prueba tus conocimientos</h3>
+                                    </div>
+                                    <Quiz />
+                                </div>
+                            ) : activeLesson.isReference ? (
+                                <div className="mt-4">
+                                    <div className="prose prose-lg text-gray-600 leading-relaxed">
+                                        {activeLesson.content}
+                                    </div>
+                                    <div className="mt-8">
+                                        <CodeBlock title={activeLesson.codeTitle} code={activeLesson.pythonCode} />
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="prose prose-lg text-gray-600 leading-relaxed">
+                                        {activeLesson.content}
+                                    </div>
+
+                                    <div className="mt-8">
+                                        <CodeBlock title={activeLesson.codeTitle} code={activeLesson.pythonCode} />
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Footer de la lección */}
+                            {!activeLesson.isQuiz && !activeLesson.isReference && (
+                                <footer className="mt-20 pt-0">
+                                    <div className="usta-header rounded-xl p-6 text-center">
+                                        <p className="text-white font-medium text-sm">Diseñado por <span className="font-bold">Javier Mauricio Sierra</span></p>
+                                        <p className="text-xs mt-1 text-white/60">
+                                            Pydantic • Enfoque Data-Driven • USTA
+                                        </p>
+                                    </div>
+                                </footer>
+                            )}
+                        </div>
+
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <script>
+        // Scroll to Top Button functionality
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+
+</html>

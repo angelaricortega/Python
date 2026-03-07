@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Módulo técnico sobre arquitectura de APIs con FastAPI para estadísticos y científicos de datos.">
+    <title>De Script a Servicio: Arquitectura de APIs para el Estadístico Moderno</title>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts: Montserrat y Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#3D008D',
+                        secondary: '#ED1E79',
+                        navy: '#001A4D',
+                        gold: '#FDB913',
+                        bg: '#F8FAFC',
+                        surface: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+            scroll-behavior: smooth;
+        }
+
+        code,
+        pre {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* USTA Gradient Background */
+        .usta-gradient {
+            background: linear-gradient(140deg, #3D008D 0%, #ED1E79 100%);
+        }
+
+        /* USTA Navy Header */
+        .usta-header {
+            background: linear-gradient(180deg, #001A4D 0%, #002868 100%);
+        }
+
+        /* USTA Card Style */
+        .usta-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .usta-card:hover {
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        /* Tip box USTA style */
+        .tip-box {
+            background: linear-gradient(135deg, rgba(61, 0, 141, 0.08) 0%, rgba(237, 30, 121, 0.08) 100%);
+            border: 1px solid rgba(61, 0, 141, 0.2);
+        }
+
+        /* Sidebar active state */
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(61, 0, 141, 0.15) 0%, transparent 100%);
+            border-left: 4px solid #ED1E79;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3D008D, #ED1E79);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #4A00A8, #FF2D8A);
+        }
+
+        /* Code scrollbar */
+        .code-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-scroll::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .code-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3D008D, #ED1E79);
+            border-radius: 4px;
+        }
+
+        /* Fade-in animation */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Focus styles for accessibility */
+        button:focus-visible {
+            outline: 2px solid #ED1E79;
+            outline-offset: 2px;
+        }
+
+        /* Syntax highlighting */
+        .syntax-kwd {
+            color: #c678dd;
+            font-weight: bold;
+        }
+
+        .syntax-cls {
+            color: #e5c07b;
+        }
+
+        .syntax-str {
+            color: #98c379;
+        }
+
+        .syntax-com {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        .syntax-func {
+            color: #61afef;
+        }
+
+        .syntax-self {
+            color: #e06c75;
+            font-style: italic;
+        }
+
+        .syntax-num {
+            color: #d19a66;
+        }
+
+        .diagram {
+            font-family: 'Fira Code', monospace;
+            white-space: pre;
+            background: #fff;
+            border: 1px dashed #999;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            color: #333;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Definición de Iconos (SVG Inline) ---
+        const Icons = {
+            BookOpen: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+            ),
+            Server: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                </svg>
+            ),
+            Activity: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+            ),
+            Database: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s 9-1.34 9-3V5"></path>
+                </svg>
+            ),
+            Cpu: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                    <rect x="9" y="9" width="6" height="6"></rect>
+                    <line x1="9" y1="1" x2="9" y2="4"></line>
+                    <line x1="15" y1="1" x2="15" y2="4"></line>
+                    <line x1="9" y1="20" x2="9" y2="23"></line>
+                    <line x1="15" y1="20" x2="15" y2="23"></line>
+                    <line x1="20" y1="9" x2="23" y2="9"></line>
+                    <line x1="20" y1="14" x2="23" y2="14"></line>
+                    <line x1="1" y1="9" x2="4" y2="9"></line>
+                    <line x1="1" y1="14" x2="4" y2="14"></line>
+                </svg>
+            ),
+            CheckSquare: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="9 11 12 14 22 4"></polyline>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+            ),
+            ChevronLeft: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            ),
+            ChevronRight: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            ),
+            Code: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+            ),
+            ArrowRight: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            )
+        };
+
+        // --- Componente Tooltip (cuadro emergente) ---
+        const Tooltip = ({ children, title, text, color = '#3D008D' }) => {
+            const [show, setShow] = useState(false);
+            return (
+                <span className="relative inline-block"
+                    onMouseEnter={() => setShow(true)}
+                    onMouseLeave={() => setShow(false)}
+                    onFocus={() => setShow(true)}
+                    onBlur={() => setShow(false)}
+                    tabIndex="0"
+                >
+                    <span className="cursor-help border-b-2 border-dashed font-bold" style={{ borderColor: color, color }}>{children}</span>
+                    {show && (
+                        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-4 rounded-xl shadow-2xl border text-left animate-fade-in"
+                            style={{ background: 'white', borderColor: color }}
+                        >
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }}></div>
+                                <span className="font-bold text-sm" style={{ color }}>{title}</span>
+                            </div>
+                            <p className="text-xs text-gray-600 leading-relaxed">{text}</p>
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0"
+                                style={{ borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: `8px solid ${color}` }}
+                            ></div>
+                        </div>
+                    )}
+                </span>
+            );
+        };
+
+        // --- Componentes de UI ---
+
+        const CodeBlock = ({ title, code }) => {
+            const [copied, setCopied] = useState(false);
+            const handleCopy = () => {
+                navigator.clipboard.writeText(code).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                });
+            };
+            return (
+                <div className="my-4 rounded-xl overflow-hidden border border-gray-700 bg-gray-900 text-gray-100 shadow-lg">
+                    <div className="bg-gray-800 px-4 py-2 text-xs font-mono text-gray-400 border-b border-gray-700 flex justify-between items-center">
+                        <span><i className="fab fa-python text-yellow-400 mr-2"></i>{title || 'Código Python'}</span>
+                        <span className="flex items-center gap-3">
+                            <button
+                                onClick={handleCopy}
+                                className="flex items-center gap-1 hover:text-white transition-colors"
+                                title="Copiar código"
+                            >
+                                {copied
+                                    ? <><i className="fas fa-check text-green-400"></i><span className="text-green-400">¡Copiado!</span></>
+                                    : <><i className="far fa-clipboard"></i><span>Copiar</span></>
+                                }
+                            </button>
+                            <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500"></div><div className="w-2 h-2 rounded-full bg-yellow-500"></div><div className="w-2 h-2 rounded-full bg-green-500"></div></span>
+                        </span>
+                    </div>
+                    <div className="p-4 overflow-x-auto code-scroll">
+                        <pre className="text-sm leading-relaxed"><code dangerouslySetInnerHTML={{
+                            __html: code.replace(/#.*/g, match => `<span class="text-green-500 italic">${match}</span>`)
+                                .replace(/"""[\s\S]*?"""/g, match => `<span class="text-green-500 italic">${match}</span>`)
+                                .replace(/class /g, '<span class="text-pink-500">class </span>')
+                                .replace(/def /g, '<span class="text-pink-500">def </span>')
+                                .replace(/from /g, '<span class="text-pink-500">from </span>')
+                                .replace(/import /g, '<span class="text-pink-500">import </span>')
+                                .replace(/return /g, '<span class="text-pink-500">return </span>')
+                                .replace(/if /g, '<span class="text-pink-500">if </span>')
+                                .replace(/else:/g, '<span class="text-pink-500">else:</span>')
+                                .replace(/elif /g, '<span class="text-pink-500">elif </span>')
+                                .replace(/for /g, '<span class="text-pink-500">for </span>')
+                                .replace(/while /g, '<span class="text-pink-500">while </span>')
+                                .replace(/async /g, '<span class="text-orange-400">async </span>')
+                                .replace(/await /g, '<span class="text-orange-400">await </span>')
+                                .replace(/try:/g, '<span class="text-pink-500">try:</span>')
+                                .replace(/except /g, '<span class="text-pink-500">except </span>')
+                                .replace(/raise /g, '<span class="text-pink-500">raise </span>')
+                                .replace(/del /g, '<span class="text-pink-500">del </span>')
+                                .replace(/as /g, '<span class="text-pink-500">as </span>')
+                                .replace(/in /g, '<span class="text-pink-500">in </span>')
+                                .replace(/not /g, '<span class="text-pink-500">not </span>')
+                                .replace(/print/g, '<span class="text-blue-400">print</span>')
+                                .replace(/int/g, '<span class="text-blue-400">int</span>')
+                                .replace(/str/g, '<span class="text-blue-400">str</span>')
+                                .replace(/float/g, '<span class="text-blue-400">float</span>')
+                                .replace(/@app/g, '<span class="text-yellow-400">@app</span>')
+                                .replace(/BaseModel/g, '<span class="text-yellow-400">BaseModel</span>')
+                                .replace(/FastAPI/g, '<span class="text-yellow-400">FastAPI</span>')
+                                .replace(/HTTPException/g, '<span class="text-yellow-400">HTTPException</span>')
+                                .replace(/BackgroundTasks/g, '<span class="text-yellow-400">BackgroundTasks</span>')
+                        }} /></pre>
+                    </div>
+                </div>
+            );
+        };
+
+        const SectionHeader = ({ title, icon: Icon }) => (
+            <div className="flex items-center gap-3 mb-4 border-b border-gray-200 pb-3">
+                <div className="usta-gradient p-2.5 rounded-xl shadow-md text-white">
+                    {Icon && <Icon size={24} />}
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+            </div>
+        );
+
+        const ComparisonDiagram = () => (
+            <div className="grid md:grid-cols-2 gap-4">
+                {/* WSGI */}
+                <div className="bg-red-50/50 p-4 rounded-xl border border-red-100">
+                    <div className="text-center mb-4">
+                        <span className="font-bold text-red-800 text-sm uppercase tracking-wider block">Estilo WSGI</span>
+                        <span className="text-xs text-red-600">Bloqueante (Un camión en un carril)</span>
+                    </div>
+
+                    <div className="space-y-2 font-mono text-xs">
+                        {/* Time T1 */}
+                        <div className="flex items-center gap-2">
+                            <span className="w-8 text-gray-400">0s</span>
+                            <div className="flex-1 h-10 bg-primary text-white rounded flex items-center justify-center shadow-sm">
+                                Usuario A (Procesando...)
+                            </div>
+                        </div>
+
+                        {/* Time T2 */}
+                        <div className="flex items-center gap-2 opacity-50">
+                            <span className="w-8 text-gray-400">5s</span>
+                            <div className="flex-1 h-10 border-2 border-dashed border-red-300 bg-red-50 text-red-400 rounded flex items-center justify-center">
+                                Usuario B (ESPERANDO 🛑)
+                            </div>
+                        </div>
+
+                        {/* Time T3 */}
+                        <div className="flex items-center gap-2">
+                            <span className="w-8 text-gray-400">10s</span>
+                            <div className="flex-1 h-10 bg-gray-200 text-gray-500 rounded flex items-center justify-center">
+                                Usuario A termina
+                            </div>
+                        </div>
+
+                        {/* Time T4 */}
+                        <div className="flex items-center gap-2">
+                            <span className="w-8 text-gray-400">11s</span>
+                            <div className="flex-1 h-10 bg-secondary text-white rounded flex items-center justify-center shadow-sm">
+                                Usuario B (Por fin inicia!)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ASGI */}
+                <div className="bg-green-50/50 p-4 rounded-xl border border-green-100">
+                    <div className="text-center mb-4">
+                        <span className="font-bold text-green-800 text-sm uppercase tracking-wider block">Estilo ASGI (FastAPI)</span>
+                        <span className="text-xs text-green-600">Asíncrono (Autopista con sobrepaso)</span>
+                    </div>
+
+                    <div className="relative font-mono text-xs h-[180px]">
+                        {/* Background grid lines */}
+                        <div className="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none">
+                            <div className="border-b border-black h-8"></div>
+                            <div className="border-b border-black h-8"></div>
+                            <div className="border-b border-black h-8"></div>
+                            <div className="border-b border-black h-8"></div>
+                        </div>
+
+                        {/* User A Task - Start */}
+                        <div className="absolute top-0 left-8 w-24 h-8 bg-primary text-white rounded flex items-center justify-center text-[10px] z-10 shadow-sm">
+                            A: Inicio (CPU)
+                        </div>
+
+                        {/* Await Period */}
+                        <div className="absolute top-8 left-20 bottom-8 border-l-2 border-primary border-dashed w-0 flex items-center">
+                            <span className="bg-white/90 text-primary text-[10px] px-1 ml-2 whitespace-nowrap border border-primary/20 rounded">
+                                ⏳ Esperando I/O (Sin uso CPU)
+                            </span>
+                        </div>
+
+                        {/* User A Task - End */}
+                        <div className="absolute bottom-0 left-8 w-24 h-8 bg-primary text-white rounded flex items-center justify-center text-[10px] z-10 shadow-sm">
+                            A: Fin (CPU)
+                        </div>
+
+                        {/* User B Task (Fits in the middle) */}
+                        {/* User B Task (Runs in the gap) */}
+                        <div className="absolute top-1/2 -translate-y-1/2 right-8 w-32 h-12 bg-secondary text-white rounded-lg shadow-md flex items-center justify-center z-20 border-2 border-white animate-pulse" title="¡Usuario B es atendido mientras A espera!">
+                            <div className="text-center">
+                                <div className="font-bold text-xs">Usuario B</div>
+                                <div className="text-[9px]">¡Atendido en el hueco! 🚀</div>
+                            </div>
+                        </div>
+
+                        {/* Time markers */}
+                        <div className="absolute left-0 top-0 text-gray-400 text-[10px]">0s</div>
+                        <div className="absolute left-0 bottom-0 text-gray-400 text-[10px]">10s</div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- Componente de Quiz Interactivo ---
+
+        const InteractiveQuiz = () => {
+            const [currentQ, setCurrentQ] = useState(0);
+            const [selected, setSelected] = useState(null);
+            const [answered, setAnswered] = useState(false);
+            const [score, setScore] = useState(0);
+            const [finished, setFinished] = useState(false);
+            const [answers, setAnswers] = useState([]);
+
+            const questions = [
+                {
+                    topic: 'Lección 1 — Fundamentos',
+                    question: '¿Qué función cumple el decorador @app.get("/ruta") en FastAPI?',
+                    options: [
+                        'Importa la librería FastAPI al proyecto',
+                        'Define qué función se ejecuta cuando un cliente visita esa URL',
+                        'Crea una base de datos automáticamente',
+                        'Instala las dependencias necesarias'
+                    ],
+                    correct: 1,
+                    explanation: 'El decorador mapea una URL (ruta) a una función Python. Cuando un cliente hace una petición GET a esa ruta, FastAPI ejecuta la función decorada y retorna su resultado como JSON.'
+                },
+                {
+                    topic: 'Lección 1 — Fundamentos',
+                    question: '¿Cuál es la diferencia principal entre REST API y una función Python normal?',
+                    options: [
+                        'REST API solo funciona con JavaScript',
+                        'Una función normal no puede retornar datos',
+                        'REST API expone la función a través de HTTP para que cualquier sistema la consuma remotamente',
+                        'No hay ninguna diferencia'
+                    ],
+                    correct: 2,
+                    explanation: 'Una REST API permite que cualquier sistema (móvil, web, IoT) consuma la función a través de URLs y verbos HTTP (GET, POST, PUT, DELETE), sin importar el lenguaje del cliente.'
+                },
+                {
+                    topic: 'Lección 2 — Arquitectura',
+                    question: '¿Cuál es la ventaja principal de ASGI sobre WSGI?',
+                    options: [
+                        'ASGI es más fácil de instalar',
+                        'ASGI permite manejar múltiples peticiones concurrentemente durante tiempos de espera (I/O)',
+                        'ASGI solo funciona con Flask',
+                        'WSGI es más moderno que ASGI'
+                    ],
+                    correct: 1,
+                    explanation: 'WSGI procesa una petición a la vez (secuencial). ASGI permite que el servidor atienda otras peticiones mientras espera operaciones lentas como consultas a bases de datos o carga de modelos.'
+                },
+                {
+                    topic: 'Lección 2 — Arquitectura',
+                    question: '¿Qué se genera automáticamente al visitar /docs en una app FastAPI?',
+                    options: [
+                        'Un archivo PDF con el código fuente',
+                        'Una interfaz gráfica interactiva (Swagger UI) para probar los endpoints',
+                        'Un reporte de errores del servidor',
+                        'Una copia de seguridad de la base de datos'
+                    ],
+                    correct: 1,
+                    explanation: 'FastAPI genera automáticamente documentación interactiva Swagger UI en /docs, donde cualquier miembro del equipo puede ver los endpoints, sus parámetros, y probarlos directamente desde el navegador.'
+                },
+                {
+                    topic: 'Lección 3 — Routing & CRUD',
+                    question: '¿Para qué se usa Pydantic (BaseModel) en FastAPI?',
+                    options: [
+                        'Para crear las rutas del servidor',
+                        'Para validar y definir la estructura de los datos de entrada automáticamente',
+                        'Para conectar con bases de datos SQL',
+                        'Para generar gráficos estadísticos'
+                    ],
+                    correct: 1,
+                    explanation: 'Pydantic permite definir modelos de datos con tipos esperados. FastAPI usa estos modelos para validar automáticamente que los datos recibidos tengan la estructura y tipos correctos, retornando errores claros si no.'
+                },
+                {
+                    topic: 'Lección 3 — Routing & CRUD',
+                    question: '¿Cuáles son los 4 verbos HTTP que componen las operaciones CRUD?',
+                    options: [
+                        'SAVE, LOAD, UPDATE, REMOVE',
+                        'GET, POST, PUT, DELETE',
+                        'READ, WRITE, EDIT, ERASE',
+                        'FETCH, SEND, PATCH, CLEAR'
+                    ],
+                    correct: 1,
+                    explanation: 'CRUD = Create (POST), Read (GET), Update (PUT), Delete (DELETE). Estos 4 verbos HTTP estándar cubren todas las operaciones básicas sobre recursos en una API REST.'
+                },
+                {
+                    topic: 'Lección 4 — Concurrencia',
+                    question: '¿Cuándo se debe usar async def en lugar de def en FastAPI?',
+                    options: [
+                        'Siempre, en todas las funciones',
+                        'Solo para funciones que manejan archivos',
+                        'Para operaciones de I/O (consultas a BD, APIs externas, carga de archivos)',
+                        'Nunca, FastAPI no soporta funciones asíncronas'
+                    ],
+                    correct: 2,
+                    explanation: 'Se usa async def para operaciones I/O-Bound (base de datos, APIs externas, disco). Para cálculos pesados de CPU (NumPy, Pandas), se recomienda def estándar, ya que async no acelera la computación pura.'
+                },
+                {
+                    topic: 'Lección 4 — Concurrencia',
+                    question: '¿Qué comando se usa para ejecutar una aplicación FastAPI en desarrollo?',
+                    options: [
+                        'python main.py',
+                        'flask run --reload',
+                        'uvicorn main:app --reload',
+                        'npm start'
+                    ],
+                    correct: 2,
+                    explanation: 'uvicorn es el servidor ASGI que ejecuta apps FastAPI. "main" es el archivo, "app" es la variable FastAPI(), y "--reload" reinicia automáticamente al guardar cambios durante desarrollo.'
+                }
+            ];
+
+            const handleSelect = (idx) => {
+                if (answered) return;
+                setSelected(idx);
+                setAnswered(true);
+                const isCorrect = idx === questions[currentQ].correct;
+                if (isCorrect) setScore(s => s + 1);
+                setAnswers(prev => [...prev, { question: currentQ, selected: idx, correct: questions[currentQ].correct, isCorrect }]);
+            };
+
+            const handleNext = () => {
+                if (currentQ < questions.length - 1) {
+                    setCurrentQ(q => q + 1);
+                    setSelected(null);
+                    setAnswered(false);
+                } else {
+                    setFinished(true);
+                }
+            };
+
+            const handleRestart = () => {
+                setCurrentQ(0);
+                setSelected(null);
+                setAnswered(false);
+                setScore(0);
+                setFinished(false);
+                setAnswers([]);
+            };
+
+            const q = questions[currentQ];
+            const progress = ((currentQ + (answered ? 1 : 0)) / questions.length) * 100;
+
+            if (finished) {
+                const pct = Math.round((score / questions.length) * 100);
+                const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '📚';
+                const msg = pct >= 80 ? '¡Excelente! Dominas los conceptos de FastAPI.' : pct >= 60 ? '¡Buen trabajo! Repasa los temas donde fallaste.' : 'Necesitas repasar. Revisa las lecciones anteriores.';
+
+                return (
+                    <div className="mt-6">
+                        <div className="usta-card p-8 text-center">
+                            <div className="text-6xl mb-4">{emoji}</div>
+                            <h3 className="text-2xl font-bold text-primary mb-2">Resultado Final</h3>
+                            <p className="text-4xl font-bold mb-2" style={{ color: pct >= 80 ? '#16a34a' : pct >= 60 ? '#d97706' : '#dc2626' }}>
+                                {score} / {questions.length}
+                            </p>
+                            <p className="text-sm text-gray-500 mb-4">({pct}% de aciertos)</p>
+                            <p className="text-sm text-gray-700 mb-6">{msg}</p>
+
+                            <div className="space-y-3 text-left mb-6">
+                                {answers.map((a, i) => (
+                                    <div key={i} className={`p-3 rounded-lg text-sm flex items-start gap-2 ${a.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                        <span className="flex-shrink-0 mt-0.5">{a.isCorrect ? '✅' : '❌'}</span>
+                                        <div>
+                                            <p className="font-medium text-gray-800">P{i + 1}: {questions[a.question].question}</p>
+                                            {!a.isCorrect && (
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                    Respuesta correcta: <strong>{questions[a.question].options[a.correct]}</strong>
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={handleRestart}
+                                className="px-6 py-3 rounded-lg text-white font-bold transition-all hover:scale-105 shadow-lg"
+                                style={{ background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' }}
+                            >
+                                <i className="fas fa-redo mr-2"></i> Intentar de Nuevo
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-bold text-secondary uppercase tracking-wider">{q.topic}</span>
+                        <span className="text-xs text-gray-500">Pregunta {currentQ + 1} de {questions.length}</span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                        <div
+                            className="h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3D008D, #ED1E79)' }}
+                        ></div>
+                    </div>
+
+                    <div className="usta-card p-6 mb-4">
+                        <h4 className="font-bold text-lg text-primary mb-4">{q.question}</h4>
+                        <div className="space-y-3">
+                            {q.options.map((opt, idx) => {
+                                let btnStyle = 'bg-white border border-gray-200 hover:border-primary hover:bg-primary/5';
+                                if (answered) {
+                                    if (idx === q.correct) {
+                                        btnStyle = 'bg-green-50 border-2 border-green-500 text-green-800';
+                                    } else if (idx === selected && idx !== q.correct) {
+                                        btnStyle = 'bg-red-50 border-2 border-red-400 text-red-700 line-through';
+                                    } else {
+                                        btnStyle = 'bg-gray-50 border border-gray-200 opacity-50';
+                                    }
+                                }
+
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleSelect(idx)}
+                                        disabled={answered}
+                                        className={`w-full text-left p-4 rounded-lg transition-all text-sm flex items-start gap-3 ${btnStyle}`}
+                                    >
+                                        <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-600">
+                                            {String.fromCharCode(65 + idx)}
+                                        </span>
+                                        <span className="flex-1 pt-0.5">{opt}</span>
+                                        {answered && idx === q.correct && <span className="flex-shrink-0 text-green-500">✅</span>}
+                                        {answered && idx === selected && idx !== q.correct && <span className="flex-shrink-0 text-red-500">❌</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {answered && (
+                        <div className={`p-4 rounded-lg mb-4 text-sm ${selected === q.correct ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+                            <p className="font-bold mb-1 flex items-center gap-2">
+                                {selected === q.correct
+                                    ? <><i className="fas fa-check-circle text-green-600"></i> ¡Correcto!</>
+                                    : <><i className="fas fa-info-circle text-amber-600"></i> Respuesta incorrecta</>
+                                }
+                            </p>
+                            <p className="text-gray-700">{q.explanation}</p>
+                        </div>
+                    )}
+
+                    {answered && (
+                        <div className="text-right">
+                            <button
+                                onClick={handleNext}
+                                className="px-6 py-2.5 rounded-lg text-white font-bold transition-all hover:scale-105 shadow-md text-sm"
+                                style={{ background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' }}
+                            >
+                                {currentQ < questions.length - 1 ? 'Siguiente →' : 'Ver Resultado Final'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- Lógica del Curso (Contenido Adaptado) ---
+
+        const curriculum = [
+            {
+                id: 'fundamentals',
+                title: 'Fundamentos',
+                codeTitle: 'Hello World + Endpoint de Bernoulli',
+                icon: 'BookOpen',
+                content: (
+                    <div>
+                        <h3 className="text-xl font-semibold text-secondary mb-4">Puente Conceptual – Del Script al Servicio</h3>
+                        <p className="mb-4">
+                            El flujo de trabajo tradicional en estadística y ciencia de datos es interactivo y centrado en el estado
+                            (memoria global). Herramientas como RStudio o Jupyter permiten un proceso experimental secuencial. Sin
+                            embargo, para que los modelos sean consumidos por sistemas externos (aplicaciones móviles, dashboards en
+                            tiempo real, sistemas de trading), es necesario transitar hacia la <strong>Ingeniería de Software para
+                                Ciencia de Datos</strong>.
+                        </p>
+
+                        <div className="tip-box p-4 rounded-lg mb-6">
+                            <h4 className="font-bold text-primary mb-2 flex items-center gap-2"><i className="fas fa-utensils"></i> Concepto Básico: La Analogía del Restaurante</h4>
+                            <p className="text-sm mb-2 text-gray-700">
+                                Antes de profundizar en la teoría, considere la estructura básica de una API usando la analogía del restaurante:
+                            </p>
+                            <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                                <li><strong>El Cliente (Usted/App):</strong> Realiza una petición ("Quiero una predicción"). No entra a la cocina.</li>
+                                <li><strong>El Camarero (API):</strong> Toma su pedido, lo lleva a la cocina y regresa con el resultado. Intermedia entre el mundo exterior y la lógica interna.</li>
+                                <li><strong>La Cocina (Servidor/Modelo):</strong> Donde ocurre el procesamiento real (cálculo de probabilidades, consulta a BD).</li>
+                            </ul>
+                            <p className="text-sm mt-2 text-gray-700">
+                                En el paradigma antiguo (WSGI), el camarero esperaba en la cocina hasta que el plato estuviera listo. En el paradigma moderno (FastAPI/ASGI), el camarero entrega la orden y atiende inmediatamente a otra mesa mientras la cocina trabaja.
+                            </p>
+                        </div>
+
+                        <div className="tip-box p-4 rounded-lg mb-6">
+                            <h4 className="font-bold text-primary mb-2 flex items-center gap-2"><i className="fas fa-globe"></i> ¿Qué es una REST API?</h4>
+                            <p className="text-sm mb-2 text-gray-700">
+                                <strong>REST</strong> (<em>Representational State Transfer</em>) es un estándar para comunicarse a través de internet usando URLs simples. Cada sitio web o aplicación que habla con otro servicio (como YouTube cargando comentarios, o Spotify obteniendo listas de reproducción) utiliza REST APIs internamente.
+                            </p>
+                            <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                                <li><strong>URL = Dirección del recurso:</strong> Cada endpoint es una URL que identifica un recurso específico (ej. <code>/predicciones</code>, <code>/usuarios/42</code>).</li>
+                                <li><strong>Verbos HTTP = Acciones:</strong> GET (consultar), POST (crear), PUT (actualizar), DELETE (eliminar).</li>
+                                <li><strong>JSON = El idioma:</strong> Los datos viajan en formato JSON, universal y legible tanto para humanos como para máquinas.</li>
+                            </ul>
+                            <p className="text-sm mt-2 text-gray-600 italic">
+                                En resumen: una REST API es un contrato estandarizado que permite que cualquier sistema (móvil, web, IoT) se comunique con su modelo de ML sin importar el lenguaje o plataforma del cliente.
+                            </p>
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-2">Teoría: El Decorador como Función de Verosimilitud</h3>
+                        <p className="mb-4">
+                            En el desarrollo web con FastAPI, el <strong>decorador</strong> cumple una función de mapeo análoga a la
+                            Función de Verosimilitud (<em>Likelihood Function</em>, L(θ|x)) en inferencia estadística.
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2 mb-4">
+                            <li><strong>La Función Python (El Núcleo):</strong> Representa la lógica estadística pura (ej. <code>calcular_media(x)</code>). Carece de contexto de ejecución externo por sí misma.</li>
+                            <li><strong>El Decorador (La Verosimilitud):</strong> Asigna un contexto de "observación". Instruye al servidor para ejecutar la lógica solo ante un evento específico del tráfico de red (ej. una petición a <code>/predict</code>).</li>
+                        </ul>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-2">Analogía: El Espacio de Muestreo de las URLs</h3>
+                        <p className="mb-4">
+                            Imagine que su aplicación es un <strong>Espacio de Muestreo</strong> (Ω). Cada posible URL válida es un evento elemental (ω ∈ Ω).
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2 mb-4">
+                            <li>Si un usuario visita <code>/summary-stats</code>, está seleccionando un evento específico.</li>
+                            <li>Si visita <code>/non-existent-page</code>, el evento cae fuera del soporte de su distribución definida, resultando en un error (el famoso 404 Not Found), que estadísticamente es análogo a un evento con probabilidad cero bajo el modelo propuesto.</li>
+                        </ul>
+
+                        <div className="usta-card p-4 border-l-4 border-secondary text-gray-700 italic mb-6">
+                            El decorador define el <strong>Soporte</strong> de su aplicación. Define qué URLs (eventos) tienen una probabilidad definida de generar una respuesta válida.
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-2">La Ventaja Oculta: Documentación Automática</h3>
+                        <p className="mb-4">
+                            Para los equipos de Ciencia de Datos, compartir especificaciones de modelos suele ser tedioso. FastAPI resuelve esto generando automáticamente documentación interactiva (Swagger UI).
+                        </p>
+                        <div className="usta-card p-4 border-l-4 border-primary text-gray-700">
+                            Al navegar a la ruta <code>/docs</code>, FastAPI presenta una interfaz gráfica donde cualquier miembro del equipo puede ver qué variables requiere el modelo (ej. <code>age: int</code>, <code>income: float</code>) y probar el endpoint directamente desde el navegador, sin escribir una sola línea de código.
+                        </div>
+
+                        <h3 className="text-xl font-semibold text-secondary mb-4 mt-8 flex items-center gap-2">🚀 ¿Cómo Ejecutar los Ejemplos?</h3>
+                        <p className="mb-4">
+                            Para ejecutar los códigos presentados en este módulo, siga estos <strong>5 pasos</strong> en su terminal. Solo necesita hacerlo una vez para configurar el entorno.
+                        </p>
+
+                        <div className="space-y-4 mb-6">
+                            <div className="usta-card p-4 border-l-4 border-secondary">
+                                <h4 className="font-bold text-primary mb-2">Paso 1 — Crear un Entorno Virtual</h4>
+                                <p className="text-sm text-gray-700 mb-2">
+                                    Un entorno virtual aísla las dependencias del proyecto. Abra una terminal y ejecute:
+                                </p>
+                                <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto mb-2"><code>{`# Crear el entorno virtual
+python -m venv venv
+
+# Activar el entorno virtual
+# En macOS/Linux:
+source venv/bin/activate
+
+# En Windows:
+venv\\Scripts\\activate
+
+# Verá (venv) al inicio de su terminal cuando esté activo`}</code></pre>
+                            </div>
+
+                            <div className="usta-card p-4 border-l-4 border-secondary">
+                                <h4 className="font-bold text-primary mb-2">Paso 2 — Instalar Dependencias</h4>
+                                <p className="text-sm text-gray-700 mb-2">
+                                    Con el entorno virtual activo, instale FastAPI y el servidor Uvicorn:
+                                </p>
+                                <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto"><code>{`pip install fastapi uvicorn numpy`}</code></pre>
+                                <p className="text-xs text-gray-500 mt-2 italic">
+                                    <strong>fastapi</strong> = el framework · <strong>uvicorn</strong> = el servidor ASGI · <strong>numpy</strong> = para los ejemplos estadísticos
+                                </p>
+                            </div>
+
+                            <div className="usta-card p-4 border-l-4 border-secondary">
+                                <h4 className="font-bold text-primary mb-2">Paso 3 — Guardar el Código en un Archivo</h4>
+                                <p className="text-sm text-gray-700 mb-2">
+                                    Copie el código del ejemplo (use el botón <strong>"Copiar"</strong> en la esquina superior derecha del bloque de código) y guárdelo en un archivo llamado <code>main.py</code>:
+                                </p>
+                                <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto"><code>{`📁 mi_proyecto/
+├── venv/          ← entorno virtual (no editar)
+└── main.py        ← su código FastAPI va aquí`}</code></pre>
+                            </div>
+
+                            <div className="usta-card p-4 border-l-4 border-secondary">
+                                <h4 className="font-bold text-primary mb-2">Paso 4 — Ejecutar el Servidor</h4>
+                                <p className="text-sm text-gray-700 mb-2">
+                                    Desde la carpeta donde está <code>main.py</code>, ejecute:
+                                </p>
+                                <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto"><code>{`uvicorn main:app --reload`}</code></pre>
+                                <div className="mt-2 text-sm text-gray-700">
+                                    <ul className="list-disc pl-5 space-y-1">
+                                        <li><code>main</code> = nombre del archivo (sin <code>.py</code>)</li>
+                                        <li><code>app</code> = nombre de la variable <code>FastAPI()</code> dentro del archivo</li>
+                                        <li><code>--reload</code> = reinicia automáticamente al guardar cambios (solo en desarrollo)</li>
+                                    </ul>
+                                </div>
+                                <p className="text-sm text-gray-700 mt-2">
+                                    Verá un mensaje como: <code className="text-green-600">Uvicorn running on http://127.0.0.1:8000</code>
+                                </p>
+                            </div>
+
+                            <div className="usta-card p-4 border-l-4 border-secondary">
+                                <h4 className="font-bold text-primary mb-2">Paso 5 — Probar en el Navegador</h4>
+                                <p className="text-sm text-gray-700 mb-2">
+                                    Con el servidor corriendo, abra su navegador y visite:
+                                </p>
+                                <div className="grid md:grid-cols-3 gap-3 mt-2">
+                                    <div className="bg-white/80 p-3 rounded-lg text-center shadow-sm">
+                                        <p className="font-mono text-sm font-bold text-primary">http://127.0.0.1:8000</p>
+                                        <p className="text-xs text-gray-500 mt-1">Endpoint raíz (Hello World)</p>
+                                    </div>
+                                    <div className="bg-white/80 p-3 rounded-lg text-center shadow-sm">
+                                        <p className="font-mono text-sm font-bold text-primary">http://127.0.0.1:8000/docs</p>
+                                        <p className="text-xs text-gray-500 mt-1">Swagger UI (documentación interactiva)</p>
+                                    </div>
+                                    <div className="bg-white/80 p-3 rounded-lg text-center shadow-sm">
+                                        <p className="font-mono text-sm font-bold text-primary">http://127.0.0.1:8000/bernoulli</p>
+                                        <p className="text-xs text-gray-500 mt-1">Endpoint de Bernoulli</p>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-3 italic">
+                                    Para detener el servidor, presione <strong>Ctrl + C</strong> en la terminal.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="tip-box p-4 rounded-lg mb-6">
+                            <h4 className="font-bold text-primary mb-2 flex items-center gap-2"><i className="fas fa-lightbulb"></i> Consejo para los Siguientes Ejemplos</h4>
+                            <p className="text-sm text-gray-700">
+                                Cada lección incluye un bloque de código diferente. Para ejecutarlos, simplemente <strong>reemplace el contenido</strong> de <code>main.py</code> con el nuevo código y el servidor se reiniciará automáticamente (gracias a <code>--reload</code>). No necesita repetir los pasos 1-2.
+                            </p>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `# === EJEMPLO 1: "Hello, World!" en FastAPI ===
+# Este es el punto de partida más simple.
+# Un solo archivo, un solo endpoint.
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def home():
+    return {"message": "Hello, FastAPI!"}
+
+# Para ejecutar: uvicorn main:app --reload
+# Visite http://127.0.0.1:8000 en su navegador
+# Visite http://127.0.0.1:8000/docs para la documentación automática
+
+
+# === EJEMPLO 2: Endpoint de Bernoulli ===
+# Ahora con lógica estadística real.
+
+import numpy as np
+
+@app.get("/bernoulli")
+def experimento_bernoulli():
+    """
+    Simula un ensayo de Bernoulli con p=0.7.
+    """
+    p = 0.7
+    resultado = np.random.binomial(n=1, p=p)
+    interpretacion = "Éxito" if resultado == 1 else "Fracaso"
+    
+    return {
+        "experimento": "Ensayo Bernoulli",
+        "parametro_p": p,
+        "observacion_cruda": int(resultado), 
+        "interpretacion": interpretacion
+    }`,
+                interactiveType: 'concept'
+            },
+            {
+                id: 'architecture',
+                title: 'Arquitectura',
+                codeTitle: 'Diagrama de Flujo (Conceptual)',
+                icon: 'Server',
+                content: (
+                    <div>
+                        <h3 className="text-xl font-semibold text-secondary mb-4">Arquitectura <Tooltip title="WSGI" text="Web Server Gateway Interface. Estándar creado en 2003 (PEP 3333) que define cómo un servidor web se comunica con aplicaciones Python. Es sincrónico: procesa una sola petición por hilo a la vez. Frameworks clásicos como Flask y Django lo utilizan." color="#dc2626">WSGI</Tooltip> vs <Tooltip title="ASGI" text="Asynchronous Server Gateway Interface. Evolución de WSGI creada en 2018. Soporta comunicación asíncrona, WebSockets y HTTP/2. Permite manejar miles de conexiones concurrentes sin bloquear el servidor. FastAPI y Starlette lo utilizan." color="#059669">ASGI</Tooltip></h3>
+
+                        <div className="grid md:grid-cols-2 gap-6 mb-8">
+                            <div className="usta-card p-5">
+                                <h4 className="font-bold text-lg text-primary mb-3">El Modelo <Tooltip title="WSGI — Web Server Gateway Interface" text="Protocolo estándar de Python (PEP 3333) para la comunicación entre servidores web y aplicaciones. Funciona de forma sincrónica: cada petición HTTP ocupa un hilo hasta completarse. Usado por Flask, Django y Bottle." color="#dc2626">WSGI</Tooltip> (Secuencial)</h4>
+                                <p className="text-sm text-gray-600 mb-3">
+                                    Históricamente, Python utilizaba WSGI (ej. Flask), comparable a una sesión estándar de R en consola ("monohilo"). Si se ejecuta una operación larga, el proceso se bloquea hasta su finalización.
+                                </p>
+                                <div className="text-xs bg-red-50 text-red-700 p-2 rounded border border-red-100">
+                                    <strong>Resultado:</strong> Sistema de colas bloqueante donde los usuarios esperan secuencialmente.
+                                </div>
+                            </div>
+
+                            <div className="usta-card p-5">
+                                <h4 className="font-bold text-lg text-secondary mb-3">El Modelo <Tooltip title="ASGI — Asynchronous Server Gateway Interface" text="Estándar moderno que extiende WSGI para soportar operaciones asíncronas (async/await), WebSockets y protocolos de larga duración. Permite que el servidor atienda miles de conexiones simultáneas. Usado por FastAPI, Starlette y Django Channels." color="#059669">ASGI</Tooltip> (Concurrente)</h4>
+                                <p className="text-sm text-gray-600 mb-3">
+                                    FastAPI utiliza ASGI, el estándar moderno. Esto es análogo a una aplicación R Shiny configurada con "promises". Permite delegar tareas pesadas y quedar libre.
+                                </p>
+                                <div className="text-xs bg-green-50 text-green-700 p-2 rounded border border-green-100">
+                                    <strong>Resultado:</strong> Alta concurrencia, el servidor atiende otras peticiones inmediatamente.
+                                </div>
+                            </div>
+                        </div>
+
+                        <figure className="mb-6">
+                            <figcaption className="text-center font-bold text-gray-700 mb-2">Comparación de Flujos de Ejecución</figcaption>
+                            <ComparisonDiagram />
+                        </figure>
+
+                        <h3 className="text-xl font-semibold text-secondary mb-4 mt-8">Los 3 Superpoderes de FastAPI</h3>
+                        <p className="mb-4">
+                            Según Saket Garodia, FastAPI se distingue de otros frameworks Python por tres capacidades fundamentales que lo convierten en la herramienta predilecta para Ciencia de Datos e IA:
+                        </p>
+                        <div className="grid md:grid-cols-3 gap-4 mb-6">
+                            <div className="usta-card p-5 text-center">
+                                <div className="text-3xl mb-3">⚡</div>
+                                <h4 className="font-bold text-primary mb-2">Velocidad Blazing</h4>
+                                <p className="text-sm text-gray-600">
+                                    Gracias a ASGI, FastAPI está a la par de <strong>Node.js</strong> y <strong>Go</strong> en rendimiento. Una sola instancia puede manejar miles de peticiones simultáneas de forma eficiente.
+                                </p>
+                            </div>
+                            <div className="usta-card p-5 text-center">
+                                <div className="text-3xl mb-3">🛡️</div>
+                                <h4 className="font-bold text-secondary mb-2">Validación Automática</h4>
+                                <p className="text-sm text-gray-600">
+                                    Usando <strong>Pydantic</strong> y <em>type hints</em> nativos de Python, FastAPI valida automáticamente todos los datos de entrada. No más <code>if not isinstance(...)</code> manuales.
+                                </p>
+                            </div>
+                            <div className="usta-card p-5 text-center">
+                                <div className="text-3xl mb-3">📄</div>
+                                <h4 className="font-bold text-navy mb-2">Docs Interactivos</h4>
+                                <p className="text-sm text-gray-600">
+                                    Al visitar <code>/docs</code>, obtienes una interfaz <strong>Swagger UI</strong> generada automáticamente donde puedes ver y probar cada endpoint en vivo.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="usta-card p-4 border-l-4 border-gold text-gray-700 italic">
+                            FastAPI es esencialmente "toda una cocina moderna" comparado con el "chef solitario" que representan los frameworks tradicionales como Flask sin extensiones.
+                        </div>
+                    </div>
+                ),
+                pythonCode: `# Pseudocódigo conceptual de la diferencia
+
+# WSGI (Flask/Django tradicional)
+def atender_cliente(request):
+    resultado = procesar_modelo_pesado() # BLOQUEA TODO EL SERVIDOR
+    return resultado
+
+# ASGI (FastAPI)
+async def atender_cliente(request):
+    # 'await' libera el servidor para atender a otros
+    # mientras el modelo procesa en otro hilo/proceso
+    resultado = await procesar_modelo_pesado() 
+    return resultado`,
+                interactiveType: 'concept'
+            },
+            {
+                id: 'crud',
+                title: 'Routing & CRUD',
+                codeTitle: 'API de Registro de Experimentos',
+                icon: 'Database',
+                content: (
+                    <div>
+                        <h3 className="text-xl font-semibold text-secondary mb-4">Verbos HTTP en el Contexto Estadístico</h3>
+                        <p className="mb-4">Es crucial mapear correctamente las operaciones estadísticas a los verbos HTTP adecuados:</p>
+
+                        <div className="overflow-x-auto mb-6">
+                            <table className="w-full text-sm text-left border-collapse">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3 border border-gray-200">Verbo HTTP</th>
+                                        <th scope="col" className="px-6 py-3 border border-gray-200">Operación Análoga</th>
+                                        <th scope="col" className="px-6 py-3 border border-gray-200">Uso en API</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-6 py-4 border border-gray-200 font-bold text-green-600">GET</td>
+                                        <td className="px-6 py-4 border border-gray-200 font-mono">summary(df), head()</td>
+                                        <td className="px-6 py-4 border border-gray-200">Consultar datos o metadatos.</td>
+                                    </tr>
+                                    <tr className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-6 py-4 border border-gray-200 font-bold text-blue-600">POST</td>
+                                        <td className="px-6 py-4 border border-gray-200 font-mono">lm(y ~ x), predict()</td>
+                                        <td className="px-6 py-4 border border-gray-200">Enviar nuevos datos/registros.</td>
+                                    </tr>
+                                    <tr className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-6 py-4 border border-gray-200 font-bold text-yellow-600">PUT</td>
+                                        <td className="px-6 py-4 border border-gray-200 font-mono">df[i] &lt;- val</td>
+                                        <td className="px-6 py-4 border border-gray-200">Actualizar un registro.</td>
+                                    </tr>
+                                    <tr className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-6 py-4 border border-gray-200 font-bold text-red-600">DELETE</td>
+                                        <td className="px-6 py-4 border border-gray-200 font-mono">rm(object)</td>
+                                        <td className="px-6 py-4 border border-gray-200">Eliminar un registro.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-2">Validación Robusta con Pydantic</h3>
+                        <p className="mb-4">
+                            Los modelos de ML son estrictos con sus inputs. Si un modelo espera un entero para "edad" y recibe
+                            "treinta", fallará. <strong>Pydantic</strong> actúa como una capa de validación automática.
+                        </p>
+
+                        <h4 className="font-semibold text-primary mb-2 flex items-center gap-2"><i className="fas fa-exchange-alt"></i> Comparación: Flask (Manual) vs FastAPI (Automático)</h4>
+                        <div className="grid md:grid-cols-2 gap-4 mb-6">
+                            <div className="bg-red-50/50 p-4 rounded-xl border border-red-200">
+                                <h5 className="font-bold text-red-700 text-sm mb-2">❌ Flask — Validación Manual</h5>
+                                <pre className="text-xs bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto"><code>{`@app.route("/predict", methods=["POST"])
+def predict():
+    data = request.get_json()
+    if not isinstance(data.get("age"), int):
+        return jsonify({"error": "age must be int"}), 400
+    if not isinstance(data.get("income"), float):
+        return jsonify({"error": "income must be float"}), 400
+    return jsonify({"success": True})`}</code></pre>
+                                <p className="text-xs text-red-600 mt-2 italic">Cada campo requiere validación manual. Propenso a errores y verboso.</p>
+                            </div>
+                            <div className="bg-green-50/50 p-4 rounded-xl border border-green-200">
+                                <h5 className="font-bold text-green-700 text-sm mb-2">✅ FastAPI — Validación Automática</h5>
+                                <pre className="text-xs bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto"><code>{`class Features(BaseModel):
+    age: int
+    income: float
+
+@app.post("/predict")
+def predict(data: Features):
+    return {"success": True}
+# ¡FastAPI valida automáticamente!`}</code></pre>
+                                <p className="text-xs text-green-600 mt-2 italic">Pydantic valida tipos, rangos y formatos automáticamente. Limpio y seguro.</p>
+                            </div>
+                        </div>
+
+                        <p className="mb-4">
+                            A continuación, implementaremos una API completa para gestionar un registro de experimentos, demostrando el uso de los cuatro verbos principales. Usaremos un diccionario de Python (<code>db</code>) como base de datos en memoria.
+                        </p>
+
+                        <div className="tip-box p-4 rounded-lg mb-6">
+                            <h4 className="font-bold text-primary mb-2 flex items-center gap-2"><i className="fas fa-terminal"></i> ¿Cómo ejecutar este código?</h4>
+                            <p className="text-sm text-gray-700 mb-2">
+                                Copie el código del panel derecho y guárdelo como <code>main.py</code>. Luego ejecute:
+                            </p>
+                            <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto"><code>{`uvicorn main:app --reload`}</code></pre>
+                            <p className="text-sm text-gray-700 mt-2">Pruebe los endpoints CRUD visitando <code>http://127.0.0.1:8000/docs</code> — la interfaz Swagger le permite probar cada operación (GET, POST, PUT, DELETE) directamente desde el navegador.</p>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI(title="API de Registro de Experimentos")
+
+# 1. Modelo de Datos (Esquema del Experimento)
+class Experimento(BaseModel):
+    id: int
+    nombre: str
+    resultado_metric: float
+    notas: str
+
+# Base de datos simulada
+db = {}
+
+# --- CREATE (POST): Registrar nuevo experimento ---
+@app.post("/experimentos")
+def crear_experimento(exp: Experimento):
+    if exp.id in db:
+        raise HTTPException(status_code=400, detail="ID ya existe")
+    db[exp.id] = exp
+    return {"mensaje": "Registrado", "data": exp}
+
+# --- READ (GET): Consultar experimento por ID ---
+@app.get("/experimentos/{exp_id}")
+def obtener_experimento(exp_id: int):
+    if exp_id not in db:
+        raise HTTPException(status_code=404, detail="Experimento no encontrado")
+    return db[exp_id]
+
+# --- UPDATE (PUT): Corregir datos de un experimento ---
+@app.put("/experimentos/{exp_id}")
+def actualizar_experimento(exp_id: int, exp_actualizado: Experimento):
+    if exp_id not in db:
+        raise HTTPException(status_code=404, detail="Experimento no encontrado")
+    db[exp_id] = exp_actualizado
+    return {"mensaje": "Actualizado", "data": exp_actualizado}
+
+# --- DELETE (DELETE): Eliminar registro ---
+@app.delete("/experimentos/{exp_id}")
+def eliminar_experimento(exp_id: int):
+    if exp_id not in db:
+        raise HTTPException(status_code=404, detail="Experimento no encontrado")
+    del db[exp_id]
+    return {"mensaje": f"Experimento {exp_id} eliminado"}`,
+                interactiveType: 'concept'
+            },
+            {
+                id: 'concurrency',
+                title: 'Concurrencia',
+                codeTitle: 'Tareas en Background',
+                icon: 'Cpu',
+                content: (
+                    <div>
+                        <h3 className="text-xl font-semibold text-secondary mb-4">Optimización y Concurrencia</h3>
+                        <p className="mb-4">
+                            Entender la naturaleza de la tarea es vital para el rendimiento. Muchas tareas de ML no son puramente
+                            matemáticas (CPU-Bound), sino que implican tiempos de espera (I/O-Bound), como:
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2 mb-4">
+                            <li>Consultar características (features) de un usuario en una base de datos SQL.</li>
+                            <li>Cargar un modelo pesado (.pkl) desde el disco o S3.</li>
+                            <li>Consultar una API externa (ej. servicio de clima).</li>
+                        </ul>
+
+                        <div className="tip-box p-4 rounded-lg mb-6">
+                            <strong className="text-primary block mb-2"><i className="fas fa-medal"></i> Regla de Oro</strong>
+                            En una app síncrona, el servidor se bloquea durante estas esperas. En FastAPI (Asíncrono), el servidor utiliza ese tiempo muerto para procesar otras peticiones. Use <code>async def</code> para operaciones de I/O y <code>def</code> estándar para cálculos pesados de CPU (NumPy/Pandas).
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-2">Tareas en Background</h3>
+                        <p className="mb-4">
+                            Para procesos extremadamente largos (reentrenamiento de modelos), se utilizan <strong>BackgroundTasks</strong> para no hacer esperar al usuario.
+                        </p>
+
+                        <div className="tip-box p-4 rounded-lg mb-6">
+                            <h4 className="font-bold text-primary mb-2 flex items-center gap-2"><i className="fas fa-terminal"></i> ¿Cómo ejecutar este código?</h4>
+                            <p className="text-sm text-gray-700 mb-2">
+                                Copie el código del panel derecho y guárdelo como <code>main.py</code>. Ejecute <code>uvicorn main:app --reload</code> y luego pruebe con:
+                            </p>
+                            <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto"><code>{`# Desde otra terminal (el servidor queda corriendo en la primera):
+curl -X POST "http://127.0.0.1:8000/trigger-retrain"
+
+# O visite http://127.0.0.1:8000/docs y use el botón "Try it out"`}</code></pre>
+                            <p className="text-xs text-gray-500 mt-2 italic">El POST responde inmediatamente con "Entrenamiento iniciado" mientras la tarea pesada se ejecuta en segundo plano.</p>
+                        </div>
+
+                        <div className="tip-box p-4 rounded-lg mb-6">
+                            <h4 className="font-bold text-primary mb-2 flex items-center gap-2"><i className="fas fa-question-circle"></i> FAQ: ¿Por qué el Puerto 8000?</h4>
+                            <p className="text-sm text-gray-700">
+                                Cuando ejecutamos <code>uvicorn main:app --reload</code>, el servidor se inicia en el puerto <strong>8000</strong> por defecto. Piense en su dirección IP como la dirección de un edificio, y el puerto como el <strong>número de apartamento</strong>. El puerto 8000 es simplemente una convención común para desarrollo. En producción, se usaría el puerto 80 (HTTP) o 443 (HTTPS).
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Acceso local: <code>http://127.0.0.1:8000</code> · Documentación: <code>http://127.0.0.1:8000/docs</code>
+                            </p>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `from fastapi import BackgroundTasks
+
+@app.post("/trigger-retrain")
+def iniciar_entrenamiento(background_tasks: BackgroundTasks, n_iter: int = 1000):
+    # Se agenda la tarea, el servidor responde "202 Accepted" al instante
+    background_tasks.add_task(entrenar_modelo_pesado, n_iter)
+    return {"mensaje": "Entrenamiento iniciado en segundo plano."}`,
+                interactiveType: 'concept'
+            },
+            {
+                id: 'evaluation',
+                title: 'Evaluación y Cierre',
+                codeTitle: 'Resumen del Módulo',
+                icon: 'CheckSquare',
+                content: (
+                    <div>
+                        <h3 className="text-xl font-semibold text-secondary mb-4">Evaluación y Conclusiones</h3>
+
+                        <div className="grid md:grid-cols-2 gap-6 mb-8">
+                            <div className="usta-card p-5">
+                                <h4 className="font-bold text-lg text-primary mb-3">Checkpoints de Conocimiento</h4>
+                                <ol className="list-decimal pl-5 space-y-3 text-sm text-gray-700">
+                                    <li>
+                                        <strong>WSGI vs ASGI:</strong> WSGI es secuencial. ASGI permite concurrencia masiva manejando miles de peticiones simultáneas durante tiempos de espera (I/O).
+                                    </li>
+                                    <li>
+                                        <strong>Ecosistema:</strong> FastAPI combina la velocidad de ejecución (gracias a Starlette/ASGI), la validación de datos (Pydantic) y la documentación automática (Swagger UI) en un solo paquete cohesivo.
+                                    </li>
+                                    <li>
+                                        <strong>REST:</strong> Una REST API usa URLs estándar y verbos HTTP (GET, POST, PUT, DELETE) para comunicar servicios de forma desacoplada.
+                                    </li>
+                                    <li>
+                                        <strong>Validación:</strong> A diferencia de Flask, FastAPI valida datos automáticamente con Pydantic, eliminando código boilerplate y previniendo errores en producción.
+                                    </li>
+                                </ol>
+                            </div>
+                            <div className="usta-card p-5 bg-gradient-to-br from-white to-gray-50">
+                                <h4 className="font-bold text-lg text-secondary mb-3">Conclusión del Módulo</h4>
+                                <p className="text-sm text-gray-700 leading-relaxed">
+                                    Se han adquirido las herramientas para transformar scripts de análisis aislados en servicios web robustos. Hemos pasado de la analogía estadística a la implementación de una API CRUD completa, lista para ser consumida por equipos de ingeniería o clientes finales.
+                                </p>
+                            </div>
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-4">¿Por qué FastAPI es la Elección Top para AI y ML?</h3>
+                        <div className="grid md:grid-cols-2 gap-4 mb-8">
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <div className="text-2xl">🔄</div>
+                                <div>
+                                    <h5 className="font-bold text-sm text-primary mb-1">Concurrencia Masiva</h5>
+                                    <p className="text-xs text-gray-600">Maneja predicciones de alto volumen. Ideal para modelos que sirven miles de peticiones por segundo en producción.</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <div className="text-2xl">⏳</div>
+                                <div>
+                                    <h5 className="font-bold text-sm text-secondary mb-1">Eficiencia I/O Bound</h5>
+                                    <p className="text-xs text-gray-600">Maneja eficientemente los tiempos de espera durante consultas a bases de datos, carga de modelos o llamadas a APIs externas.</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <div className="text-2xl">🛡️</div>
+                                <div>
+                                    <h5 className="font-bold text-sm text-primary mb-1">Validación de Datos</h5>
+                                    <p className="text-xs text-gray-600">Previene crasheos por datos malformados. Si el modelo espera un entero y recibe texto, FastAPI rechaza la petición antes de que llegue al modelo.</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <div className="text-2xl">🤝</div>
+                                <div>
+                                    <h5 className="font-bold text-sm text-secondary mb-1">Colaboración via /docs</h5>
+                                    <p className="text-xs text-gray-600">La documentación auto-generada permite que cualquier miembro del equipo pruebe modelos directamente desde el navegador, sin leer una sola línea de código.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="usta-card p-5 border-l-4 border-gold bg-gradient-to-r from-yellow-50/30 to-white">
+                            <p className="text-sm text-gray-700 italic leading-relaxed">
+                                <strong>"FastAPI combina la simplicidad de Flask con el poder del rendimiento asíncrono moderno."</strong> Es esencialmente pasar de tener un solo chef en una cocina pequeña a tener toda una cocina industrial moderna, equipada y optimizada para servir a escala.
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">— Adaptado de Saket Garodia, "From Zero to API"</p>
+                        </div>
+
+                        <h3 className="text-xl font-semibold text-secondary mb-4 mt-10 flex items-center gap-2">📝 Cuestionario Interactivo</h3>
+                        <p className="mb-2 text-sm text-gray-700">
+                            Ponga a prueba su comprensión de los temas cubiertos en este módulo. <strong>8 preguntas</strong> de selección múltiple con retroalimentación inmediata.
+                        </p>
+                        <InteractiveQuiz />
+                    </div>
+                ),
+                pythonCode: `# Resumen visual del ecosistema FastAPI
+
+FastAPI = (
+    Starlette (Web / ASGI / Routing) +
+    Pydantic (Validación de Datos) +
+    OpenAPI (Documentación Automática)
+)
+
+# ¡Listo para producción!`,
+                interactiveType: 'concept'
+            },
+            {
+                id: 'lab-activity',
+                title: 'Actividad Aplicada',
+                codeTitle: 'Esqueleto — Completar',
+                icon: 'Code',
+                content: (
+                    <div>
+                        <h3 className="text-xl font-semibold text-secondary mb-4">🔬 Proyecto Personal: Mi API de Análisis de Datos</h3>
+                        <p className="mb-4">
+                            En esta actividad usted diseñará y construirá <strong>su propia API REST personalizada</strong> aplicada a un dominio de su elección. La API debe recibir datos, validarlos con Pydantic, procesarlos y retornar resultados como JSON. Esta actividad integra todos los temas cubiertos en las 3 semanas del módulo.
+                        </p>
+
+                        <div className="tip-box p-4 rounded-lg mb-6">
+                            <h4 className="font-bold text-primary mb-2 flex items-center gap-2"><i className="fas fa-bullseye"></i> Objetivo de Aprendizaje</h4>
+                            <p className="text-sm text-gray-700">
+                                Al completar este proyecto, usted será capaz de diseñar modelos de datos propios con Pydantic, implementar endpoints CRUD en FastAPI, y demostrar comprensión del flujo completo request → validación → procesamiento → respuesta JSON.
+                            </p>
+                        </div>
+
+                        <div className="usta-card p-5 border-l-4 border-secondary bg-gradient-to-r from-blue-50/30 to-white mb-6">
+                            <h4 className="font-bold text-secondary mb-3 flex items-center gap-2"><i className="fas fa-robot"></i> Política sobre uso de IA</h4>
+                            <p className="text-sm text-gray-700 mb-2">
+                                <strong>Puede usar herramientas de IA</strong> (ChatGPT, Copilot, etc.) como apoyo para consultar sintaxis o depurar errores. Sin embargo:
+                            </p>
+                            <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+                                <li>Debe elegir un <strong>dominio propio y único</strong> (no el ejemplo genérico de esta lección).</li>
+                                <li>Las <strong>preguntas de reflexión</strong> deben responderse con base en su proyecto específico.</li>
+                                <li>Se requiere <strong>evidencia de ejecución</strong> (capturas de pantalla o video de su terminal y Swagger UI).</li>
+                                <li>Código idéntico al ejemplo de la lección <strong>o idéntico al de otro compañero será penalizado</strong>.</li>
+                            </ul>
+                        </div>
+
+                        <h4 className="font-bold text-lg text-primary mb-3">🎯 Paso 0: Elija su Dominio</h4>
+                        <p className="mb-3 text-sm text-gray-700">
+                            Elija un <strong>dominio personal</strong> para su API. Su dominio debe tener datos numéricos que se puedan analizar. Algunos ejemplos:
+                        </p>
+                        <div className="grid md:grid-cols-3 gap-3 mb-6">
+                            <div className="usta-card p-3 text-center">
+                                <div className="text-2xl mb-1">🏥</div>
+                                <p className="text-xs font-bold text-primary">Salud</p>
+                                <p className="text-xs text-gray-500">Registros de presión arterial, glucosa, IMC</p>
+                            </div>
+                            <div className="usta-card p-3 text-center">
+                                <div className="text-2xl mb-1">⚽</div>
+                                <p className="text-xs font-bold text-secondary">Deportes</p>
+                                <p className="text-xs text-gray-500">Goles por partido, tiempos, puntuaciones</p>
+                            </div>
+                            <div className="usta-card p-3 text-center">
+                                <div className="text-2xl mb-1">🌦️</div>
+                                <p className="text-xs font-bold text-primary">Clima</p>
+                                <p className="text-xs text-gray-500">Temperaturas, precipitación, humedad</p>
+                            </div>
+                            <div className="usta-card p-3 text-center">
+                                <div className="text-2xl mb-1">💰</div>
+                                <p className="text-xs font-bold text-secondary">Finanzas</p>
+                                <p className="text-xs text-gray-500">Precios, rendimientos, transacciones</p>
+                            </div>
+                            <div className="usta-card p-3 text-center">
+                                <div className="text-2xl mb-1">📊</div>
+                                <p className="text-xs font-bold text-primary">Encuestas</p>
+                                <p className="text-xs text-gray-500">Respuestas Likert, calificaciones, satisfacción</p>
+                            </div>
+                            <div className="usta-card p-3 text-center">
+                                <div className="text-2xl mb-1">🧪</div>
+                                <p className="text-xs font-bold text-secondary">Laboratorio</p>
+                                <p className="text-xs text-gray-500">Mediciones químicas, concentraciones, pH</p>
+                            </div>
+                        </div>
+
+                        <h4 className="font-bold text-lg text-primary mb-3">📋 Mapa de Integración de Temas</h4>
+                        <div className="overflow-x-auto mb-8">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-primary/10">
+                                        <th className="text-left p-3 font-bold text-primary border-b-2 border-primary/20">Semana</th>
+                                        <th className="text-left p-3 font-bold text-primary border-b-2 border-primary/20">Tema</th>
+                                        <th className="text-left p-3 font-bold text-primary border-b-2 border-primary/20">Aplicación en el Laboratorio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="border-b border-gray-100">
+                                        <td className="p-3 font-bold text-secondary">1</td>
+                                        <td className="p-3">Entornos virtuales, <code>requirements.txt</code></td>
+                                        <td className="p-3">Fase 1: Setup del proyecto</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                                        <td className="p-3 font-bold text-secondary">1</td>
+                                        <td className="p-3">Decoradores en Python</td>
+                                        <td className="p-3">Fases 4: <code>@app.get</code>, <code>@app.post</code></td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100">
+                                        <td className="p-3 font-bold text-secondary">2</td>
+                                        <td className="p-3">HTTP (verbos, status codes), JSON</td>
+                                        <td className="p-3">Fases 4-5: GET, POST, DELETE + respuestas JSON</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                                        <td className="p-3 font-bold text-secondary">2</td>
+                                        <td className="p-3">Pydantic (validación de datos)</td>
+                                        <td className="p-3">Fase 2: Modelos <code>DatasetInput</code> y <code>StatsResult</code></td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100">
+                                        <td className="p-3 font-bold text-secondary">3</td>
+                                        <td className="p-3">Routing, CRUD, FastAPI</td>
+                                        <td className="p-3">Fase 4: Endpoints CRUD completos</td>
+                                    </tr>
+                                    <tr className="bg-gray-50/50">
+                                        <td className="p-3 font-bold text-secondary">3</td>
+                                        <td className="p-3">Síncrono vs Asíncrono, Uvicorn</td>
+                                        <td className="p-3">Fase 5: Ejecución y pruebas con Swagger UI</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <hr className="mb-8 border-gray-200" />
+
+                        <h3 className="text-lg font-semibold text-secondary mb-4">Fase 1 — Setup del Proyecto <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full ml-2">Semana 1</span></h3>
+                        <p className="mb-3 text-sm text-gray-700">
+                            Cree la estructura profesional del proyecto con entorno virtual. Use un nombre de carpeta que refleje su dominio (ej: <code>salud_api</code>, <code>deportes_api</code>).
+                        </p>
+                        <pre className="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto mb-4"><code>{`# 1. Crear carpeta con el nombre de su dominio
+mkdir mi_dominio_api && cd mi_dominio_api
+
+# 2. Crear entorno virtual
+python -m venv venv
+source venv/bin/activate   # macOS/Linux
+# venv\\Scripts\\activate   # Windows
+
+# 3. Instalar dependencias
+pip install fastapi uvicorn numpy
+
+# 4. Generar requirements.txt
+pip freeze > requirements.txt`}</code></pre>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-4">Fase 2 — Diseñe sus Modelos Pydantic <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full ml-2">Semana 2</span></h3>
+                        <p className="mb-3 text-sm text-gray-700">
+                            Diseñe <strong>dos modelos Pydantic propios</strong> para su dominio. NO copie los del ejemplo de la lección. Sus modelos deben reflejar la naturaleza de los datos de su dominio.
+                        </p>
+                        <div className="overflow-x-auto mb-4">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-purple-50">
+                                        <th className="text-left p-3 font-bold text-purple-700 border-b-2 border-purple-200">Requisito</th>
+                                        <th className="text-left p-3 font-bold text-purple-700 border-b-2 border-purple-200">Modelo de Entrada</th>
+                                        <th className="text-left p-3 font-bold text-purple-700 border-b-2 border-purple-200">Modelo de Salida</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="border-b border-gray-100">
+                                        <td className="p-3 font-bold">Nombre del modelo</td>
+                                        <td className="p-3">Refleje su dominio (ej: <code>PacienteInput</code>, <code>PartidoInput</code>)</td>
+                                        <td className="p-3">Refleje el resultado (ej: <code>DiagnosticoResult</code>, <code>EstadisticasPartido</code>)</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                                        <td className="p-3 font-bold">Campos obligatorios</td>
+                                        <td className="p-3">Mínimo 3 campos con tipos distintos (<code>str</code>, <code>int</code>, <code>float</code>, <code>List</code>)</td>
+                                        <td className="p-3">Mínimo 5 campos numéricos calculados</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100">
+                                        <td className="p-3 font-bold">Validaciones</td>
+                                        <td className="p-3">Al menos 2 validaciones con <code>Field()</code> (ej: <code>min_length</code>, <code>ge</code>, <code>le</code>)</td>
+                                        <td className="p-3">Tipos explícitos en todos los campos</td>
+                                    </tr>
+                                    <tr className="bg-gray-50/50">
+                                        <td className="p-3 font-bold">Campo opcional</td>
+                                        <td className="p-3">Al menos 1 campo <code>Optional</code></td>
+                                        <td className="p-3">—</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-4">Fase 3 — Implemente la Lógica de Procesamiento <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">Transversal</span></h3>
+                        <p className="mb-3 text-sm text-gray-700">
+                            Escriba una <strong>función pura</strong> que procese los datos de su dominio. La función debe:
+                        </p>
+                        <ul className="list-disc pl-5 text-sm text-gray-700 space-y-2 mb-4">
+                            <li>Recibir los datos validados y retornar un diccionario con los resultados.</li>
+                            <li>Usar <code>numpy</code> para al menos 5 cálculos estadísticos o del dominio.</li>
+                            <li>Redondear todos los valores numéricos a 4 decimales.</li>
+                            <li>Usar <code>ddof=1</code> para cálculos muestrales (varianza, desviación estándar).</li>
+                        </ul>
+                        <div className="usta-card p-4 border-l-4 border-secondary text-gray-700 italic mb-8">
+                            <strong>Importante:</strong> La función debe ser independiente de FastAPI. Debe poder ejecutarse sin importar nada del framework web. Esto es una buena práctica de separación de responsabilidades.
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-4">Fase 4 — Cree los Endpoints CRUD <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full ml-2">Semana 3</span></h3>
+                        <p className="mb-3 text-sm text-gray-700">
+                            Conecte su lógica con el mundo exterior. Su API debe exponer <strong>mínimo estos 4 endpoints</strong>:
+                        </p>
+                        <div className="overflow-x-auto mb-4">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-secondary/10">
+                                        <th className="text-left p-2 font-bold text-secondary">Verbo</th>
+                                        <th className="text-left p-2 font-bold text-secondary">Ruta</th>
+                                        <th className="text-left p-2 font-bold text-secondary">Qué debe hacer</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="border-b border-gray-100">
+                                        <td className="p-2"><code className="bg-green-100 text-green-700 px-1 rounded">POST</code></td>
+                                        <td className="p-2"><code>/analizar</code> (o nombre propio)</td>
+                                        <td className="p-2">Recibir datos, validarlos, procesarlos, guardarlos en memoria, retornar resultado</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100 bg-gray-50/50">
+                                        <td className="p-2"><code className="bg-blue-100 text-blue-700 px-1 rounded">GET</code></td>
+                                        <td className="p-2"><code>/historial</code></td>
+                                        <td className="p-2">Listar todos los análisis guardados</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-100">
+                                        <td className="p-2"><code className="bg-blue-100 text-blue-700 px-1 rounded">GET</code></td>
+                                        <td className="p-2"><code>/historial/{'{id}'}</code></td>
+                                        <td className="p-2">Obtener un análisis específico (manejar 404 con <code>HTTPException</code>)</td>
+                                    </tr>
+                                    <tr className="bg-gray-50/50">
+                                        <td className="p-2"><code className="bg-red-100 text-red-700 px-1 rounded">DELETE</code></td>
+                                        <td className="p-2"><code>/historial/{'{id}'}</code></td>
+                                        <td className="p-2">Eliminar un análisis (manejar 404)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-4">Fase 5 — Pruebas y Evidencia <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full ml-2">Semanas 2+3</span></h3>
+                        <p className="mb-3 text-sm text-gray-700">
+                            Ejecute su servidor con <code>uvicorn main:app --reload</code> y documente al menos <strong>5 pruebas</strong> en Swagger UI:
+                        </p>
+                        <div className="space-y-3 mb-6">
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs text-green-700">1</span>
+                                <div>
+                                    <p className="font-bold text-sm text-gray-800">POST — Caso exitoso</p>
+                                    <p className="text-xs text-gray-600">Envíe datos válidos de su dominio. Verifique el cálculo correcto.</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-red-100 flex items-center justify-center font-bold text-xs text-red-700">2</span>
+                                <div>
+                                    <p className="font-bold text-sm text-gray-800">POST — Validación rechazada (422)</p>
+                                    <p className="text-xs text-gray-600">Envíe datos que violen sus validaciones Pydantic. Muestre el error 422.</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center font-bold text-xs text-blue-700">3</span>
+                                <div>
+                                    <p className="font-bold text-sm text-gray-800">GET /historial — Verificar persistencia</p>
+                                    <p className="text-xs text-gray-600">Después de 2-3 POST exitosos, verifique que el historial los contiene.</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center font-bold text-xs text-amber-700">4</span>
+                                <div>
+                                    <p className="font-bold text-sm text-gray-800">GET /historial/99 — Error 404</p>
+                                    <p className="text-xs text-gray-600">Consulte un ID que no existe y muestre el manejo de error.</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center font-bold text-xs text-purple-700">5</span>
+                                <div>
+                                    <p className="font-bold text-sm text-gray-800">DELETE — Eliminar y verificar</p>
+                                    <p className="text-xs text-gray-600">Elimine un análisis y confirme con GET que ya no aparece en el historial.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="usta-card p-4 border-l-4 border-gold text-gray-700 mb-8">
+                            <strong>📸 Evidencia requerida:</strong> Para cada prueba, incluya una captura de pantalla de Swagger UI mostrando tanto el <strong>request</strong> como el <strong>response</strong>. Alternativamente, grabe un <strong>video corto</strong> ({'<'} 3 min) mostrando la ejecución completa de las 5 pruebas.
+                        </div>
+
+                        <hr className="mb-8 border-gray-200" />
+
+                        <h3 className="text-xl font-semibold text-secondary mb-4 flex items-center gap-2">📝 Preguntas de Reflexión</h3>
+                        <p className="mb-4 text-sm text-gray-700">
+                            Responda las siguientes preguntas <strong>por escrito</strong> (máximo 150 palabras cada una). Sus respuestas deben estar contextualizadas en <strong>su proyecto específico</strong>, no en términos genéricos.
+                        </p>
+                        <div className="space-y-4 mb-8">
+                            <div className="usta-card p-4">
+                                <h5 className="font-bold text-sm text-primary mb-2">Pregunta 1 — Dominio y Validaciones</h5>
+                                <p className="text-sm text-gray-700">
+                                    ¿Por qué eligió ese dominio? Describa las validaciones Pydantic que implementó y justifique por qué son necesarias para la integridad de los datos en su contexto específico.
+                                </p>
+                            </div>
+                            <div className="usta-card p-4">
+                                <h5 className="font-bold text-sm text-secondary mb-2">Pregunta 2 — Sin Validación</h5>
+                                <p className="text-sm text-gray-700">
+                                    ¿Qué sucedería concretamente en <strong>su API</strong> si eliminara todas las validaciones Pydantic? Dé un ejemplo de un JSON malformado específico para su dominio y explique qué error produciría.
+                                </p>
+                            </div>
+                            <div className="usta-card p-4">
+                                <h5 className="font-bold text-sm text-primary mb-2">Pregunta 3 — Escalabilidad</h5>
+                                <p className="text-sm text-gray-700">
+                                    Si su API recibiera 10,000 requests por minuto, ¿qué problema tendría su implementación actual con el diccionario en memoria? Proponga una alternativa concreta.
+                                </p>
+                            </div>
+                            <div className="usta-card p-4">
+                                <h5 className="font-bold text-sm text-secondary mb-2">Pregunta 4 — Flujo Completo</h5>
+                                <p className="text-sm text-gray-700">
+                                    Dibuje o describa el flujo completo de un request POST a su endpoint principal: desde que el cliente envía el JSON hasta que recibe la respuesta. Mencione: decorador, Pydantic, función de lógica, y respuesta HTTP.
+                                </p>
+                            </div>
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-secondary mb-4">📦 Entregables</h3>
+                        <div className="grid md:grid-cols-2 gap-4 mb-8">
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="text-xl">📄</span>
+                                <div>
+                                    <p className="font-bold text-sm text-primary">Código fuente</p>
+                                    <p className="text-xs text-gray-600"><code>main.py</code> + <code>requirements.txt</code> (archivos, no capturas)</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="text-xl">📸</span>
+                                <div>
+                                    <p className="font-bold text-sm text-secondary">Evidencia de ejecución</p>
+                                    <p className="text-xs text-gray-600">Capturas de Swagger UI + terminal con uvicorn corriendo</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="text-xl">✍️</span>
+                                <div>
+                                    <p className="font-bold text-sm text-primary">Reflexiones</p>
+                                    <p className="text-xs text-gray-600">Respuestas a las 4 preguntas (documento PDF o Word)</p>
+                                </div>
+                            </div>
+                            <div className="usta-card p-4 flex items-start gap-3">
+                                <span className="text-xl">🎥</span>
+                                <div>
+                                    <p className="font-bold text-sm text-secondary">Video (opcional, reemplaza capturas)</p>
+                                    <p className="text-xs text-gray-600">Video {'<'} 3 min mostrando la ejecución de las 5 pruebas</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="usta-card p-5 border-l-4 border-primary bg-gradient-to-r from-blue-50/30 to-white">
+                            <h4 className="font-bold text-primary mb-2 flex items-center gap-2"><i className="fas fa-graduation-cap"></i> Rúbrica de Evaluación</h4>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr className="bg-primary/10">
+                                            <th className="text-left p-2 font-bold text-primary border-b border-primary/20">Criterio</th>
+                                            <th className="text-center p-2 font-bold text-primary border-b border-primary/20">%</th>
+                                            <th className="text-left p-2 font-bold text-primary border-b border-primary/20">Descripción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr className="border-b border-gray-100">
+                                            <td className="p-2 font-bold">Setup y entorno</td>
+                                            <td className="p-2 text-center">10%</td>
+                                            <td className="p-2">Entorno virtual + <code>requirements.txt</code> funcional</td>
+                                        </tr>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <td className="p-2 font-bold">Modelos Pydantic</td>
+                                            <td className="p-2 text-center">20%</td>
+                                            <td className="p-2">Modelos propios del dominio con validaciones <code>Field()</code></td>
+                                        </tr>
+                                        <tr className="border-b border-gray-100">
+                                            <td className="p-2 font-bold">Endpoints CRUD</td>
+                                            <td className="p-2 text-center">20%</td>
+                                            <td className="p-2">4 endpoints funcionales con manejo de errores HTTP</td>
+                                        </tr>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <td className="p-2 font-bold">Evidencia de ejecución</td>
+                                            <td className="p-2 text-center">15%</td>
+                                            <td className="p-2">Capturas/video de 5 pruebas en Swagger UI</td>
+                                        </tr>
+                                        <tr className="border-b border-gray-100">
+                                            <td className="p-2 font-bold">Preguntas de reflexión</td>
+                                            <td className="p-2 text-center">20%</td>
+                                            <td className="p-2">Respuestas contextualizadas al proyecto propio</td>
+                                        </tr>
+                                        <tr className="bg-gray-50/50">
+                                            <td className="p-2 font-bold text-gold">Originalidad</td>
+                                            <td className="p-2 text-center font-bold text-gold">15%</td>
+                                            <td className="p-2">Dominio único, código propio (no copiado del ejemplo ni de compañeros)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `# ============================================
+# MI API DE ANÁLISIS — [SU DOMINIO AQUÍ]
+# Proyecto Personal (Semanas 1-3)
+# ============================================
+# Guarde este archivo como: main.py
+# Ejecute con: uvicorn main:app --reload
+#
+# INSTRUCCIONES: Complete cada sección TODO
+# con código propio para su dominio elegido.
+# ============================================
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from typing import List, Optional
+import numpy as np
+
+# === TODO 1: MODELO DE ENTRADA ===
+# Cree su propio modelo Pydantic para su
+# dominio. Requisitos mínimos:
+#   - 3+ campos (str, int, float, List)
+#   - 2+ validaciones con Field()
+#   - 1 campo Optional
+
+class MiEntrada(BaseModel):
+    """TODO: Renombre y adapte a su dominio."""
+    # nombre: str = Field(..., min_length=?)
+    # datos: List[float] = Field(..., min_items=?)
+    # campo_opcional: Optional[str] = None
+    pass
+
+# === TODO 2: MODELO DE SALIDA ===
+# Defina qué retornará su API.
+# Mínimo 5 campos numéricos calculados.
+
+class MiResultado(BaseModel):
+    """TODO: Renombre y adapte a su dominio."""
+    # nombre: str
+    # n: int
+    # campo_calculado_1: float
+    # ...
+    pass
+
+# === TODO 3: FUNCIÓN DE PROCESAMIENTO ===
+# Escriba una función PURA (sin FastAPI).
+# Use numpy para al menos 5 cálculos.
+# Redondee a 4 decimales.
+# Use ddof=1 para varianza/desv. estándar.
+
+def procesar_datos(datos) -> dict:
+    """TODO: Implemente la lógica de su dominio."""
+    arr = np.array(datos)
+    return {
+        # "n": len(arr),
+        # "media": round(float(np.mean(arr)), 4),
+        # ... agregue más cálculos
+    }
+
+# === TODO 4: APP FASTAPI + ENDPOINTS ===
+
+app = FastAPI(
+    title="TODO: Nombre de su API",
+    description="TODO: Descripción de su API",
+    version="1.0.0"
+)
+
+historial = {}
+contador_id = 0
+
+# TODO 4a: POST /analizar (o su ruta propia)
+# - Recibir datos validados
+# - Procesar con su función
+# - Guardar en historial
+# - Retornar resultado
+
+# TODO 4b: GET /historial
+# - Retornar todos los análisis guardados
+
+# TODO 4c: GET /historial/{id}
+# - Retornar un análisis por ID
+# - Manejar 404 con HTTPException
+
+# TODO 4d: DELETE /historial/{id}
+# - Eliminar un análisis
+# - Manejar 404 con HTTPException`,
+                interactiveType: 'concept'
+            },
+            {
+                id: 'references',
+                title: 'Referencia Bibliográfica',
+                codeTitle: 'Fuentes Consultadas',
+                icon: 'BookOpen',
+                content: (
+                    <div className="space-y-6">
+                        <p className="text-lg leading-relaxed text-gray-700">
+                            El presente documento de estudio autónomo fue elaborado con base en los siguientes artículos y recursos técnicos:
+                        </p>
+
+                        <div className="space-y-4">
+                            <div className="usta-card p-6">
+                                <blockquote className="border-l-4 pl-4" style={{ borderLeftColor: '#ED1E79' }}>
+                                    <p className="text-gray-800 font-medium text-lg mb-2">
+                                        "From Zero to API: The Data Scientist's Guide to FastAPI"
+                                    </p>
+                                    <p className="text-gray-600 mb-1">
+                                        <strong>Autor:</strong> Saket Garodia
+                                    </p>
+                                    <p className="text-gray-600 mb-3">
+                                        Publicado en <strong>Medium</strong>
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">FastAPI</span>
+                                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Data Science</span>
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">API Design</span>
+                                    </div>
+                                    <a
+                                        href="https://saketgarodia.medium.com/from-zero-to-api-the-data-scientists-guide-to-fastapi-9ae3bb662f5a"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:text-secondary transition-colors font-medium inline-flex items-center gap-2"
+                                    >
+                                        <i className="fas fa-external-link-alt"></i>
+                                        Ver artículo original
+                                    </a>
+                                </blockquote>
+                            </div>
+
+                            <div className="usta-card p-6">
+                                <blockquote className="border-l-4 pl-4" style={{ borderLeftColor: '#3D008D' }}>
+                                    <p className="text-gray-800 font-medium text-lg mb-2">
+                                        "Ultimate Guide to FastAPI Library in Python"
+                                    </p>
+                                    <p className="text-gray-600 mb-1">
+                                        <strong>Fuente:</strong> Deepnote Blog
+                                    </p>
+                                    <p className="text-gray-600 mb-3">
+                                        Guía completa sobre arquitectura, configuración, routing y despliegue de FastAPI
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Arquitectura</span>
+                                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Deployment</span>
+                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Pydantic</span>
+                                    </div>
+                                    <a
+                                        href="https://deepnote.com/blog/ultimate-guide-to-fastapi-library-in-python"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:text-secondary transition-colors font-medium inline-flex items-center gap-2"
+                                    >
+                                        <i className="fas fa-external-link-alt"></i>
+                                        Ver artículo original
+                                    </a>
+                                </blockquote>
+                            </div>
+
+                            <div className="usta-card p-6">
+                                <blockquote className="border-l-4 pl-4" style={{ borderLeftColor: '#FDB913' }}>
+                                    <p className="text-gray-800 font-medium text-lg mb-2">
+                                        "Swagger UI"
+                                    </p>
+                                    <p className="text-gray-600 mb-1">
+                                        <strong>Fuente:</strong> GeeksforGeeks
+                                    </p>
+                                    <p className="text-gray-600 mb-3">
+                                        Referencia técnica sobre Swagger UI: documentación interactiva automática para APIs REST
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Swagger UI</span>
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">OpenAPI</span>
+                                        <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">Documentación</span>
+                                    </div>
+                                    <a
+                                        href="https://www.geeksforgeeks.org/python/swagger-ui/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:text-secondary transition-colors font-medium inline-flex items-center gap-2"
+                                    >
+                                        <i className="fas fa-external-link-alt"></i>
+                                        Ver artículo original
+                                    </a>
+                                </blockquote>
+                            </div>
+
+                            <div className="usta-card p-6">
+                                <blockquote className="border-l-4 pl-4" style={{ borderLeftColor: '#ED1E79' }}>
+                                    <p className="text-gray-800 font-medium text-lg mb-2">
+                                        "Unlocking the Magic: Understanding Decorators in FastAPI (for Beginners!)"
+                                    </p>
+                                    <p className="text-gray-600 mb-1">
+                                        <strong>Autor:</strong> Joseph Utuedeye
+                                    </p>
+                                    <p className="text-gray-600 mb-3">
+                                        Publicado en <strong>DEV Community</strong>
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Decoradores</span>
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">FastAPI</span>
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Beginners</span>
+                                    </div>
+                                    <a
+                                        href="https://dev.to/joe_/unlocking-the-magic-understanding-decorators-in-fastapi-for-beginners-5783"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:text-secondary transition-colors font-medium inline-flex items-center gap-2"
+                                    >
+                                        <i className="fas fa-external-link-alt"></i>
+                                        Ver artículo original
+                                    </a>
+                                </blockquote>
+                            </div>
+                        </div>
+
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r">
+                            <p className="text-sm text-blue-800">
+                                <i className="fas fa-info-circle mr-2"></i>
+                                <strong>Nota:</strong> El contenido fue adaptado para estudiantes de estadística de la Universidad Santo Tomás (USTA), manteniendo los ejemplos prácticos y el enfoque en APIs para ciencia de datos e inteligencia artificial.
+                            </p>
+                        </div>
+
+                        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                            <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                <i className="fas fa-lightbulb text-gold"></i>
+                                ¿Te gustaría profundizar?
+                            </h4>
+                            <ul className="list-disc pl-5 space-y-2 text-gray-600 text-sm">
+                                <li>Visita la <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">documentación oficial de FastAPI</a> para conocer todas las funcionalidades avanzadas.</li>
+                                <li>Explora la <a href="https://docs.pydantic.dev/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">documentación de Pydantic</a> para validación de datos.</li>
+                                <li>Consulta la <a href="https://swagger.io/tools/swagger-ui/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">documentación de Swagger UI</a> para documentación interactiva de APIs.</li>
+                                <li>Practica con datasets reales de <a href="https://www.kaggle.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-secondary underline">Kaggle</a> aplicando los conceptos aprendidos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                ),
+                pythonCode: `# Recursos adicionales para seguir aprendiendo
+
+# Documentación oficial de FastAPI
+# https://fastapi.tiangolo.com/
+
+# Documentación de Pydantic
+# https://docs.pydantic.dev/
+
+# Instalación rápida
+pip install fastapi uvicorn pydantic numpy
+
+# Para la actividad aplicada
+pip install fastapi uvicorn numpy
+pip freeze > requirements.txt
+
+# Repositorios de referencia
+# Busca en GitHub: fastapi-examples
+# Busca en GitHub: awesome-fastapi`,
+                interactiveType: 'concept'
+            }
+        ];
+
+        // --- Componente Principal ---
+
+        const App = () => {
+            const [activeLessonIndex, setActiveLessonIndex] = useState(0);
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+
+            const activeLesson = curriculum[activeLessonIndex];
+
+            // Renderizado seguro de Iconos
+            const renderIcon = (iconName, size = 20) => {
+                const Icon = Icons[iconName];
+                return Icon ? <Icon size={size} /> : null;
+            };
+
+            return (
+                <div className="flex h-screen overflow-hidden relative">
+
+                    {/* Botón flotante para toggle del sidebar */}
+                    <button
+                        onClick={() => setSidebarOpen(prev => !prev)}
+                        className="fixed top-4 left-4 z-50 p-2.5 rounded-full shadow-lg text-white transition-all hover:scale-110"
+                        style={{ background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' }}
+                        title={sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'}
+                    >
+                        <i className={`fas ${sidebarOpen ? 'fa-times' : 'fa-bars'} text-sm`}></i>
+                    </button>
+
+                    {/* Overlay cuando sidebar está abierto (para cerrar al hacer clic fuera) */}
+                    {sidebarOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/20 z-30 lg:hidden"
+                            onClick={() => setSidebarOpen(false)}
+                        />
+                    )}
+
+                    {/* Sidebar de Navegación */}
+                    <div
+                        className="flex-shrink-0 overflow-y-auto z-40 flex flex-col"
+                        style={{
+                            background: 'linear-gradient(180deg, #001A4D 0%, #002868 100%)',
+                            width: sidebarOpen ? '16rem' : '0',
+                            minWidth: sidebarOpen ? '16rem' : '0',
+                            opacity: sidebarOpen ? 1 : 0,
+                            transition: 'width 0.3s ease, min-width 0.3s ease, opacity 0.25s ease',
+                            overflow: sidebarOpen ? 'visible auto' : 'hidden'
+                        }}
+                    >
+                        <div className="p-6 pt-16 border-b border-white/10">
+                            <h1 className="text-white font-bold text-lg tracking-tight flex items-center gap-2">
+                                <span className="text-secondary">py</span>API<span className="text-gold">Fast</span>
+                            </h1>
+                            <p className="text-xs text-white/50 mt-1">Python para APIs e IA Aplicada • USTA</p>
+                        </div>
+                        <nav className="p-4 space-y-2">
+                            {curriculum.map((lesson, idx) => (
+                                <button
+                                    key={lesson.id}
+                                    onClick={() => { setActiveLessonIndex(idx); if (window.innerWidth < 1024) setSidebarOpen(false); }}
+                                    className={`w-full flex items-start gap-3 px-3 py-3 text-sm rounded-lg transition-all text-left ${activeLessonIndex === idx
+                                        ? 'text-white shadow-lg'
+                                        : 'text-white/60 hover:text-white hover:bg-white/10'
+                                        }`}
+                                    style={activeLessonIndex === idx ? { background: 'linear-gradient(140deg, #3D008D 0%, #ED1E79 100%)' } : {}}
+                                >
+                                    <span className="flex-shrink-0 mt-0.5" style={{ width: 18, height: 18 }}>{renderIcon(lesson.icon, 18)}</span>
+                                    <span className="font-medium leading-tight break-words">{lesson.title.split(':')[0]}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+
+                    {/* Área Principal */}
+                    <main className="flex-1 flex overflow-hidden bg-bg">
+
+                        {/* Contenido Central */}
+                        <div className="flex-1 overflow-y-auto p-8 lg:p-12 max-w-5xl mx-auto w-full">
+                            <div className="mb-6 flex items-center justify-between">
+                                <span className="text-xs font-bold tracking-wider text-secondary uppercase">Lección {activeLessonIndex + 1} de {curriculum.length}</span>
+                                <div className="flex gap-2">
+                                    <button
+                                        disabled={activeLessonIndex === 0}
+                                        onClick={() => setActiveLessonIndex(c => c - 1)}
+                                        className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                                    >
+                                        {renderIcon('ChevronLeft')}
+                                    </button>
+                                    <button
+                                        disabled={activeLessonIndex === curriculum.length - 1}
+                                        onClick={() => setActiveLessonIndex(c => c + 1)}
+                                        className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                                    >
+                                        {renderIcon('ChevronRight')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <SectionHeader title={activeLesson.title} icon={Icons[activeLesson.icon]} />
+
+                            {/* Header del documento original si es la primera lección */}
+                            {activeLessonIndex === 0 && (
+                                <div className="mb-8 text-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                    <h1 className="text-2xl font-bold text-primary mb-2">De Script a Servicio</h1>
+                                    <p className="text-gray-600 font-light">Arquitectura de APIs para el Estadístico Moderno</p>
+                                </div>
+                            )}
+
+                            <div className="prose prose-lg text-gray-600 leading-relaxed animate-fade-in">
+                                {activeLesson.content}
+                            </div>
+
+                            <div className="mt-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                                <CodeBlock title={activeLesson.codeTitle} code={activeLesson.pythonCode} />
+                            </div>
+
+                            {/* Footer */}
+                            <footer className="mt-20 pt-8 border-t border-gray-200">
+                                <div className="usta-header rounded-xl p-6 text-center">
+                                    <p className="text-white font-medium text-sm">Diseñado por <span className="font-bold">Javier Mauricio Sierra</span></p>
+                                    <p className="text-xs mt-1 text-white/60">
+                                        Python para APIs e IA • USTA
+                                    </p>
+                                    <p className="text-[10px] mt-2 text-white/40">
+                                        Documentación generada basada en el módulo: "De Script a Servicio".
+                                    </p>
+                                    <p className="text-[10px] mt-1 text-white/40">
+                                        Referencia: Garodia, S. (2025). <em>"From Zero to API: The Data Scientist's Guide to FastAPI"</em>. Medium. <a href="https://saketgarodia.medium.com/from-zero-to-api-the-data-scientists-guide-to-fastapi-9ae3bb662f5a" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">Enlace al artículo</a>.
+                                    </p>
+                                </div>
+                            </footer>
+                        </div>
+
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
