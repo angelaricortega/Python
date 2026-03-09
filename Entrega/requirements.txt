@@ -1,22 +1,40 @@
-# Dependencias del Sistema de Análisis de Riesgo Crediticio
-# Sistema Financiero Colombiano — Datos Abiertos Gov.co
-# Curso: Python para APIs e IA Aplicada — Universidad Santo Tomás · 2026
-# 
-# Este proyecto integra TODOS los conceptos de las Semanas 1, 2 y 3:
-#   Semana 1: Pattern Matching, Decoradores, Entornos Virtuales
-#   Semana 2: Pydantic, HTTP/JSON, OOP, requests.Session
-#   Semana 3: FastAPI, endpoints CRUD, Swagger UI
+# ════════════════════════════════════════════════════════════════════════════════
+# requirements.txt — Sistema de Análisis de Riesgo Crediticio
+# Universidad Santo Tomás · 2026
+# ════════════════════════════════════════════════════════════════════════════════
+#
+# INSTALACIÓN:
+#   1. python -m venv venv
+#   2. venv\Scripts\activate (Windows) o source venv/bin/activate (Mac/Linux)
+#   3. pip install -r requirements.txt
+#
+# ════════════════════════════════════════════════════════════════════════════════
 
-# ── Core Científico ─────────────────────────────────────────────────────
-pandas>=2.2.2            # DataFrames, EDA, estadísticos descriptivos
-numpy>=1.26.4            # Cálculos numéricos, generador aleatorio
+# Core Científico
+pandas==2.2.2
+numpy==1.26.4
+scipy==1.13.1
 
-# ── HTTP y APIs ──────────────────────────────────────────────────────────
-requests>=2.32.3         # Cliente HTTP con Session (conexión persistente)
-fastapi>=0.115.0         # Framework web moderno (ASGI, docs automáticos)
-uvicorn>=0.30.6          # Servidor ASGI para ejecutar FastAPI
-pydantic>=2.7.4          # Validación de datos con BaseModel, Field
+# Visualización
+matplotlib==3.9.0
+seaborn==0.13.2
 
-# ── Utilidades ───────────────────────────────────────────────────────────
-python-dotenv>=1.0.1     # Variables de entorno (.env)
+# HTTP y APIs
+requests==2.32.3
+fastapi==0.115.0
+uvicorn==0.30.6
+python-multipart==0.0.9
 
+# Validación de Datos
+pydantic==2.7.4
+pydantic-settings==2.4.0
+
+# Utilidades
+python-dotenv==1.0.1
+jupyter==1.0.0
+ipykernel==6.29.5
+psutil==5.9.8          # Monitoreo de sistema (health check)
+
+# Testing (opcional - descomentar si necesita)
+# pytest==8.3.3
+# httpx==0.27.2

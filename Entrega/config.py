@@ -1,7 +1,18 @@
 """
-config.py — Configuración Global del Proyecto
-==============================================
+config.py — Configuración Global del Proyecto con pydantic-settings
+====================================================================
 Semana 1: Configuración centralizada para reproducibilidad.
+Semana 6: Inyección de Dependencias — Carga de configuración desde variables de entorno.
+
+CONCEPTO APLICADO — pydantic-settings (Semana 6):
+  Usamos BaseSettings de pydantic-settings para cargar configuración
+  desde variables de entorno (.env) con validación automática.
+  
+  VENTAJAS sobre os.getenv():
+  1. Validación de tipos automática (int, float, str, bool)
+  2. Valores por defecto documentados
+  3. Error inmediato si falta variable requerida
+  4. Autocompletado en IDEs
 
 CONCEPTO APLICADO — Modularización (Semana 1):
   Centralizar la configuración en UN solo archivo permite:
@@ -22,24 +33,115 @@ PALETA "ROSADITO BONITO":
 
 # ── Librería estándar ────────────────────────────────────────────────────
 from pathlib import Path
+from typing import Optional
 
 # ── Terceros ─────────────────────────────────────────────────────────────
+from pydantic_settings import BaseSettings
+from pydantic import Field, field_validator
 import matplotlib.pyplot as plt
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 1. API DE DATOS ABIERTOS
+# CLASE DE CONFIGURACIÓN (Semana 6 — pydantic-settings)
 # ══════════════════════════════════════════════════════════════════════════
 
-# API Socrata de Datos Abiertos Colombia
-# Endpoint: Cartera y captaciones del sistema financiero por municipio
-API_BASE = "https://www.datos.gov.co/resource/3kqn-n4za.json"
+class Settings(BaseSettings):
+    """
+    Configuración de la API cargada desde variables de entorno.
+    
+    SEMANA 6 — Inyección de Dependencias:
+    Esta clase se usa como dependencia global en FastAPI para
+    inyectar configuración validada en todos los endpoints.
+    
+    USO:
+        settings = Settings()
+        API_BASE = settings.api_base
+    """
+    
+    # ── API de Datos Abiertos ─────────────────────────────────────────────
+    api_base: str = Field(
+        default="https://www.datos.gov.co/resource/3kqn-n4za.json",
+        description="Endpoint Socrata de Datos Abiertos Colombia",
+    )
+    
+    http_timeout: int = Field(
+        default=15,
+        ge=1,
+        description="Timeout para peticiones HTTP (segundos)",
+    )
+    
+    default_limit: int = Field(
+        default=500,
+        ge=1,
+        le=10000,
+        description="Límite de registros a descargar",
+    )
+    
+    # ── Servidor ──────────────────────────────────────────────────────────
+    host: str = Field(
+        default="127.0.0.1",
+        description="Host del servidor",
+    )
+    
+    port: int = Field(
+        default=8000,
+        ge=1,
+        le=65535,
+        description="Puerto del servidor",
+    )
+    
+    log_level: str = Field(
+        default="info",
+        description="Nivel de logging (debug, info, warning, error)",
+    )
+    
+    # ── Entorno ───────────────────────────────────────────────────────────
+    environment: str = Field(
+        default="development",
+        description="Entorno (development, production)",
+    )
+    
+    @field_validator("log_level")
+    @classmethod
+    def validate_log_level(cls, v: str) -> str:
+        """Valida que el nivel de logging sea válido."""
+        valid_levels = ["debug", "info", "warning", "error", "critical"]
+        if v.lower() not in valid_levels:
+            raise ValueError(
+                f"log_level debe ser uno de: {valid_levels}, got '{v}'"
+            )
+        return v.lower()
+    
+    # ── Rutas ─────────────────────────────────────────────────────────────
+    @property
+    def base_dir(self) -> Path:
+        """Directorio base del proyecto."""
+        return Path(__file__).resolve().parent.parent
+    
+    @property
+    def outputs_dir(self) -> Path:
+        """Directorio de outputs."""
+        return self.base_dir / "outputs"
+    
+    @property
+    def static_dir(self) -> Path:
+        """Directorio de archivos estáticos."""
+        return self.base_dir / "Entrega" / "static"
+    
+    # ── Metadata ──────────────────────────────────────────────────────────
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
+        "extra": "ignore",  # Ignora variables no definidas
+    }
 
-# Timeout para peticiones HTTP (segundos)
-HTTP_TIMEOUT = 15
 
-# Límite por defecto de registros a descargar
-DEFAULT_LIMIT = 500
+# ══════════════════════════════════════════════════════════════════════════
+# Instancia global de Settings (Inyección de Dependencias — Semana 6)
+# ══════════════════════════════════════════════════════════════════════════
+
+settings = Settings()
 
 
 # ══════════════════════════════════════════════════════════════════════════

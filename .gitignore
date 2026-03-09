@@ -1,21 +1,79 @@
-# Entornos virtuales
+# ════════════════════════════════════════════════════════════════════════════════
+# .gitignore — Python para APIs e IA Aplicada
+# ════════════════════════════════════════════════════════════════════════════════
+
+# ── Entornos Virtuales ──────────────────────────────────────────────────────────
 venv/
 .venv/
 env/
+ENV/
 
-# Python
+# ── Python ──────────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+*.so
+*.egg
 *.egg-info/
+*.egg
+.eggs/
 
-# IDE
+# ── IDE ─────────────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# OS
+# ── Jupyter Notebook ────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Variables de Entorno ────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Outputs Generados ───────────────────────────────────────────────────────────
+outputs/
+Entrega/outputs/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pkl
+
+# ── Logs ────────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Base de Datos (futuro) ──────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Uploads ─────────────────────────────────────────────────────────────────────
+uploads/
+*.csv
+*.xlsx
+*.xls
+
+# ── Sistema Operativo ───────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Outputs generados
-Entrega/outputs/
+# ── Testing ─────────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ── Documentación ───────────────────────────────────────────────────────────────
+docs/_build/
+
+# ════════════════════════════════════════════════════════════════════════════════
+# NOTAS:
+#   - Los archivos .csv de ejemplo SÍ se versionan (están en static/)
+#   - Los outputs .png SÍ se versionan si son parte del README
+#   - .env NO se versiona (contiene credenciales)
+# ════════════════════════════════════════════════════════════════════════════════

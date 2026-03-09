@@ -30,11 +30,16 @@
 # ╚════════════════════════════════════════════════════════════════════════╝
 
 # ── Terceros ─────────────────────────────────────────────────────────────
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, UploadFile, File
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Literal
 import numpy as np
+import pandas as pd
 from datetime import datetime
+import os
+import io
 
 # ── Locales ──────────────────────────────────────────────────────────────
 # CONCEPTO: Decorador simple (Semana 1) — importamos el decorador
@@ -422,13 +427,44 @@ Evaluación de cartera bancaria usando el índice NPL (Non-Performing Loans).
     },
 )
 
+# Configurar CORS (Cross-Origin Resource Sharing)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción, restringir a dominios específicos
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Montar archivos estáticos (HTML, CSS, JS)
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+@app.get("/", tags=["UI"], include_in_schema=True)
+async def home():
+    """
+    **Interfaz Web Principal** — Dashboard interactivo para análisis de riesgo crediticio.
+    
+    Características:
+    - Carga de archivos CSV/Excel
+    - Formulario manual de entrada
+    - Visualización de resultados con gráficos
+    - Historial de análisis
+    - Explicación educativa del NPL
+    """
+    from fastapi.responses import FileResponse
+    index_path = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"mensaje": "🌸 Interfaz en construcción - Usa /docs para Swagger UI"}
+
 # Base de datos en memoria (diccionario)
 historial_analisis: dict[int, dict] = {}
 contador_id: int = 0
 
-
 @app.get(
-    "/",
+    "/health",
     tags=["Health Check"],
     summary="Mensaje de bienvenida",
 )
@@ -499,6 +535,82 @@ async def analizar_riesgo(datos: RiesgoCrediticioInput) -> RiesgoCrediticioOutpu
         mensaje=resultados["mensaje"],
         fecha_analisis=historial_analisis[contador_id]["fecha_analisis"],
     )
+
+
+@app.post(
+    "/upload",
+    tags=["Análisis"],
+    summary="Cargar archivo para análisis masivo",
+)
+async def cargar_archivo(file: UploadFile = File(...)):
+    """
+    **Carga un archivo CSV o Excel para análisis masivo.**
+    
+    Proceso:
+    1. Lee el archivo (CSV o Excel)
+    2. Intenta mapear columnas (colocaciones, captaciones, municipio)
+    3. Procesa cada fila y guarda en historial
+    4. Retorna resumen del procesamiento
+    """
+    global contador_id
+    content = await file.read()
+    
+    try:
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(content))
+        elif file.filename.endswith(('.xls', '.xlsx')):
+            df = pd.read_excel(io.BytesIO(content))
+        else:
+            raise HTTPException(400, "Formato de archivo no soportado. Use CSV o Excel.")
+            
+        # Normalizar nombres de columnas (quitar acentos, espacios, lower)
+        df.columns = [str(c).strip().lower().replace('ó', 'o').replace('á', 'a') for c in df.columns]
+        
+        # Mapeo flexible de columnas
+        mapeo = {
+            "municipio": ["municipio", "nombre", "ciudad", "territorio"],
+            "cartera_a": ["cartera_a", "colocaciones_a", "clase_a"],
+            "cartera_b": ["cartera_b", "colocaciones_b", "clase_b"],
+            "cartera_c": ["cartera_c", "colocaciones_c", "clase_c"],
+            "cartera_d": ["cartera_d", "colocaciones_d", "clase_d"],
+            "cartera_e": ["cartera_e", "colocaciones_e", "clase_e"],
+            "total_cartera": ["total_cartera", "colocaciones", "total_colocaciones"],
+            "total_captaciones": ["total_captaciones", "captaciones", "depositos", "ahorros"]
+        }
+        
+        results = []
+        for _, row in df.iterrows():
+            # Extraer datos con el mapeo flexible
+            data_dict = {}
+            for key, aliases in mapeo.items():
+                col_found = next((c for c in df.columns if c in aliases), None)
+                data_dict[key] = row.get(col_found) if col_found else (0 if key != "municipio" else "Desconocido")
+            
+            try:
+                # Validar y procesar cada fila
+                input_data = RiesgoCrediticioInput(**data_dict)
+                historical_npls = [a["resultados"]["indice_riesgo"] for a in historial_analisis.values()]
+                res = procesar_riesgo_crediticio(input_data.model_dump(), historical_npls)
+                
+                contador_id += 1
+                historial_analisis[contador_id] = {
+                    "id": contador_id,
+                    "municipio": input_data.municipio,
+                    "request": input_data.model_dump(),
+                    "resultados": res,
+                    "fecha_analisis": datetime.now(),
+                }
+                results.append(contador_id)
+            except Exception as e:
+                print(f"Error procesando fila: {e}")
+                continue
+                
+        return {
+            "mensaje": f"Se procesaron {len(results)} registros correctamente.",
+            "ids_creados": results
+        }
+    except Exception as e:
+        raise HTTPException(500, f"Error al procesar el archivo: {str(e)}")
 
 
 @app.get(
@@ -609,9 +721,9 @@ if __name__ == "__main__":
     print("=" * 65)
     print("\n  Iniciando servidor de desarrollo...")
     print("\n  URLs disponibles:")
-    print("    · http://127.0.0.1:8000       → Health check")
-    print("    · http://127.0.0.1:8000/docs  → Swagger UI interactivo")
-    print("    · http://127.0.0.1:8000/redoc → ReDoc")
+    print("    * http://127.0.0.1:8000       -> Health check")
+    print("    * http://127.0.0.1:8000/docs  -> Swagger UI interactivo")
+    print("    * http://127.0.0.1:8000/redoc -> ReDoc")
     print("\n  Presione Ctrl+C para detener el servidor")
     print("=" * 65)
     

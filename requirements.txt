@@ -43,12 +43,12 @@ ipykernel==6.29.5       # Kernel de Python para Jupyter
 
 # ── Testing (Opcional) ──────────────────────────────────────────────────────────
 # Librerías para pruebas automáticas (semanas avanzadas)
-# pytest==8.3.3         # Framework de testing
-# httpx==0.27.2         # Cliente HTTP asíncrono para tests de FastAPI
+pytest==8.3.3           # Framework de testing
+httpx==0.27.2           # Cliente HTTP asíncrono para tests de FastAPI
 
 # ════════════════════════════════════════════════════════════════════════════════
 # NOTAS:
 #   - Las versiones están congeladas para reproducibilidad
-#   - Para testing, descomentar las librerías opcionales
+#   - Para testing, usar: pip install pytest httpx
 #   - Este archivo se genera con: pip freeze > requirements.txt
 # ════════════════════════════════════════════════════════════════════════════════

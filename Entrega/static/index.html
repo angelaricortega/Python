@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏦 Análisis de Riesgo Crediticio | NPL Ratio</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>RiskAPI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#que-es-npl">¿Qué es NPL?</a></li>
+                <li><a href="#que-es-hhi">¿Qué es HHI?</a></li>
+                <li><a href="#analizar">Analizar</a></li>
+                <li><a href="#historial">Historial</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <i class="fas fa-university"></i>
+                Sistema de Análisis de Riesgo Crediticio
+            </h1>
+            <p class="hero-subtitle">
+                Evalúa la salud financiera de municipios colombianos usando el <strong>Índice NPL</strong> 
+                (Non-Performing Loans) con datos de la Superfinanciera
+            </p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <i class="fas fa-database"></i>
+                    <span>Datos Abiertos Gov.co</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Basel II/III</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>En tiempo real</span>
+                </div>
+            </div>
+            <a href="#analizar" class="btn-primary">
+                <i class="fas fa-play-circle"></i>
+                Comenzar Análisis
+            </a>
+        </div>
+    </section>
+
+    <!-- ¿Qué es NPL? Section -->
+    <section id="que-es-npl" class="educational-section">
+        <div class="section-container">
+            <h2 class="section-title">
+                <i class="fas fa-book-open"></i>
+                ¿Qué es el Índice NPL?
+            </h2>
+            
+            <div class="npl-explanation">
+                <div class="npl-card">
+                    <div class="npl-icon">
+                        <i class="fas fa-percent"></i>
+                    </div>
+                    <h3>Fórmula</h3>
+                    <div class="formula-box">
+                        <span class="formula">NPL = <span class="fraction"><span class="numerator">C + D + E</span><span class="denominator">Total Cartera</span></span></span>
+                    </div>
+                    <p>Midela proporción de cartera en mora (categorías C, D, E) respecto al total</p>
+                </div>
+
+                <div class="npl-card featured">
+                    <div class="npl-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3>Clasificación Regulatoria</h3>
+                    <div class="risk-levels">
+                        <div class="risk-level level-a">
+                            <span class="level-badge">A</span>
+                            <span class="level-name">Normal</span>
+                            <span class="level-desc">Cartera sana</span>
+                        </div>
+                        <div class="risk-level level-b">
+                            <span class="level-badge">B</span>
+                            <span class="level-name">Observación</span>
+                            <span class="level-desc">Alerta temprana</span>
+                        </div>
+                        <div class="risk-level level-c">
+                            <span class="level-badge">C</span>
+                            <span class="level-name">Subestándar</span>
+                            <span class="level-desc">Mora 1-30 días</span>
+                        </div>
+                        <div class="risk-level level-d">
+                            <span class="level-badge">D</span>
+                            <span class="level-name">Dudosa</span>
+                            <span class="level-desc">Mora 31-90 días</span>
+                        </div>
+                        <div class="risk-level level-e">
+                            <span class="level-badge">E</span>
+                            <span class="level-name">Pérdida</span>
+                            <span class="level-desc">Mora &gt; 90 días</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="npl-card">
+                    <div class="npl-icon">
+                        <i class="fas fa-traffic-light"></i>
+                    </div>
+                    <h3>Umbrales de Riesgo</h3>
+                    <div class="thresholds">
+                        <div class="threshold threshold-ok">
+                            <span class="threshold-value">0%</span>
+                            <span class="threshold-label">Sin Riesgo</span>
+                        </div>
+                        <div class="threshold threshold-low">
+                            <span class="threshold-value">&lt;1%</span>
+                            <span class="threshold-label">Riesgo Bajo</span>
+                        </div>
+                        <div class="threshold threshold-mod">
+                            <span class="threshold-value">&lt;5%</span>
+                            <span class="threshold-label">Riesgo Moderado</span>
+                        </div>
+                        <div class="threshold threshold-high">
+                            <span class="threshold-value">&lt;15%</span>
+                            <span class="threshold-label">Riesgo Alto</span>
+                        </div>
+                        <div class="threshold threshold-crit">
+                            <span class="threshold-value">≥15%</span>
+                            <span class="threshold-label">Riesgo Crítico</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>¿Por qué es importante?</strong>
+                    <p>El índice NPL es el principal indicador de salud del sistema financiero. Un NPL alto indica que muchos préstamos no se están pagando, lo que puede llevar a crisis bancarias. La Superfinanciera colombiana usa este indicador para vigilar la estabilidad del sistema.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ¿Qué es HHI? Section -->
+    <section id="que-es-hhi" class="educational-section">
+        <div class="section-container">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                ¿Qué es el Índice HHI?
+            </h2>
+
+            <div class="npl-explanation">
+                <div class="npl-card">
+                    <div class="npl-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3>Fórmula</h3>
+                    <div class="formula-box">
+                        <span class="formula">HHI = <span class="fraction"><span class="numerator">∑ (cartera_i)²</span><span class="denominator">(Total Cartera)²</span></span></span>
+                    </div>
+                    <p>Suma de los cuadrados de las carteras individuales dividido por el cuadrado del total</p>
+                </div>
+
+                <div class="npl-card featured">
+                    <div class="npl-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h3>Interpretación</h3>
+                    <div class="hhi-interpretation">
+                        <div class="hhi-level">
+                            <span class="hpi-value">HHI &lt; 0.15</span>
+                            <span class="hpi-label">Baja Concentración</span>
+                            <span class="hpi-desc">Cartera bien diversificada</span>
+                        </div>
+                        <div class="hhi-level">
+                            <span class="hpi-value">0.15 - 0.25</span>
+                            <span class="hpi-label">Concentración Moderada</span>
+                            <span class="hpi-desc">Diversificación aceptable</span>
+                        </div>
+                        <div class="hhi-level">
+                            <span class="hpi-value">HHI &gt; 0.25</span>
+                            <span class="hpi-label">Alta Concentración</span>
+                            <span class="hpi-desc">Riesgo por falta de diversificación</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="npl-card">
+                    <div class="npl-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <h3>¿Qué mide?</h3>
+                    <ul class="hhi-list">
+                        <li><i class="fas fa-check-circle"></i> <strong>Concentración de riesgo:</strong> Qué tan distribuida está la cartera</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Diversificación:</strong> Si el riesgo está en pocos o muchos municipios</li>
+                        <li><i class="fas fa-check-circle"></i> <strong>Exposición máxima:</strong> El peso de cada municipio en el total</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-lightbulb"></i>
+                <div>
+                    <strong>¿Cómo se interpreta?</strong>
+                    <p>El Índice HHI (Herfindahl-Hirschman Index) mide la concentración. Un HHI bajo (cercano a 0) indica que la cartera está bien distribuida entre muchos municipios. Un HHI alto (cercano a 1) significa que pocos municipios concentran la mayor parte del riesgo. <strong>Ejemplo:</strong> Si un solo municipio representa el 80% de la cartera total, el HHI será 0.64 (0.8²), indicando alta concentración.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Datos Section -->
+    <section id="datos" class="data-section">
+        <div class="section-container">
+            <h2 class="section-title">
+                <i class="fas fa-database"></i>
+                Fuentes de Datos
+            </h2>
+            
+            <div class="data-sources">
+                <div class="data-card">
+                    <div class="data-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>Datos Abiertos Gov.co</h3>
+                    <p>Plataforma oficial del Gobierno colombiano con información del sistema financiero</p>
+                    <a href="https://www.datos.gov.co/" target="_blank" class="btn-link">
+                        <i class="fas fa-external-link-alt"></i>
+                        Visitar portal
+                    </a>
+                </div>
+
+                <div class="data-card">
+                    <div class="data-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3>Superfinanciera</h3>
+                    <p>Entidad que regula y vigila el sistema financiero colombiano</p>
+                    <a href="https://www.superfinanciera.gov.co/" target="_blank" class="btn-link">
+                        <i class="fas fa-external-link-alt"></i>
+                        Visitar sitio
+                    </a>
+                </div>
+
+                <div class="data-card">
+                    <div class="data-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h3>Formatos Aceptados</h3>
+                    <ul class="formats-list">
+                        <li><i class="fas fa-check"></i> CSV (valores separados por comas)</li>
+                        <li><i class="fas fa-check"></i> Excel (.xlsx, .xls)</li>
+                        <li><i class="fas fa-check"></i> Datos manuales en formulario</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="columns-info">
+                <h3><i class="fas fa-table"></i> Columnas Requeridas</h3>
+                <div class="columns-grid">
+                    <div class="column-item">
+                        <code>municipio</code>
+                        <span>Nombre del municipio</span>
+                    </div>
+                    <div class="column-item">
+                        <code>cartera_a / colocaciones_a</code>
+                        <span>Cartera categoría A (normal)</span>
+                    </div>
+                    <div class="column-item">
+                        <code>cartera_b / colocaciones_b</code>
+                        <span>Cartera categoría B (observación)</span>
+                    </div>
+                    <div class="column-item">
+                        <code>cartera_c / colocaciones_c</code>
+                        <span>Cartera categoría C (subestándar)</span>
+                    </div>
+                    <div class="column-item">
+                        <code>cartera_d / colocaciones_d</code>
+                        <span>Cartera categoría D (dudosa)</span>
+                    </div>
+                    <div class="column-item">
+                        <code>cartera_e / colocaciones_e</code>
+                        <span>Cartera categoría E (pérdida)</span>
+                    </div>
+                    <div class="column-item highlight">
+                        <code>total_cartera / colocaciones</code>
+                        <span>Cartera total del municipio</span>
+                    </div>
+                    <div class="column-item optional">
+                        <code>total_captaciones / captaciones / depositos</code>
+                        <span>Captaciones totales (opcional)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Análisis Section -->
+    <section id="analizar" class="analysis-section">
+        <div class="section-container">
+            <h2 class="section-title">
+                <i class="fas fa-calculator"></i>
+                Realizar Análisis
+            </h2>
+
+            <div class="analysis-grid">
+                <!-- Upload Zone -->
+                <div class="upload-card">
+                    <h3><i class="fas fa-cloud-upload-alt"></i> Carga Masiva</h3>
+                    <p>Sube tu archivo CSV o Excel con múltiples municipios</p>
+                    
+                    <div id="drop-zone" class="drop-zone">
+                        <i class="fas fa-file-import drop-icon"></i>
+                        <p class="drop-text">Arrastra tu archivo aquí</p>
+                        <p class="drop-subtext">o haz clic para buscar</p>
+                        <input type="file" id="file-input" hidden accept=".csv, .xlsx, .xls">
+                    </div>
+
+                    <div class="supported-formats">
+                        <span><i class="fas fa-file-csv"></i> .csv</span>
+                        <span><i class="fas fa-file-excel"></i> .xlsx</span>
+                        <span><i class="fas fa-file-excel"></i> .xls</span>
+                    </div>
+                    
+                    <div class="example-download">
+                        <a href="/static/ejemplo_datos.csv" download class="btn-download">
+                            <i class="fas fa-download"></i>
+                            Descargar ejemplo CSV
+                        </a>
+                        <p>Archivo con 15 municipios de ejemplo para probar</p>
+                    </div>
+                </div>
+
+                <!-- Manual Form -->
+                <div class="form-card">
+                    <h3><i class="fas fa-keyboard"></i> Análisis Manual</h3>
+                    <p>Ingresa los datos de un municipio específico</p>
+
+                    <form id="analysis-form">
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="municipio">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Municipio
+                                </label>
+                                <input type="text" id="municipio" placeholder="Ej: Bogotá D.C." required minlength="2">
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4><i class="fas fa-coins"></i> Cartera por Categoría (COP)</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cartera_a">Categoría A</label>
+                                    <input type="number" id="cartera_a" value="0" min="0" step="0.01">
+                                    <small>Normal</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cartera_b">Categoría B</label>
+                                    <input type="number" id="cartera_b" value="0" min="0" step="0.01">
+                                    <small>Observación</small>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cartera_c">Categoría C</label>
+                                    <input type="number" id="cartera_c" value="0" min="0" step="0.01">
+                                    <small>Subestándar</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cartera_d">Categoría D</label>
+                                    <input type="number" id="cartera_d" value="0" min="0" step="0.01">
+                                    <small>Dudosa</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cartera_e">Categoría E</label>
+                                    <input type="number" id="cartera_e" value="0" min="0" step="0.01">
+                                    <small>Pérdida</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4><i class="fas fa-calculator"></i> Totales</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="total_cartera">
+                                        <i class="fas fa-chart-bar"></i>
+                                        Cartera Total *
+                                    </label>
+                                    <input type="number" id="total_cartera" placeholder="Suma de A+B+C+D+E" required min="0.01" step="0.01">
+                                    <small>* Obligatorio</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="total_captaciones">
+                                        <i class="fas fa-piggy-bank"></i>
+                                        Captaciones
+                                    </label>
+                                    <input type="number" id="total_captaciones" placeholder="Total de ahorros" min="0" step="0.01">
+                                    <small>Opcional</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <span id="btn-text"><i class="fas fa-magic"></i> Ejecutar Análisis</span>
+                            <div class="loader" id="btn-loader"></div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resultados Section -->
+    <section id="resultados" class="results-section">
+        <div class="section-container">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                Resultados del Análisis
+            </h2>
+
+            <div id="results-container" class="results-container" style="display: none;">
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-primary">
+                        <div class="kpi-icon"><i class="fas fa-percent"></i></div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Índice NPL</span>
+                            <span class="kpi-value" id="kpi-npl">0%</span>
+                            <span class="kpi-subtitle" id="kpi-npl-desc">-</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fas fa-tint"></i></div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Cartera Sana</span>
+                            <span class="kpi-value" id="kpi-sana">0%</span>
+                            <span class="kpi-subtitle">Categoría A</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Cartera en Mora</span>
+                            <span class="kpi-value" id="kpi-mora">0%</span>
+                            <span class="kpi-subtitle">C+D+E</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Ratio Liquidez</span>
+                            <span class="kpi-value" id="kpi-liquidez">-</span>
+                            <span class="kpi-subtitle">Capt/Cartera</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-pie"></i> Composición de Cartera</h3>
+                        <canvas id="composicion-chart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-bar"></i> Distribución por Nivel</h3>
+                        <canvas id="nivel-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detailed Results -->
+                <div class="results-detail">
+                    <h3><i class="fas fa-file-alt"></i> Detalle del Análisis</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Municipio</span>
+                            <span class="detail-value" id="detail-municipio">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Nivel de Riesgo</span>
+                            <span class="detail-value" id="detail-nivel">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Concentración de Riesgo</span>
+                            <span class="detail-value" id="detail-concentracion">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Índice HHI</span>
+                            <span class="detail-value" id="detail-hhi">-</span>
+                        </div>
+                    </div>
+                    <div class="mensaje-box" id="resultado-mensaje">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state">
+                <i class="fas fa-chart-area"></i>
+                <h3>Sin resultados aún</h3>
+                <p>Realiza un análisis para ver los resultados aquí</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Historial Section -->
+    <section id="historial" class="history-section">
+        <div class="section-container">
+            <h2 class="section-title">
+                <i class="fas fa-history"></i>
+                Historial de Análisis
+            </h2>
+
+            <div class="history-filters">
+                <div class="filter-group">
+                    <label><i class="fas fa-filter"></i> Filtrar por riesgo:</label>
+                    <select id="filter-riesgo">
+                        <option value="">Todos</option>
+                        <option value="sin_riesgo">🟢 Sin Riesgo</option>
+                        <option value="riesgo_bajo">🟢 Riesgo Bajo</option>
+                        <option value="riesgo_moderado">🟡 Moderado</option>
+                        <option value="riesgo_alto">🟠 Alto</option>
+                        <option value="riesgo_critico">🔴 Crítico</option>
+                    </select>
+                </div>
+                <button id="btn-clear-history" class="btn-danger">
+                    <i class="fas fa-trash-alt"></i>
+                    Limpiar Todo
+                </button>
+            </div>
+
+            <div class="history-container">
+                <div class="history-chart">
+                    <h3><i class="fas fa-chart-line"></i> Evolución del NPL</h3>
+                    <canvas id="history-chart"></canvas>
+                </div>
+                <div class="history-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Municipio</th>
+                                <th>NPL</th>
+                                <th>Nivel</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            <!-- Data loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <h3><i class="fas fa-university"></i> RiskAPI</h3>
+                <p>Sistema de Análisis de Riesgo Crediticio</p>
+                <p>Universidad Santo Tomás · 2026</p>
+            </div>
+            <div class="footer-links">
+                <a href="https://www.datos.gov.co/" target="_blank">
+                    <i class="fas fa-globe"></i> Datos Abiertos
+                </a>
+                <a href="https://www.superfinanciera.gov.co/" target="_blank">
+                    <i class="fas fa-building"></i> Superfinanciera
+                </a>
+                <a href="/docs" target="_blank">
+                    <i class="fas fa-book"></i> API Docs
+                </a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>Desarrollado por Angela Rico · Sebastian Ramirez</p>
+        </div>
+    </footer>
+
+    <script src="/static/app.js?v=5"></script>
+</body>
+</html>
