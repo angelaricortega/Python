@@ -225,82 +225,288 @@
     <section id="datos" class="data-section">
         <div class="section-container">
             <h2 class="section-title">
-                <i class="fas fa-database"></i>
-                Fuentes de Datos
+                <i class="fas fa-book-open"></i>
+                Guía de Uso y Documentación
             </h2>
-            
-            <div class="data-sources">
-                <div class="data-card">
-                    <div class="data-icon">
+
+            <!-- Info Cards Superiores -->
+            <div class="info-cards-top">
+                <div class="info-card info-gradient-1">
+                    <div class="info-card-icon">
                         <i class="fas fa-globe"></i>
                     </div>
-                    <h3>Datos Abiertos Gov.co</h3>
-                    <p>Plataforma oficial del Gobierno colombiano con información del sistema financiero</p>
-                    <a href="https://www.datos.gov.co/" target="_blank" class="btn-link">
+                    <h3>Fuente Oficial</h3>
+                    <p>Datos Abiertos del Gobierno Colombiano</p>
+                    <a href="https://www.datos.gov.co/" target="_blank" class="btn-info-card">
                         <i class="fas fa-external-link-alt"></i>
-                        Visitar portal
+                        Visitar Portal
                     </a>
                 </div>
 
-                <div class="data-card">
-                    <div class="data-icon">
-                        <i class="fas fa-building"></i>
+                <div class="info-card info-gradient-2">
+                    <div class="info-card-icon">
+                        <i class="fas fa-folder-open"></i>
                     </div>
-                    <h3>Superfinanciera</h3>
-                    <p>Entidad que regula y vigila el sistema financiero colombiano</p>
-                    <a href="https://www.superfinanciera.gov.co/" target="_blank" class="btn-link">
-                        <i class="fas fa-external-link-alt"></i>
-                        Visitar sitio
-                    </a>
+                    <h3>Formatos</h3>
+                    <div class="formatos-mini">
+                        <span class="formato-badge"><i class="fas fa-file-csv"></i> CSV</span>
+                        <span class="formato-badge"><i class="fas fa-file-excel"></i> Excel</span>
+                        <span class="formato-badge"><i class="fas fa-keyboard"></i> Manual</span>
+                    </div>
                 </div>
 
-                <div class="data-card">
-                    <div class="data-icon">
-                        <i class="fas fa-file-excel"></i>
+                <div class="info-card info-gradient-3">
+                    <div class="info-card-icon">
+                        <i class="fas fa-coins"></i>
                     </div>
-                    <h3>Formatos Aceptados</h3>
-                    <ul class="formats-list">
-                        <li><i class="fas fa-check"></i> CSV (valores separados por comas)</li>
-                        <li><i class="fas fa-check"></i> Excel (.xlsx, .xls)</li>
-                        <li><i class="fas fa-check"></i> Datos manuales en formulario</li>
-                    </ul>
+                    <h3>Moneda</h3>
+                    <p>Pesos Colombianos (COP)</p>
+                    <div class="moneda-ejemplo">
+                        <code>1.500.000.000</code>
+                    </div>
                 </div>
             </div>
 
-            <div class="columns-info">
-                <h3><i class="fas fa-table"></i> Columnas Requeridas</h3>
-                <div class="columns-grid">
-                    <div class="column-item">
-                        <code>municipio</code>
-                        <span>Nombre del municipio</span>
+            <!-- Categorías de Cartera -->
+            <div class="categorias-wrapper">
+                <div class="categorias-header">
+                    <i class="fas fa-layer-group"></i>
+                    <div>
+                        <h3>Categorías de Cartera</h3>
+                        <p>Clasificación de la Superintendencia Financiera de Colombia</p>
                     </div>
-                    <div class="column-item">
-                        <code>cartera_a / colocaciones_a</code>
-                        <span>Cartera categoría A (normal)</span>
+                </div>
+
+                <div class="categorias-explicacion">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                        <strong>¿Cómo funciona?</strong>
+                        <p>Tú ingresas el valor en pesos de cada categoría → La API calcula automáticamente los indicadores de riesgo</p>
                     </div>
-                    <div class="column-item">
-                        <code>cartera_b / colocaciones_b</code>
-                        <span>Cartera categoría B (observación)</span>
+                </div>
+
+                <div class="categorias-cards-container">
+                    <div class="categoria-card-v2 cat-a">
+                        <div class="cat-header">
+                            <span class="cat-letter">A</span>
+                            <span class="cat-riesgo">Riesgo Mínimo</span>
+                        </div>
+                        <h4>Normal</h4>
+                        <p class="cat-desc">Cartera sana, sin mora, pago oportuno</p>
+                        <div class="cat-ejemplo">
+                            <span class="ejemplo-label">Ejemplo:</span>
+                            <span class="ejemplo-valor">$1.500M</span>
+                        </div>
+                        <div class="cat-indicator">
+                            <i class="fas fa-check-circle"></i>
+                            <span>100% saludable</span>
+                        </div>
                     </div>
-                    <div class="column-item">
-                        <code>cartera_c / colocaciones_c</code>
-                        <span>Cartera categoría C (subestándar)</span>
+
+                    <div class="categoria-card-v2 cat-b">
+                        <div class="cat-header">
+                            <span class="cat-letter">B</span>
+                            <span class="cat-riesgo">Riesgo Bajo</span>
+                        </div>
+                        <h4>En Observación</h4>
+                        <p class="cat-desc">Señales de alerta temprana, monitorear</p>
+                        <div class="cat-ejemplo">
+                            <span class="ejemplo-label">Ejemplo:</span>
+                            <span class="ejemplo-valor">$200M</span>
+                        </div>
+                        <div class="cat-indicator">
+                            <i class="fas fa-eye"></i>
+                            <span>Requiere atención</span>
+                        </div>
                     </div>
-                    <div class="column-item">
-                        <code>cartera_d / colocaciones_d</code>
-                        <span>Cartera categoría D (dudosa)</span>
+
+                    <div class="categoria-card-v2 cat-c">
+                        <div class="cat-header">
+                            <span class="cat-letter">C</span>
+                            <span class="cat-riesgo">Riesgo Moderado</span>
+                        </div>
+                        <h4>Subestándar</h4>
+                        <p class="cat-desc">Mora entre 1 y 30 días</p>
+                        <div class="cat-ejemplo">
+                            <span class="ejemplo-label">Ejemplo:</span>
+                            <span class="ejemplo-valor">$50M</span>
+                        </div>
+                        <div class="cat-indicator">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>En mora temprana</span>
+                        </div>
                     </div>
-                    <div class="column-item">
-                        <code>cartera_e / colocaciones_e</code>
-                        <span>Cartera categoría E (pérdida)</span>
+
+                    <div class="categoria-card-v2 cat-d">
+                        <div class="cat-header">
+                            <span class="cat-letter">D</span>
+                            <span class="cat-riesgo">Riesgo Alto</span>
+                        </div>
+                        <h4>Dudosa</h4>
+                        <p class="cat-desc">Mora entre 31 y 90 días</p>
+                        <div class="cat-ejemplo">
+                            <span class="ejemplo-label">Ejemplo:</span>
+                            <span class="ejemplo-valor">$25M</span>
+                        </div>
+                        <div class="cat-indicator">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Mora significativa</span>
+                        </div>
                     </div>
-                    <div class="column-item highlight">
-                        <code>total_cartera / colocaciones</code>
-                        <span>Cartera total del municipio</span>
+
+                    <div class="categoria-card-v2 cat-e">
+                        <div class="cat-header">
+                            <span class="cat-letter">E</span>
+                            <span class="cat-riesgo">Riesgo Crítico</span>
+                        </div>
+                        <h4>Pérdida</h4>
+                        <p class="cat-desc">Mora mayor a 90 días, incobrable</p>
+                        <div class="cat-ejemplo">
+                            <span class="ejemplo-label">Ejemplo:</span>
+                            <span class="ejemplo-valor">$10M</span>
+                        </div>
+                        <div class="cat-indicator">
+                            <i class="fas fa-ban"></i>
+                            <span>Pérdida total</span>
+                        </div>
                     </div>
-                    <div class="column-item optional">
-                        <code>total_captaciones / captaciones / depositos</code>
-                        <span>Captaciones totales (opcional)</span>
+                </div>
+
+                <!-- NPL Fórmula -->
+                <div class="npl-formula-card">
+                    <div class="formula-header">
+                        <i class="fas fa-calculator"></i>
+                        <h4>¿Cómo calcula la API el Índice NPL?</h4>
+                    </div>
+                    <div class="formula-content">
+                        <div class="formula-main">
+                            <span class="formula-label">NPL Ratio =</span>
+                            <div class="formula-fraction">
+                                <span class="formula-numerator">
+                                    <span class="cat-c-small">C</span> + 
+                                    <span class="cat-d-small">D</span> + 
+                                    <span class="cat-e-small">E</span>
+                                </span>
+                                <span class="formula-divider"></span>
+                                <span class="formula-denominator">Total Cartera</span>
+                            </div>
+                        </div>
+                        <div class="formula-explicacion">
+                            <i class="fas fa-info-circle"></i>
+                            <p><strong>Solo C, D y E</strong> se consideran "cartera en mora". La API calcula automáticamente este y otros indicadores.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formatos Numéricos -->
+            <div class="formatos-numeros-section">
+                <h3><i class="fas fa-keyboard"></i> Formatos Numéricos Aceptados</h3>
+                <p class="section-desc">Puedes ingresar los valores en cualquier formato. La API los interpreta correctamente.</p>
+                
+                <div class="formatos-grid">
+                    <div class="formato-numero-card">
+                        <code>1500000</code>
+                        <span>Sin separadores</span>
+                    </div>
+                    <div class="formato-numero-card">
+                        <code>1.500.000</code>
+                        <span>Punto como miles (Colombia)</span>
+                    </div>
+                    <div class="formato-numero-card">
+                        <code>1,500,000</code>
+                        <span>Coma como miles (US)</span>
+                    </div>
+                    <div class="formato-numero-card">
+                        <code>$1.500.000</code>
+                        <span>Con símbolo de moneda</span>
+                    </div>
+                    <div class="formato-numero-card destacado">
+                        <code>1.234.567,89</code>
+                        <span>Formato colombiano con decimales</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline de Procesamiento -->
+            <div class="procesamiento-section">
+                <div class="procesamiento-header">
+                    <i class="fas fa-cogs"></i>
+                    <div>
+                        <h3>Procesamiento del Archivo datos.gov.co</h3>
+                        <p>Cuando cargas el archivo <code>Saldo_de_las_captaciones_y_colocaciones_por_municipios_*.csv</code></p>
+                    </div>
+                </div>
+
+                <div class="timeline-horizontal">
+                    <div class="timeline-card">
+                        <div class="timeline-num">1</div>
+                        <div class="timeline-icon">
+                            <i class="fas fa-file-import"></i>
+                        </div>
+                        <h4>Lectura y Validación</h4>
+                        <ul>
+                            <li>Lee el archivo CSV (80 columnas)</li>
+                            <li>Verifica columnas requeridas</li>
+                            <li>Reporta errores de estructura</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-card">
+                        <div class="timeline-num">2</div>
+                        <div class="timeline-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <h4>Limpieza Automática</h4>
+                        <ul>
+                            <li>Valores nulos → Imputados con 0</li>
+                            <li>Formato "1.234.567,89" → 1234567.89</li>
+                            <li>Símbolos "$", "COP" → Eliminados</li>
+                            <li>Duplicados → Se conserva el primero</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-card">
+                        <div class="timeline-num">3</div>
+                        <div class="timeline-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <h4>Transformación</h4>
+                        <div class="transform-mini">
+                            <div class="transform-mini-row">
+                                <span>Municipio</span>
+                                <i class="fas fa-arrow-right"></i>
+                                <code>municipio</code>
+                            </div>
+                            <div class="transform-mini-row">
+                                <span>Cartera créditos</span>
+                                <i class="fas fa-arrow-right"></i>
+                                <code>total_cartera</code>
+                            </div>
+                            <div class="transform-mini-row">
+                                <span>Categorías A-E</span>
+                                <i class="fas fa-arrow-right"></i>
+                                <code>cartera_a...e</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-card">
+                        <div class="timeline-num">4</div>
+                        <div class="timeline-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4>Cálculo de Indicadores</h4>
+                        <div class="indicadores-chips">
+                            <span class="chip">NPL</span>
+                            <span class="chip">% Sana</span>
+                            <span class="chip">% Mora</span>
+                            <span class="chip">HHI</span>
+                            <span class="chip">Media</span>
+                            <span class="chip">Varianza</span>
+                            <span class="chip">Std</span>
+                            <span class="chip">CV</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -316,11 +522,39 @@
             </h2>
 
             <div class="analysis-grid">
-                <!-- Upload Zone -->
+                <!-- Upload Zone - Datos.gov.co -->
+                <div class="upload-card featured-card">
+                    <h3><i class="fas fa-globe"></i> Datos.gov.co</h3>
+                    <p>Carga el archivo oficial del gobierno colombiano</p>
+
+                    <div class="gov-badge">
+                        <span class="badge-text">Archivo Soportado</span>
+                        <code>Saldo_de_las_captaciones_y_colocaciones_por_municipios_*.csv</code>
+                    </div>
+
+                    <div id="drop-zone-gov" class="drop-zone drop-zone-gov">
+                        <i class="fas fa-file-csv drop-icon"></i>
+                        <p class="drop-text">Arrastra el CSV de Datos.gov.co</p>
+                        <p class="drop-subtext">o haz clic para buscar</p>
+                        <input type="file" id="file-input-gov" hidden accept=".csv">
+                    </div>
+
+                    <div class="gov-info">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Este archivo contiene 80 columnas con información detallada del sistema financiero colombiano por municipio</p>
+                    </div>
+
+                    <button id="btn-cargar-gov" class="btn-gov">
+                        <i class="fas fa-upload"></i>
+                        Cargar Archivo Datos.gov.co
+                    </button>
+                </div>
+
+                <!-- Upload Zone - Generic -->
                 <div class="upload-card">
-                    <h3><i class="fas fa-cloud-upload-alt"></i> Carga Masiva</h3>
+                    <h3><i class="fas fa-cloud-upload-alt"></i> Carga Masiva Genérica</h3>
                     <p>Sube tu archivo CSV o Excel con múltiples municipios</p>
-                    
+
                     <div id="drop-zone" class="drop-zone">
                         <i class="fas fa-file-import drop-icon"></i>
                         <p class="drop-text">Arrastra tu archivo aquí</p>
@@ -333,7 +567,7 @@
                         <span><i class="fas fa-file-excel"></i> .xlsx</span>
                         <span><i class="fas fa-file-excel"></i> .xls</span>
                     </div>
-                    
+
                     <div class="example-download">
                         <a href="/static/ejemplo_datos.csv" download class="btn-download">
                             <i class="fas fa-download"></i>
@@ -502,6 +736,34 @@
                             <span class="detail-value" id="detail-hhi">-</span>
                         </div>
                     </div>
+                    
+                    <!-- Estadísticos -->
+                    <div class="estadisticos-section">
+                        <h4><i class="fas fa-chart-line"></i> Estadísticos de la Muestra</h4>
+                        <div class="estadisticos-grid">
+                            <div class="estadistico-item">
+                                <span class="estadistico-label">Media NPL</span>
+                                <span class="estadistico-value" id="stat-media">-</span>
+                                <span class="estadistico-desc">Promedio multirregional</span>
+                            </div>
+                            <div class="estadistico-item">
+                                <span class="estadistico-label">Varianza</span>
+                                <span class="estadistico-value" id="stat-varianza">-</span>
+                                <span class="estadistico-desc">Dispersión al cuadrado</span>
+                            </div>
+                            <div class="estadistico-item">
+                                <span class="estadistico-label">Desviación Std</span>
+                                <span class="estadistico-value" id="stat-std">-</span>
+                                <span class="estadistico-desc">Dispersión absoluta</span>
+                            </div>
+                            <div class="estadistico-item">
+                                <span class="estadistico-label">Coef. Variación</span>
+                                <span class="estadistico-value" id="stat-cv">-</span>
+                                <span class="estadistico-desc">Variabilidad relativa %</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="mensaje-box" id="resultado-mensaje">
                         <i class="fas fa-lightbulb"></i>
                         <span>-</span>
@@ -595,6 +857,98 @@
         </div>
     </footer>
 
-    <script src="/static/app.js?v=5"></script>
+    <script src="/static/app.js?v=10"></script>
+    <style>
+    /* Estilos simplificados para sección Datos */
+    .data-section { background: linear-gradient(180deg, rgba(255,255,255,0.8) 0%, transparent 100%); }
+    .info-cards-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem; }
+    .info-card { background: #fff; border-radius: 18px; padding: 1.75rem; text-align: center; box-shadow: 0 4px 15px rgba(255,105,180,0.12); border: 2px solid #FFB6C1; }
+    .info-card-icon { width: 65px; height: 65px; margin: 0 auto 0.75rem; background: #FFF0F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #FF69B4; font-size: 1.6rem; }
+    .info-card h3 { color: #8B0A50; margin-bottom: 0.4rem; font-size: 1.05rem; }
+    .info-card p { color: #6C757D; margin-bottom: 0.75rem; font-size: 0.85rem; }
+    .btn-info-card { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; background: #FF69B4; color: #fff; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 0.8rem; }
+    .btn-info-card:hover { background: #DB7093; }
+    .formatos-mini { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+    .formato-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.7rem; background: #FFF0F5; border-radius: 20px; font-size: 0.75rem; color: #8B0A50; }
+    .formato-badge i { color: #FF69B4; }
+    .moneda-ejemplo code { display: inline-block; padding: 0.5rem 0.85rem; background: #FFF0F5; border-radius: 6px; font-family: monospace; color: #8B0A50; font-size: 0.85rem; font-weight: 600; }
+    .categorias-wrapper { background: #fff; border-radius: 18px; padding: 1.75rem; box-shadow: 0 4px 15px rgba(255,105,180,0.12); margin-bottom: 2rem; }
+    .categorias-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .categorias-header i { font-size: 1.6rem; color: #FF69B4; }
+    .categorias-header h3 { color: #8B0A50; margin: 0; font-size: 1.2rem; }
+    .categorias-header p { color: #6C757D; margin: 0.2rem 0 0 0; font-size: 0.85rem; }
+    .categorias-explicacion { display: flex; align-items: flex-start; gap: 0.75rem; background: #FFF3CD; padding: 0.85rem 1rem; border-radius: 10px; margin-bottom: 1.25rem; border-left: 3px solid #FFC107; }
+    .categorias-explicacion i { font-size: 1.2rem; color: #FF9800; }
+    .categorias-explicacion strong { display: block; color: #343A40; margin-bottom: 0.2rem; font-size: 0.9rem; }
+    .categorias-explicacion p { color: #343A40; margin: 0; font-size: 0.85rem; }
+    .categorias-cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+    .categoria-card-v2 { background: #fff; border-radius: 12px; padding: 1rem; border: 2px solid #FFF0F5; text-align: center; }
+    .categoria-card-v2:hover { border-color: #FF69B4; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,105,180,0.15); }
+    .cat-header { display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+    .cat-letter { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 0.95rem; }
+    .cat-a .cat-letter { background: #28A745; } .cat-b .cat-letter { background: #17A2B8; } .cat-c .cat-letter { background: #FFC107; color: #343A40; } .cat-d .cat-letter { background: #FD7E14; } .cat-e .cat-letter { background: #DC3545; }
+    .cat-riesgo { font-size: 0.65rem; font-weight: 600; color: #6C757D; text-transform: uppercase; }
+    .categoria-card-v2 h4 { color: #8B0A50; margin-bottom: 0.4rem; font-size: 0.95rem; }
+    .cat-desc { color: #6C757D; font-size: 0.75rem; line-height: 1.35; margin-bottom: 0.6rem; }
+    .cat-ejemplo { background: #FFF0F5; padding: 0.5rem; border-radius: 6px; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; }
+    .ejemplo-label { font-size: 0.65rem; color: #6C757D; } .ejemplo-valor { font-weight: 700; color: #8B0A50; font-family: monospace; font-size: 0.8rem; }
+    .cat-indicator { display: flex; align-items: center; justify-content: center; gap: 0.35rem; font-size: 0.7rem; color: #6C757D; }
+    .cat-indicator i { color: #FF69B4; }
+    .npl-formula-card { background: #FFF0F5; border: 2px dashed #FFB6C1; border-radius: 12px; padding: 1.25rem; text-align: center; }
+    .formula-header { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .formula-header i { font-size: 1.2rem; color: #FF69B4; } .formula-header h4 { color: #8B0A50; margin: 0; font-size: 0.95rem; }
+    .formula-content { max-width: 450px; margin: 0 auto; }
+    .formula-main { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 0.75rem; font-size: 1rem; font-weight: 600; }
+    .formula-label { color: #8B0A50; }
+    .formula-fraction { display: inline-flex; flex-direction: column; align-items: center; }
+    .formula-numerator { border-bottom: 2px solid #FF69B4; padding: 0 0.6rem 0.25rem; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.35rem; }
+    .cat-c-small { background: #FFC107; color: #343A40; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 700; font-size: 0.85rem; }
+    .cat-d-small { background: #FD7E14; color: #fff; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 700; font-size: 0.85rem; }
+    .cat-e-small { background: #DC3545; color: #fff; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 700; font-size: 0.85rem; }
+    .formula-denominator { color: #8B0A50; font-weight: 700; }
+    .formula-explicacion { display: flex; align-items: flex-start; gap: 0.6rem; background: #fff; padding: 0.6rem 0.85rem; border-radius: 6px; text-align: left; }
+    .formula-explicacion i { font-size: 1rem; color: #FF69B4; margin-top: 0.1rem; }
+    .formula-explicacion p { color: #6C757D; margin: 0; font-size: 0.8rem; }
+    .formatos-numeros-section { background: #fff; border-radius: 18px; padding: 1.75rem; box-shadow: 0 4px 15px rgba(255,105,180,0.12); margin-bottom: 2rem; text-align: center; }
+    .formatos-numeros-section h3 { color: #8B0A50; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 1.2rem; }
+    .section-desc { color: #6C757D; margin-bottom: 1.25rem; font-size: 0.85rem; }
+    .formatos-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
+    .formato-numero-card { background: #FFF0F5; border-radius: 8px; padding: 0.65rem 1rem; text-align: center; min-width: 150px; }
+    .formato-numero-card code { display: block; font-family: monospace; color: #8B0A50; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .formato-numero-card span { font-size: 0.7rem; color: #6C757D; }
+    .formato-numero-card.destacado { background: #FF69B4; } .formato-numero-card.destacado code, .formato-numero-card.destacado span { color: #fff; }
+    .procesamiento-section { background: #fff; border-radius: 18px; padding: 1.75rem; box-shadow: 0 4px 15px rgba(255,105,180,0.12); }
+    .procesamiento-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .procesamiento-header i { font-size: 1.6rem; color: #FF69B4; }
+    .procesamiento-header h3 { color: #8B0A50; margin: 0 0 0.4rem 0; font-size: 1.2rem; }
+    .procesamiento-header p { color: #6C757D; margin: 0; font-size: 0.85rem; line-height: 1.4; }
+    .procesamiento-header code { background: #FFF0F5; padding: 0.15rem 0.4rem; border-radius: 4px; font-family: monospace; color: #8B0A50; font-size: 0.75rem; }
+    .timeline-horizontal { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .timeline-card { background: #fff; border: 2px solid #FFF0F5; border-radius: 12px; padding: 1rem; position: relative; text-align: center; }
+    .timeline-card:hover { border-color: #FF69B4; }
+    .timeline-num { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 28px; height: 28px; background: #FF69B4; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+    .timeline-icon { width: 45px; height: 45px; margin: 0.4rem auto 0.6rem; background: #FFF0F5; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .timeline-icon i { font-size: 1.2rem; color: #FF69B4; }
+    .timeline-card h4 { color: #8B0A50; text-align: center; margin-bottom: 0.6rem; font-size: 0.9rem; }
+    .timeline-card ul { list-style: none; padding: 0; margin: 0; text-align: left; }
+    .timeline-card ul li { padding: 0.3rem 0; padding-left: 1.1rem; position: relative; color: #6C757D; font-size: 0.75rem; }
+    .timeline-card ul li::before { content: '✓'; position: absolute; left: 0; color: #FF69B4; font-weight: 700; }
+    .transform-mini { background: #FFF0F5; border-radius: 6px; padding: 0.6rem; text-align: left; }
+    .transform-mini-row { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem; font-size: 0.75rem; }
+    .transform-mini-row i { color: #FF69B4; font-size: 0.7rem; } .transform-mini-row code { color: #8B0A50; font-weight: 600; }
+    .indicadores-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; }
+    .chip { display: inline-block; padding: 0.35rem 0.7rem; background: #FF69B4; color: #fff; border-radius: 16px; font-size: 0.7rem; font-weight: 600; }
+    
+    /* Estadísticos de la Muestra - Resultados */
+    .estadisticos-section { margin: 1.5rem 0; padding: 1.25rem; background: linear-gradient(135deg, #FFF0F5, #FFF5F7); border-radius: 12px; border: 1px solid #FFB6C1; }
+    .estadisticos-section h4 { color: #8B0A50; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; }
+    .estadisticos-section h4 i { color: #FF69B4; }
+    .estadisticos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+    .estadistico-item { background: #fff; padding: 0.75rem; border-radius: 8px; text-align: center; border: 1px solid #FFE4E9; transition: all 0.3s ease; }
+    .estadistico-item:hover { border-color: #FF69B4; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255,105,180,0.15); }
+    .estadistico-label { display: block; font-size: 0.7rem; color: #6C757D; margin-bottom: 0.35rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .estadistico-value { display: block; font-size: 1.1rem; font-weight: 700; color: #FF69B4; margin-bottom: 0.25rem; font-family: 'Courier New', monospace; }
+    .estadistico-desc { display: block; font-size: 0.65rem; color: #6C757D; font-weight: 400; }
+    </style>
 </body>
 </html>

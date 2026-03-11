@@ -3,6 +3,69 @@
  * Sistema de Análisis de Riesgo Crediticio
  */
 
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILIDADES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Parsea un string con formato numérico colombiano/internacional a float
+ * Soporta: "1.500.000", "1,500,000", "1.500.000,50", "$1.500.000"
+ */
+function parseNumber(value) {
+    if (!value) return 0;
+    if (typeof value === 'number') return value;
+    
+    // Convertir a string y limpiar
+    let str = value.toString().trim();
+    
+    // Quitar símbolos de moneda y espacios
+    str = str.replace(/[$\s]/g, '');
+    
+    // Si está vacío después de limpiar
+    if (!str) return 0;
+    
+    // Detectar formato
+    const tieneComa = str.includes(',');
+    const tienePunto = str.includes('.');
+    
+    if (tieneComa && tienePunto) {
+        // Ambos presentes: el último es el decimal
+        const lastComma = str.lastIndexOf(',');
+        const lastDot = str.lastIndexOf('.');
+        
+        if (lastComma > lastDot) {
+            // Formato EU: 1.234.567,89
+            str = str.replace(/\./g, '').replace(',', '.');
+        } else {
+            // Formato US: 1,234,567.89
+            str = str.replace(/,/g, '');
+        }
+    } else if (tieneComa) {
+        // Solo comas: verificar si es decimal o miles
+        const parts = str.split(',');
+        if (parts.length === 2 && parts[1].length <= 2) {
+            // Probable decimal: 1234,56
+            str = str.replace(',', '.');
+        } else {
+            // Probable miles: 1,234,567
+            str = str.replace(/,/g, '');
+        }
+    } else if (tienePunto) {
+        // Solo puntos: verificar si es decimal o miles
+        const parts = str.split('.');
+        if (parts.length === 2 && parts[1].length <= 2) {
+            // Probable decimal: 1234.56
+            // Ya está en formato correcto
+        } else {
+            // Probable miles: 1.234.567
+            str = str.replace(/\./g, '');
+        }
+    }
+    
+    const result = parseFloat(str);
+    return isNaN(result) ? 0 : result;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias al DOM
     const form = document.getElementById('analysis-form');
@@ -31,16 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const payload = {
             municipio: document.getElementById('municipio').value.trim(),
-            cartera_a: parseFloat(document.getElementById('cartera_a').value) || 0,
-            cartera_b: parseFloat(document.getElementById('cartera_b').value) || 0,
-            cartera_c: parseFloat(document.getElementById('cartera_c').value) || 0,
-            cartera_d: parseFloat(document.getElementById('cartera_d').value) || 0,
-            cartera_e: parseFloat(document.getElementById('cartera_e').value) || 0,
-            total_cartera: parseFloat(document.getElementById('total_cartera').value) || 0,
-            total_captaciones: parseFloat(document.getElementById('total_captaciones').value) || null
+            cartera_a: parseNumber(document.getElementById('cartera_a').value),
+            cartera_b: parseNumber(document.getElementById('cartera_b').value),
+            cartera_c: parseNumber(document.getElementById('cartera_c').value),
+            cartera_d: parseNumber(document.getElementById('cartera_d').value),
+            cartera_e: parseNumber(document.getElementById('cartera_e').value),
+            total_cartera: parseNumber(document.getElementById('total_cartera').value),
+            total_captaciones: parseNumber(document.getElementById('total_captaciones').value) || null
         };
         
         // Validar coherencia
@@ -162,6 +225,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (detailConcentracion) detailConcentracion.textContent = (data.concentracion_riesgo || 0).toFixed(1) + '%';
         if (detailHhi) detailHhi.textContent = (data.hhi || 0).toFixed(4);
         if (resultadoMensajeSpan) resultadoMensajeSpan.textContent = data.mensaje || '-';
+
+        // Estadísticos - mostrar si están disponibles
+        const statMedia = document.getElementById('stat-media');
+        const statVarianza = document.getElementById('stat-varianza');
+        const statStd = document.getElementById('stat-std');
+        const statCv = document.getElementById('stat-cv');
+
+        if (statMedia) statMedia.textContent = data.media_cartera ? (data.media_cartera * 100).toFixed(2) + '%' : 'N/A';
+        if (statVarianza) statVarianza.textContent = data.var_cartera ? data.var_cartera.toFixed(6) : 'N/A';
+        if (statStd) statStd.textContent = data.std_cartera ? (data.std_cartera * 100).toFixed(2) + '%' : 'N/A';
+        if (statCv) statCv.textContent = data.cv_cartera ? data.cv_cartera.toFixed(2) + '%' : 'N/A';
 
         // Actualizar color del mensaje según riesgo
         const mensajeBox = document.getElementById('resultado-mensaje');
@@ -511,7 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ═══════════════════════════════════════════════════════════════════════════
     // UPLOAD DE ARCHIVOS
     // ═══════════════════════════════════════════════════════════════════════════
-    
+
     // Click para seleccionar archivo
     dropZone.addEventListener('click', () => fileInput.click());
 
@@ -542,20 +616,20 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleUpload(file) {
         const formData = new FormData();
         formData.append('file', file);
-        
+
         const originalText = dropZone.querySelector('.drop-text').textContent;
         dropZone.querySelector('.drop-text').textContent = '⏳ Procesando...';
         dropZone.style.opacity = '0.6';
         dropZone.style.pointerEvents = 'none';
-        
+
         try {
             const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData
             });
-            
+
             const result = await response.json();
-            
+
             if (response.ok) {
                 Swal.fire({
                     icon: 'success',
@@ -585,6 +659,118 @@ document.addEventListener('DOMContentLoaded', () => {
             dropZone.style.opacity = '1';
             dropZone.style.pointerEvents = 'auto';
             fileInput.value = '';
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // UPLOAD DE ARCHIVOS - DATOS.GOV.CO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const dropZoneGov = document.getElementById('drop-zone-gov');
+    const fileInputGov = document.getElementById('file-input-gov');
+    const btnCargarGov = document.getElementById('btn-cargar-gov');
+
+    if (dropZoneGov && fileInputGov && btnCargarGov) {
+        // Click para seleccionar archivo
+        dropZoneGov.addEventListener('click', () => fileInputGov.click());
+        btnCargarGov.addEventListener('click', () => fileInputGov.click());
+
+        // Drag & Drop
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZoneGov.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZoneGov.classList.add('drop-active');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZoneGov.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZoneGov.classList.remove('drop-active');
+            }, false);
+        });
+
+        dropZoneGov.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleUploadGov(files[0]);
+        });
+
+        fileInputGov.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) handleUploadGov(e.target.files[0]);
+        });
+    }
+
+    async function handleUploadGov(file) {
+        // Validar que sea CSV
+        if (!file.name.endsWith('.csv')) {
+            Swal.fire({
+                icon: 'warning',
+                title: '⚠️ Archivo no válido',
+                text: 'Por favor selecciona un archivo CSV (.csv)'
+            });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Mostrar loading en el botón
+        const originalText = btnCargarGov.innerHTML;
+        btnCargarGov.disabled = true;
+        btnCargarGov.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+        try {
+            const response = await fetch('/datos-gov/cargar', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '✅ Archivo de Datos.gov.co procesado',
+                    html: `
+                        <b>${result.mensaje}</b><br><br>
+                        <div style="text-align: left; font-size: 0.9rem;">
+                            <p><strong>📊 Resumen:</strong></p>
+                            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                <li>Total filas: ${result.total_filas || 0}</li>
+                                <li>Municipios procesados: ${result.ids_creados ? result.ids_creados.length : 0}</li>
+                                <li>Errores: ${result.errores || 0}</li>
+                            </ul>
+                        </div>
+                    `,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Ver historial',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cerrar'
+                }).then((swalResult) => {
+                    if (swalResult.isConfirmed) {
+                        document.getElementById('historial').scrollIntoView({ behavior: 'smooth' });
+                        loadHistory();
+                    }
+                });
+                loadHistory();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: '❌ Error',
+                    text: result.detail || 'Error al procesar el archivo'
+                });
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: '❌ Error de conexión',
+                text: 'No se pudo conectar con el servidor'
+            });
+        } finally {
+            btnCargarGov.disabled = false;
+            btnCargarGov.innerHTML = originalText;
+            fileInputGov.value = '';
         }
     }
 

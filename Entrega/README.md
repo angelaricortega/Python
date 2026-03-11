@@ -116,10 +116,11 @@ HHI = ────────────────
 
 ```
 Entrega/
-├── main.py                      # ⭐ API FastAPI completa (737 líneas)
+├── main.py                      # ⭐ API FastAPI completa (760 líneas)
 ├── modelos.py                   # ⭐ Modelos Pydantic + Clases OOP (884 líneas)
 ├── decorators.py                # ⭐ Decoradores estadísticos (527 líneas)
 ├── config.py                    # ⭐ Configuración global (225 líneas)
+├── limpieza.py                  # ⭐ Funciones puras de limpieza (Semana 1) [NUEVO]
 ├── start.py                     # 🚀 Script de inicio rápido
 ├── verificar_instalacion.py     # 🔍 Verificador de instalación
 ├── README.md                    # 📖 Este archivo
@@ -136,10 +137,11 @@ Entrega/
 
 | Archivo | Líneas | Propósito | Conceptos Aplicados |
 |---------|--------|-----------|---------------------|
-| `main.py` | 737 | API FastAPI con 7 endpoints | Semana 1, 2, 3 |
+| `main.py` | 760 | API FastAPI con 7 endpoints | Semana 1, 2, 3 |
 | `modelos.py` | 884 | Pydantic + OOP Herencia | Semana 2 |
 | `decorators.py` | 527 | Decoradores simples y factory | Semana 1 |
-| `config.py` | 225 | Configuración centralizada | Semana 1 |
+| `config.py` | 225 | Configuración centralizada | Semana 1, 6 |
+| `limpieza.py` | ~200 | **Funciones puras de limpieza** | **Semana 1** ⭐ |
 | `index.html` | 600 | Estructura HTML de la UI | Semana 3 |
 | `style.css` | 1246 | Estilos rosaditos pastel | Semana 3 |
 | `app.js` | 748 | Lógica de interactividad | Semana 3 |
@@ -348,6 +350,137 @@ PLT_STYLE = {
 ```
 
 **Ventaja:** Cambias un valor aquí y se actualiza en TODO el proyecto.
+
+---
+
+#### 6. Módulo de Limpieza — Funciones Puras (Semana 1)
+
+**Ubicación:** `limpieza.py` — Módulo reutilizable de limpieza de datos
+
+**CONCEPTO APLICADO — Modularización (Semana 1):**
+> Separar la limpieza de datos en un módulo reutilizable permite:
+> 1. Reutilizar las mismas funciones en múltiples análisis
+> 2. Testear independientemente la lógica de limpieza
+> 3. Mantener el código de análisis principal limpio y legible
+> 4. Documentar claramente cada paso del pipeline de limpieza
+
+**Código:**
+```python
+# limpieza.py — Funciones puras para limpieza de DataFrames
+from typing import List, Optional
+import pandas as pd
+import numpy as np
+
+def eliminar_duplicados(
+    df: pd.DataFrame,
+    subset: Optional[List[str]] = None,
+    mantener: str = 'first'
+) -> pd.DataFrame:
+    """
+    Elimina filas duplicadas del DataFrame.
+    
+    FUNCIÓN PURA:
+      - Recibe DataFrame, retorna DataFrame limpio
+      - No modifica el original
+      - Sin efectos secundarios
+    """
+    n_antes = len(df)
+    df_limpio = df.drop_duplicates(subset=subset, keep=mantener)
+    n_duplicados = n_antes - len(df_limpio)
+    print(f"✅ Eliminados {n_duplicados} duplicados")
+    return df_limpio
+
+def imputar_nulos(
+    df: pd.DataFrame,
+    columnas: List[str],
+    estrategia: str = 'mediana'
+) -> pd.DataFrame:
+    """
+    Imputa valores nulos con la estrategia especificada.
+    
+    ESTRATEGIAS:
+      - 'media': Media aritmética
+      - 'mediana': Mediana (robusta a outliers) ← RECOMENDADA
+      - 'moda': Valor más frecuente
+      - 'cero': Rellena con 0
+    """
+    df_limpio = df.copy()  # Copia para mantener pureza
+    for col in columnas:
+        n_nulos = df_limpio[col].isna().sum()
+        if estrategia == 'mediana':
+            valor = df_limpio[col].median()
+        df_limpio[col] = df_limpio[col].fillna(valor)
+        print(f"✅ {col}: {n_nulos} nulos imputados")
+    return df_limpio
+
+def detectar_outliers_iqr(
+    df: pd.DataFrame,
+    columna: str,
+    factor: float = 1.5
+) -> pd.Series:
+    """
+    Detecta outliers usando el método IQR.
+    
+    MÉTODO:
+      1. Calcular Q1 (25to percentil) y Q3 (75to percentil)
+      2. IQR = Q3 - Q1
+      3. Límite inf = Q1 - factor × IQR
+      4. Límite sup = Q3 + factor × IQR
+      5. Outlier = valor fuera de límites
+    """
+    Q1 = df[columna].quantile(0.25)
+    Q3 = df[columna].quantile(0.75)
+    IQR = Q3 - Q1
+    outliers = (df[columna] < Q1 - factor * IQR) | (df[columna] > Q3 + factor * IQR)
+    print(f"⚠️ {columna}: {outliers.sum()} outliers detectados")
+    return outliers
+
+def limpieza_completa(
+    df: pd.DataFrame,
+    columnas_numericas: List[str],
+    columna_municipio: str = 'municipio'
+) -> pd.DataFrame:
+    """
+    Aplica pipeline completo de limpieza.
+    
+    PIPELINE:
+      1. Eliminar duplicados
+      2. Imputar nulos
+      3. Detectar outliers (reporte)
+    """
+    df_limpio = eliminar_duplicados(df, subset=[columna_municipio])
+    df_limpio = imputar_nulos(df_limpio, columnas=columnas_numericas)
+    for col in columnas_numericas:
+        if col in df_limpio.columns:
+            detectar_outliers_iqr(df_limpio, col)
+    return df_limpio
+```
+
+**Uso en el endpoint `/upload` (main.py):**
+```python
+from limpieza import limpieza_completa
+
+@app.post("/upload")
+async def cargar_archivo(file: UploadFile = File(...)):
+    # Leer archivo
+    df = pd.read_csv(io.BytesIO(await file.read()))
+    
+    # Aplicar limpieza (Semana 1)
+    df_limpio = limpieza_completa(
+        df,
+        columnas_numericas=['cartera_a', 'cartera_b', 'total_cartera'],
+        columna_municipio='municipio'
+    )
+    
+    # Procesar datos limpios...
+```
+
+**Ventajas de esta implementación:**
+1. **Funciones puras:** Mismos inputs → mismos outputs, sin efectos secundarios
+2. **Modularización:** Un solo archivo con toda la lógica de limpieza
+3. **Reutilizable:** Se puede importar en cualquier script
+4. **Testeable:** Cada función se puede probar independientemente
+5. **Documentado:** Docstrings explican qué hace cada función
 
 ---
 

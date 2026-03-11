@@ -52,6 +52,11 @@ from decorators import registrar_ejecucion
 # calcular_varianza() para usar ddof=1 (corrección de Bessel).
 from modelos import AnalizadorMuestral
 
+# CONCEPTO: Modularización (Semana 1) — importamos funciones puras
+# para limpieza de DataFrames: eliminar_duplicados, imputar_nulos,
+# detectar_outliers_iqr, limpieza_completa
+from limpieza import limpieza_completa, eliminar_duplicados, detectar_outliers_iqr
+
 
 # ════════════════════════════════════════════════════════════════════════════════
 # FASE 2 — MODELOS PYDANTIC
@@ -403,18 +408,139 @@ app = FastAPI(
     description="""
 ## Sistema Financiero Colombiano — Datos Abiertos Gov.co
 
-Esta API permite:
-- **Analizar** riesgo crediticio de municipios colombianos
-- **Consultar** historial de análisis realizados
-- **Eliminar** análisis específicos
+### 📊 ¿Qué hace esta API?
 
-### Dominio
-Evaluación de cartera bancaria usando el índice NPL (Non-Performing Loans).
+Esta API **NO es solo un visor de datos**. Realiza **cálculos estadísticos y financieros** sobre los datos que proporcionas:
 
-### Validaciones
-- Cartera debe ser ≥ 0 (no hay cartera negativa)
-- Total cartera debe ser > 0 (requiere cartera para calcular)
-- Municipio debe tener ≥ 2 caracteres
+| Lo que tú ingresas | Lo que la API calcula |
+|-------------------|----------------------|
+| Cartera A, B, C, D, E (en COP) | **Índice NPL** = (C+D+E) / Total Cartera |
+| Total de cartera (en COP) | **Porcentaje cartera sana** = A / Total × 100 |
+| Total de captaciones (en COP, opcional) | **Porcentaje cartera en mora** = (C+D+E) / Total × 100 |
+| | **Concentración de riesgo** = (D+E) / (C+D+E) × 100 |
+| | **Índice HHI** (Herfindahl-Hirschman) para concentración |
+| | **Estadísticos muestrales** (media, varianza, std, CV) |
+
+### 🔢 Unidades de Medida
+
+**Todos los valores monetarios deben estar en PESOS COLOMBIANOS (COP):**
+
+- `cartera_a`, `cartera_b`, `cartera_c`, `cartera_d`, `cartera_e`: Valor de la cartera en cada categoría (COP)
+- `total_cartera`: Suma total de la cartera (COP)
+- `total_captaciones`: Total de depósitos/captaciones del municipio (COP)
+
+**Ejemplo:**
+```json
+{
+  "municipio": "Bogotá D.C.",
+  "cartera_a": 1500000000,      // 1.500 millones de pesos
+  "cartera_b": 200000000,       // 200 millones de pesos
+  "cartera_c": 50000000,        // 50 millones de pesos
+  "cartera_d": 25000000,        // 25 millones de pesos
+  "cartera_e": 10000000,        // 10 millones de pesos
+  "total_cartera": 1785000000,  // Suma total
+  "total_captaciones": 2500000000  // 2.500 millones en captaciones
+}
+```
+
+### 🏛️ Fuente de Datos
+
+**Datos Abiertos Colombia (datos.gov.co)**
+
+Esta API está diseñada para trabajar con el dataset oficial del Gobierno Colombiano:
+
+- **Dataset**: "Saldo de las captaciones y colocaciones por municipios"
+- **Fuente**: Sistema Financiero Colombiano
+- **Plataforma**: [www.datos.gov.co](https://www.datos.gov.co/)
+- **Entidad responsable**: Superintendencia Financiera de Colombia
+
+### 📁 Tratamiento de Datos del datos.gov.co
+
+Cuando cargas el archivo CSV del datos.gov.co, la API realiza el siguiente proceso:
+
+#### 1. **Lectura y Validación**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Archivo CSV (80 columnas)                                  │
+│  Saldo_de_las_captaciones_y_colocaciones_por_municipios.csv │
+└─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Verificación de columnas requeridas:                       │
+│  ✓ Nombre del municipio                                     │
+│  ✓ Cartera de créditos                                      │
+│  ✓ Categoría A riesgo normal                                │
+│  ✓ Categoría B riesgo aceptable                             │
+│  ✓ Categoría C riesgo apreciable                            │
+│  ✓ Categoría D riesgo significativo                         │
+│  ✓ Categoría E riesgo de Incobrabilidad                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 2. **Limpieza de Datos**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Problemas detectados y corregidos:                         │
+│  • Valores nulos → Imputados con 0                          │
+│  • Formato "1.234.567,89" → Convertido a 1234567.89         │
+│  • Símbolos "$", "COP" → Eliminados                         │
+│  • Municipios duplicados → Se conserva el primero           │
+│  • Filas sin municipio → Eliminadas                         │
+│  • Total cartera = 0 → Fila descartada                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 3. **Transformación**
+```
+Columnas originales (datos.gov.co)  →  Columnas API
+─────────────────────────────────────────────────────
+Nombre del municipio                →  municipio
+Cartera de créditos                 →  total_cartera
+Categoría A riesgo normal           →  cartera_a
+Categoría B riesgo aceptable        →  cartera_b
+Categoría C riesgo apreciable       →  cartera_c
+Categoría D riesgo significativo    →  cartera_d
+Categoría E riesgo de Incobrabilidad→  cartera_e
+Depósitos en cuenta corriente       →  (suma para)
+Depósitos simples                   →  (suma para)
+Certificados de depósito a término  →   total_captaciones
+Depósitos de ahorro                 →  (suma para)
+... (otras columnas de depósitos)   →
+```
+
+#### 4. **Cálculo de Indicadores**
+```
+Para CADA municipio procesado:
+
+  Índice NPL = (cartera_c + cartera_d + cartera_e) / total_cartera
+  
+  Porcentaje Sana = cartera_a / total_cartera × 100
+  
+  Porcentaje Mora = (cartera_c + cartera_d + cartera_e) / total_cartera × 100
+  
+  Concentración Riesgo = (cartera_d + cartera_e) / (cartera_c + cartera_d + cartera_e) × 100
+  
+  Índice HHI = Σ(participación_i)²
+  
+  Clasificación = match(NPL):
+    - 0% → sin_riesgo
+    - <1% → riesgo_bajo
+    - <5% → riesgo_moderado
+    - <15% → riesgo_alto
+    - ≥15% → riesgo_critico
+```
+
+### ✅ Endpoints Disponibles
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/analizar` | POST | Análisis manual de un municipio |
+| `/upload` | POST | Carga masiva de CSV/Excel genérico |
+| `/datos-gov/cargar` | POST | Carga específica del archivo datos.gov.co |
+| `/datos-gov/info` | GET | Información del formato esperado |
+| `/historial` | GET | Listar todos los análisis |
+| `/historial/{id}` | GET | Obtener análisis específico |
+| `/historial/{id}` | DELETE | Eliminar análisis |
     """,
     version="1.0.0",
     contact={
@@ -545,16 +671,21 @@ async def analizar_riesgo(datos: RiesgoCrediticioInput) -> RiesgoCrediticioOutpu
 async def cargar_archivo(file: UploadFile = File(...)):
     """
     **Carga un archivo CSV o Excel para análisis masivo.**
-    
+
     Proceso:
     1. Lee el archivo (CSV o Excel)
-    2. Intenta mapear columnas (colocaciones, captaciones, municipio)
-    3. Procesa cada fila y guarda en historial
-    4. Retorna resumen del procesamiento
+    2. Aplica pipeline de limpieza (Semana 1): eliminar duplicados, imputar nulos, detectar outliers
+    3. Intenta mapear columnas (colocaciones, captaciones, municipio)
+    4. Procesa cada fila y guarda en historial
+    5. Retorna resumen del procesamiento
+
+    CONCEPTO SEMANA 1 — Modularización:
+      Usa el módulo limpieza.py para aplicar funciones puras de limpieza
+      antes de procesar los datos.
     """
     global contador_id
     content = await file.read()
-    
+
     try:
         if file.filename.endswith('.csv'):
             df = pd.read_csv(io.BytesIO(content))
@@ -562,10 +693,23 @@ async def cargar_archivo(file: UploadFile = File(...)):
             df = pd.read_excel(io.BytesIO(content))
         else:
             raise HTTPException(400, "Formato de archivo no soportado. Use CSV o Excel.")
-            
+
         # Normalizar nombres de columnas (quitar acentos, espacios, lower)
-        df.columns = [str(c).strip().lower().replace('ó', 'o').replace('á', 'a') for c in df.columns]
-        
+        df.columns = [str(c).strip().lower().replace('ó', 'o').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ú', 'u') for c in df.columns]
+
+        # ═══════════════════════════════════════════════════════════════════════════
+        # FASE 1 — LIMPIEZA DE DATOS (Semana 1)
+        # ═══════════════════════════════════════════════════════════════════════════
+        # Aplicar pipeline de limpieza con funciones puras del módulo limpieza.py
+        columnas_numericas = ['cartera_a', 'cartera_b', 'cartera_c', 'cartera_d', 'cartera_e', 'total_cartera', 'total_captaciones']
+        df_limpio = limpieza_completa(
+            df,
+            columnas_numericas=columnas_numericas,
+            columna_municipio='municipio',
+            estrategia_imputacion='mediana'
+        )
+        # ═══════════════════════════════════════════════════════════════════════════
+
         # Mapeo flexible de columnas
         mapeo = {
             "municipio": ["municipio", "nombre", "ciudad", "territorio"],
@@ -577,9 +721,9 @@ async def cargar_archivo(file: UploadFile = File(...)):
             "total_cartera": ["total_cartera", "colocaciones", "total_colocaciones"],
             "total_captaciones": ["total_captaciones", "captaciones", "depositos", "ahorros"]
         }
-        
+
         results = []
-        for _, row in df.iterrows():
+        for _, row in df_limpio.iterrows():  # Usar df_limpio en lugar de df
             # Extraer datos con el mapeo flexible
             data_dict = {}
             for key, aliases in mapeo.items():
@@ -686,10 +830,10 @@ async def obtener_analisis(analisis_id: int):
 async def eliminar_analisis(analisis_id: int):
     """
     **Elimina un análisis del historial.**
-    
+
     Args:
         analisis_id: ID único del análisis a eliminar
-    
+
     Raises:
         HTTPException 404: Si el análisis no existe
     """
@@ -698,13 +842,361 @@ async def eliminar_analisis(analisis_id: int):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Análisis con ID {analisis_id} no encontrado",
         )
-    
+
     del historial_analisis[analisis_id]
-    
+
     return {
         "mensaje": f"✅ Análisis {analisis_id} eliminado exitosamente",
         "id_eliminado": analisis_id,
         "analisis_restantes": len(historial_analisis),
+    }
+
+
+# ════════════════════════════════════════════════════════════════════════════════
+# ENDPOINT PARA DATOS.GOV.CO — CAPTACIONES Y COLOCACIONES
+# ════════════════════════════════════════════════════════════════════════════════
+
+@app.post(
+    "/datos-gov/cargar",
+    status_code=status.HTTP_200_OK,
+    tags=["Datos.gov.co"],
+    summary="Cargar archivo CSV de Datos.gov.co",
+)
+async def cargar_datos_gov(file: UploadFile = File(...)):
+    """
+    **Carga el archivo CSV de captaciones y colocaciones de Datos.gov.co**
+
+    Este endpoint está diseñado específicamente para el archivo:
+    `Saldo_de_las_captaciones_y_colocaciones_por_municipios_*.csv`
+
+    El archivo contiene:
+      - 80 columnas con información detallada del sistema financiero
+      - Categorías de riesgo A, B, C, D, E
+      - Depósitos, captaciones y colocaciones por municipio
+
+    Proceso:
+      1. Lee el archivo CSV
+      2. Mapea columnas del formato gov.co al formato de la API
+      3. Aplica limpieza de datos
+      4. Procesa cada municipio
+      5. Guarda en historial
+
+    Returns:
+        dict: Resumen del procesamiento con IDs creados
+    """
+    global contador_id
+
+    content = await file.read()
+
+    try:
+        # Leer CSV
+        df = pd.read_csv(io.BytesIO(content), encoding='utf-8', nrows=1000)
+
+        # ═══════════════════════════════════════════════════════════════════════════
+        # MAPEO DE COLUMNAS - Formato Datos.gov.co → Formato API
+        # ═══════════════════════════════════════════════════════════════════════════
+
+        # Columnas del archivo gov.co
+        COL_MUNICIPIO = "Nombre del municipio"
+        COL_CARTERA_CREDITOS = "Cartera de créditos"
+        
+        # Categorías de riesgo (columnas principales)
+        COL_CAT_A = "Categoría A riesgo normal"
+        COL_CAT_B = "Categoría B riesgo aceptable"
+        COL_CAT_C = "Categoría C riesgo apreciable"
+        COL_CAT_D = "Categoría D riesgo significativo"
+        COL_CAT_E = "Categoría E riesgo de Incobrabilidad"
+
+        # Columnas de depósitos/captaciones (sumar para total)
+        COLS_CAPTACIONES = [
+            "Depósitos en cuenta corriente bancaria",
+            "Depósitos simples",
+            "Certificados de depósito a término",
+            "Depósitos de ahorro",
+            "Cuenta de ahorros de valor real",
+            "Cuentas de ahorro especial",
+            "Certificado de ahorro valor real",
+            "Títulos de inversión en circulación",
+        ]
+
+        # Verificar columnas requeridas
+        columnas_requeridas = [
+            COL_MUNICIPIO, COL_CARTERA_CREDITOS,
+            COL_CAT_A, COL_CAT_B, COL_CAT_C, COL_CAT_D, COL_CAT_E
+        ]
+
+        columnas_faltantes = [c for c in columnas_requeridas if c not in df.columns]
+        if columnas_faltantes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Columnas faltantes en el archivo: {columnas_faltantes}"
+            )
+
+        # ═══════════════════════════════════════════════════════════════════════════
+        # TRANSFORMACIÓN DE DATOS
+        # ═══════════════════════════════════════════════════════════════════════════
+
+        # Función para limpiar valores monetarios (ej: "1.500.000,00" → 1500000.00)
+        def limpiar_moneda(valor, permitir_cero=True):
+            """
+            Limpia y convierte valores monetarios a float.
+            
+            Args:
+                valor: Valor a limpiar (puede ser string, int, float, None)
+                permitir_cero: Si False, retorna None para valores 0 o vacíos
+            
+            Returns:
+                float o None: Valor limpio, o None si está vacío y no se permite cero
+            """
+            # Manejo de valores nulos o vacíos
+            if valor is None:
+                return 0.0 if permitir_cero else None
+            if pd.isna(valor):
+                return 0.0 if permitir_cero else None
+            if isinstance(valor, str):
+                valor = valor.strip()
+                if valor == '' or valor.upper() == 'NAN':
+                    return 0.0 if permitir_cero else None
+            if isinstance(valor, (int, float)) and valor == 0:
+                return 0.0 if permitir_cero else None
+            
+            try:
+                # Convertir a string y limpiar
+                s = str(valor).strip()
+                # Quitar símbolos de moneda y espacios
+                s = s.replace('$', '').replace('COP', '').replace(' ', '')
+                # Manejar formato colombiano: 1.234.567,89 → 1234567.89
+                s = s.replace('.', '').replace(',', '.')
+                return float(s)
+            except (ValueError, TypeError, AttributeError):
+                return 0.0 if permitir_cero else None
+
+        # Función para validar que una fila tenga datos mínimos requeridos
+        def fila_valida(row):
+            """Verifica que la fila tenga al menos municipio y total_cartera > 0"""
+            # Municipio válido
+            if not row['municipio'] or pd.isna(row['municipio']):
+                return False, "Municipio vacío"
+            if str(row['municipio']).strip() in ['', 'nan', 'NAN', 'None']:
+                return False, "Municipio inválido"
+            
+            # Total de cartera debe ser mayor a 0
+            if not row['total_cartera'] or row['total_cartera'] <= 0:
+                return False, "Total cartera inválido o cero"
+            
+            return True, None
+
+        # Crear DataFrame transformado
+        df_transformado = pd.DataFrame()
+
+        # Municipio - manejar valores faltantes
+        df_transformado['municipio'] = df[COL_MUNICIPIO].apply(
+            lambda x: str(x).strip() if pd.notna(x) and str(x).strip() not in ['', 'nan', 'NAN', 'None'] else None
+        )
+
+        # Cartera por categoría (limpiar valores monetarios)
+        df_transformado['cartera_a'] = df[COL_CAT_A].apply(limpiar_moneda)
+        df_transformado['cartera_b'] = df[COL_CAT_B].apply(limpiar_moneda)
+        df_transformado['cartera_c'] = df[COL_CAT_C].apply(limpiar_moneda)
+        df_transformado['cartera_d'] = df[COL_CAT_D].apply(limpiar_moneda)
+        df_transformado['cartera_e'] = df[COL_CAT_E].apply(limpiar_moneda)
+
+        # Total cartera - crítico, no puede ser cero o nulo
+        df_transformado['total_cartera'] = df[COL_CARTERA_CREDITOS].apply(
+            lambda x: limpiar_moneda(x, permitir_cero=False)
+        )
+
+        # Total captaciones (suma de todas las columnas de depósitos)
+        cols_disp = [c for c in COLS_CAPTACIONES if c in df.columns]
+        if cols_disp:
+            # Sumar columnas de captaciones, reemplazando nulos con 0
+            df_transformado['total_captaciones'] = df[cols_disp].apply(
+                lambda row: sum(limpiar_moneda(row[c]) for c in cols_disp),
+                axis=1
+            )
+        else:
+            df_transformado['total_captaciones'] = None
+
+        # ═══════════════════════════════════════════════════════════════════════════
+        # FILTRAR FILAS INVÁLIDAS ANTES DE LIMPIEZA
+        # ═══════════════════════════════════════════════════════════════════════════
+        
+        # Contar filas antes de filtrar
+        filas_antes = len(df_transformado)
+        
+        # Aplicar validación de filas
+        mask_validas = df_transformado.apply(
+            lambda row: fila_valida(row)[0], axis=1
+        )
+        df_filtrado = df_transformado[mask_validas].copy()
+        
+        # Registrar filas filtradas
+        filas_filtradas = filas_antes - len(df_filtrado)
+        if filas_filtradas > 0:
+            print(f"    Filas filtradas (datos incompletos): {filas_filtradas}")
+
+        # ═══════════════════════════════════════════════════════════════════════════
+        # LIMPIEZA DE DATOS (Semana 1)
+        # ═══════════════════════════════════════════════════════════════════════════
+
+        columnas_numericas = ['cartera_a', 'cartera_b', 'cartera_c',
+                              'cartera_d', 'cartera_e', 'total_cartera',
+                              'total_captaciones']
+
+        # Imputar nulos en columnas de cartera con 0 (no tiene sentido usar mediana para ceros)
+        for col in ['cartera_a', 'cartera_b', 'cartera_c', 'cartera_d', 'cartera_e']:
+            if col in df_filtrado.columns:
+                n_nulos = df_filtrado[col].isna().sum()
+                if n_nulos > 0:
+                    df_filtrado[col] = df_filtrado[col].fillna(0)
+                    print(f"    {col}: {n_nulos} valores faltantes imputados con 0")
+        
+        # Imputar total_captaciones con 0 si es nulo
+        if 'total_captaciones' in df_filtrado.columns:
+            n_nulos = df_filtrado['total_captaciones'].isna().sum()
+            if n_nulos > 0:
+                df_filtrado['total_captaciones'] = df_filtrado['total_captaciones'].fillna(0)
+                print(f"    total_captaciones: {n_nulos} valores faltantes imputados con 0")
+
+        df_limpio = eliminar_duplicados(df_filtrado, subset=['municipio'])
+        
+        # Solo detectar outliers, no reasignar (la funcion retorna un Series, no un DataFrame)
+        detectar_outliers_iqr(df_limpio, 'total_cartera')
+
+        # Resetear índice para evitar problemas con índices originales
+        df_limpio = df_limpio.reset_index(drop=True)
+
+        # ═══════════════════════════════════════════════════════════════════════════
+        # PROCESAMIENTO
+        # ═══════════════════════════════════════════════════════════════════════════
+
+        results = []
+        errores = []
+
+        for idx, row in df_limpio.iterrows():
+            try:
+                # Saltar filas con municipio inválido
+                municipio_str = str(row['municipio']).strip()
+                if not municipio_str or municipio_str == 'nan':
+                    continue
+
+                # Saltar filas con total_cartera <= 0
+                total_cartera_val = float(row['total_cartera']) if row['total_cartera'] else 0.0
+                if total_cartera_val <= 0:
+                    continue
+
+                # Preparar datos para validación Pydantic
+                data_dict = {
+                    'municipio': municipio_str.title(),
+                    'cartera_a': float(row['cartera_a']) if row['cartera_a'] and float(row['cartera_a']) > 0 else 0.0,
+                    'cartera_b': float(row['cartera_b']) if row['cartera_b'] and float(row['cartera_b']) > 0 else 0.0,
+                    'cartera_c': float(row['cartera_c']) if row['cartera_c'] and float(row['cartera_c']) > 0 else 0.0,
+                    'cartera_d': float(row['cartera_d']) if row['cartera_d'] and float(row['cartera_d']) > 0 else 0.0,
+                    'cartera_e': float(row['cartera_e']) if row['cartera_e'] and float(row['cartera_e']) > 0 else 0.0,
+                    'total_cartera': total_cartera_val,
+                    'total_captaciones': float(row['total_captaciones']) if row['total_captaciones'] and float(row['total_captaciones']) > 0 else None,
+                }
+
+                # Validar con Pydantic
+                input_data = RiesgoCrediticioInput(**data_dict)
+                
+                # Obtener NPLs históricos para cálculo estadístico
+                historical_npls = [a["resultados"]["indice_riesgo"] for a in historial_analisis.values()]
+                
+                # Procesar
+                res = procesar_riesgo_crediticio(input_data.model_dump(), historical_npls)
+
+                # Guardar en historial
+                contador_id += 1
+                historial_analisis[contador_id] = {
+                    "id": contador_id,
+                    "municipio": input_data.municipio,
+                    "request": input_data.model_dump(),
+                    "resultados": res,
+                    "fecha_analisis": datetime.now(),
+                }
+                results.append(contador_id)
+
+            except Exception as e:
+                errores.append({
+                    "fila": int(idx),
+                    "municipio": str(row.get('municipio', 'Desconocido')),
+                    "error": str(e)
+                })
+                continue
+
+        # ═══════════════════════════════════════════════════════════════════════════
+        # RESUMEN
+        # ═══════════════════════════════════════════════════════════════════════════
+
+        return {
+            "mensaje": f"✅ Se procesaron {len(results)} municipios correctamente",
+            "ids_creados": results,
+            "total_filas": len(df_limpio),
+            "errores": len(errores),
+            "detalle_errores": errores[:5] if errores else None,  # Mostrar primeros 5 errores
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"Error completo:\n{error_traceback}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al procesar el archivo: {str(e)}"
+        )
+
+
+@app.get(
+    "/datos-gov/info",
+    tags=["Datos.gov.co"],
+    summary="Información del archivo Datos.gov.co",
+)
+async def info_datos_gov():
+    """
+    **Muestra información sobre el formato esperado del archivo CSV**
+
+    El archivo debe ser: `Saldo_de_las_captaciones_y_colocaciones_por_municipios_*.csv`
+
+    Columnas requeridas:
+      - Nombre del municipio
+      - Cartera de créditos
+      - Categoría A riesgo normal
+      - Categoría B riesgo aceptable
+      - Categoría C riesgo apreciable
+      - Categoría D riesgo significativo
+      - Categoría E riesgo de Incobrabilidad
+
+    Columnas opcionales (para captaciones):
+      - Depósitos en cuenta corriente bancaria
+      - Depósitos simples
+      - Certificados de depósito a término
+      - Depósitos de ahorro
+      - etc.
+    """
+    return {
+        "fuente": "Datos.gov.co - Sistema Financiero Colombiano",
+        "archivo_esperado": "Saldo_de_las_captaciones_y_colocaciones_por_municipios_*.csv",
+        "columnas_requeridas": [
+            "Nombre del municipio",
+            "Cartera de créditos",
+            "Categoría A riesgo normal",
+            "Categoría B riesgo aceptable",
+            "Categoría C riesgo apreciable",
+            "Categoría D riesgo significativo",
+            "Categoría E riesgo de Incobrabilidad",
+        ],
+        "columnas_captaciones": [
+            "Depósitos en cuenta corriente bancaria",
+            "Depósitos simples",
+            "Certificados de depósito a término",
+            "Depósitos de ahorro",
+        ],
+        "endpoint_carga": "/datos-gov/cargar",
+        "metodo": "POST",
+        "ejemplo_uso": "curl -X POST -F 'file=@archivo.csv' http://127.0.0.1:8000/datos-gov/cargar",
     }
 
 
