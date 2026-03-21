@@ -640,12 +640,17 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
                 continue
 
             # ═══════════════════════════════════════════════════════════════════════════════
-            # PARSEO DE VALORES CON TOLERANCIA A ERRORES
+            # PARSEO DE VALORES CON VALIDACIÓN ESTRICTA
             # ═══════════════════════════════════════════════════════════════════════════════
-            # Nombre (con fallback)
+            # Nombre (validación estricta - no aceptar números puros)
             nombre_raw = row.get(nombre_col, "")
             try:
                 nombre = str(nombre_raw).strip()
+                # Validar que no sea un número puro (ej: "23", "24")
+                if nombre.isdigit() or (len(nombre) < 3 and nombre.isnumeric()):
+                    errores.append({"fila": idx + 1, "error": f"Nombre inválido: '{nombre}' parece ser un número"})
+                    filas_saltadas.append(idx + 1)
+                    continue
                 if len(nombre) < 2:
                     nombre = f"Encuestado Fila {idx + 1}"  # Fallback si nombre muy corto
             except:
@@ -682,34 +687,54 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
             except (ValueError, TypeError):
                 estrato = 3
 
-            # Departamento (con fallback)
-            depto_raw = str(row.get(depto_col, "Bogotá D.C.") if depto_col else "Bogotá D.C.").strip()
+            # Departamento (con validación DANE - si no es válido, se salta la fila)
+            depto_raw = str(row.get(depto_col, "") if depto_col else "").strip()
+            if not depto_col or not depto_raw:
+                errores.append({"fila": idx + 1, "error": "Departamento no especificado"})
+                filas_saltadas.append(idx + 1)
+                continue
             try:
                 from validators import validar_departamento
                 departamento = validar_departamento(depto_raw)
-            except:
-                departamento = "Bogotá D.C."  # Fallback si departamento no es válido
+            except Exception as e:
+                errores.append({"fila": idx + 1, "error": f"Departamento inválido: '{depto_raw}'. {str(e)[:100]}"})
+                filas_saltadas.append(idx + 1)
+                continue
 
-            # Municipio (con fallback)
-            municipio = str(row.get(municipio_col, "Desconocido") if municipio_col else "Desconocido").strip()
-            if len(municipio) < 2:
-                municipio = "Desconocido"
+            # Municipio (validación estricta - no aceptar números puros)
+            municipio_raw = str(row.get(municipio_col, "") if municipio_col else "").strip()
+            if municipio_raw.isdigit() or (len(municipio_raw) < 3 and municipio_raw.isnumeric()):
+                errores.append({"fila": idx + 1, "error": f"Municipio inválido: '{municipio_raw}' parece ser un número"})
+                filas_saltadas.append(idx + 1)
+                continue
+            municipio = municipio_raw if len(municipio_raw) >= 2 else "Desconocido"
 
-            # Nivel educativo (con fallback a 'otro' si no es reconocido)
-            nivel_raw = str(row.get(edu_col, "otro") if edu_col else "otro").strip().lower()
-            nivel_map = {
-                "ninguno": "ninguno", "primaria": "primaria", "secundaria": "secundaria",
-                "tecnico": "tecnico", "técnico": "tecnico", "universitario": "universitario",
-                "posgrado": "posgrado", "postgrado": "posgrado", "pregrado": "universitario",
-                "doctorado": "posgrado", "maestria": "posgrado", "maestría": "posgrado",
-                "bachiller": "secundaria", "basica": "primaria", "básica": "primaria",
-            }
-            nivel_educativo = nivel_map.get(nivel_raw, "otro")  # Default a 'otro' si no coincide
+            # Nivel educativo (con validación estricta)
+            nivel_raw = str(row.get(edu_col, "") if edu_col else "").strip().lower()
+            if not nivel_raw:
+                nivel_educativo = "otro"
+            else:
+                nivel_map = {
+                    "ninguno": "ninguno", "primaria": "primaria", "secundaria": "secundaria",
+                    "tecnico": "tecnico", "técnico": "tecnico", "universitario": "universitario",
+                    "posgrado": "posgrado", "postgrado": "posgrado", "pregrado": "universitario",
+                    "doctorado": "posgrado", "maestria": "posgrado", "maestría": "posgrado",
+                    "bachiller": "secundaria", "basica": "primaria", "básica": "primaria",
+                }
+                # Si el valor es un número puro, es inválido
+                if nivel_raw.isdigit() or nivel_raw.replace(".", "").isdigit():
+                    errores.append({"fila": idx + 1, "error": f"Nivel educativo inválido: '{nivel_raw}' parece ser un número"})
+                    filas_saltadas.append(idx + 1)
+                    continue
+                nivel_educativo = nivel_map.get(nivel_raw, "otro")
 
-            # Ocupación (opcional, puede ser None)
-            ocupacion = str(row.get(ocupacion_col, "") if ocupacion_col else "").strip()
-            if ocupacion == "" or ocupacion.lower() in ("ninguno", "ninguna", "n/a", "no aplica"):
-                ocupacion = None
+            # Ocupación (validación estricta - no aceptar números puros)
+            ocupacion_raw = str(row.get(ocupacion_col, "") if ocupacion_col else "").strip()
+            if ocupacion_raw and (ocupacion_raw.isdigit() or (len(ocupacion_raw) < 4 and ocupacion_raw.isnumeric())):
+                errores.append({"fila": idx + 1, "error": f"Ocupación inválida: '{ocupacion_raw}' parece ser un número"})
+                filas_saltadas.append(idx + 1)
+                continue
+            ocupacion = ocupacion_raw if ocupacion_raw and ocupacion_raw.lower() not in ("ninguno", "ninguna", "n/a", "no aplica") else None
 
             # ═══════════════════════════════════════════════════════════════════════════════
             # CONSTRUCCIÓN DE RESPUESTAS (columnas restantes, tolerante a errores)
