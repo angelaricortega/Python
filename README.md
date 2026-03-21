@@ -135,7 +135,7 @@ Carlos López,28,masculino,2,Valle del Cauca,Cali,tecnico,Ingeniero,5,60.0
 ### Ejecutar tests unitarios (Bonificación +0.1)
 
 ```bash
-pytest tests/test_api.py -v
+pytest tests/test_endpoints.py -v
 ```
 
 ### Probar upload de CSV
@@ -192,12 +192,14 @@ encuesta-api/
 ├── models.py                  # Modelos Pydantic anidados
 ├── validators.py              # Validadores (DANE, estrato, edad)
 ├── requirements.txt           # Dependencias
+├── render.yaml                # Configuración de despliegue en Render
+├── Procfile                   # Configuración de despliegue (Railway/Heroku)
 ├── README.md                  # Este archivo
 ├── .gitignore                 # Git ignore
 ├── frontend/
 │   └── index.html             # Interfaz gráfica HTML
 ├── tests/
-│   └── test_api.py            # Tests unitarios con pytest
+│   └── test_endpoints.py      # 25 tests unitarios con pytest
 ├── scripts/
 │   └── cliente_consumidor.py  # Cliente Python (httpx + pandas)
 └── datos_ejemplo/
@@ -209,15 +211,15 @@ encuesta-api/
 ## 🎓 Bonificaciones Implementadas
 
 ### ✅ +0.1 Tests Unitarios
-- 22 tests con `pytest` que validan:
-  - Modelos Pydantic (Encuestado, RespuestaEncuesta, EncuestaCompleta)
-  - Endpoints CRUD
-  - Manejo de errores HTTP 422
-  - Exportación JSON/Pickle
+- 25 tests con `pytest` organizados en clases por endpoint:
+  - Ciclo CRUD completo (POST → GET → PUT → DELETE)
+  - Validaciones Pydantic (edad inválida, estrato, departamento, Likert)
+  - Estructura del handler HTTP 422 personalizado
+  - Estadísticas agregadas
 
 **Ejecutar:**
 ```bash
-pytest tests/test_api.py -v
+pytest tests/test_endpoints.py -v
 ```
 
 ### ✅ +0.1 Serialización JSON vs Pickle
@@ -245,17 +247,25 @@ pytest tests/test_api.py -v
 python scripts/cliente_consumidor.py
 ```
 
-### ⏳ +0.2 Despliegue en la Nube
-- Pendiente: Desplegar en Render/Railway
+### ✅ +0.2 Despliegue en la Nube (Render)
+- Archivos de configuración incluidos: `render.yaml` y `Procfile`
 
-**Pasos sugeridos:**
+**Pasos para desplegar en Render (gratuito):**
 1. Crear cuenta en https://render.com
-2. Crear nuevo "Web Service"
-3. Conectar repositorio de GitHub
-4. Configurar:
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-5. Desplegar
+2. Hacer clic en **New → Web Service**
+3. Conectar el repositorio de GitHub (`angelaricortega/Python`)
+4. Render detecta automáticamente el `render.yaml` — no requiere configuración manual
+5. Hacer clic en **Deploy**
+
+La URL pública quedará disponible en: `https://encuesta-api.onrender.com`
+
+**Alternativa con Railway:**
+```bash
+# Instalar Railway CLI
+npm install -g @railway/cli
+railway login
+railway up
+```
 
 ---
 
@@ -310,5 +320,5 @@ Material desarrollado para el curso **Python para APIs e IA** — Universidad Sa
 
 Para dudas o problemas:
 1. Revisar la documentación en `/docs`
-2. Ejecutar tests: `pytest tests/test_api.py -v`
+2. Ejecutar tests: `pytest tests/test_endpoints.py -v`
 3. Verificar logs en consola

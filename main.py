@@ -46,9 +46,8 @@ from datetime import datetime
 from functools import wraps
 from typing import Dict, List, Optional
 
-import httpx
 import pandas as pd
-from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
@@ -57,9 +56,6 @@ from models import (
     EncuestaCompleta,
     Encuestado,
     EstadisticasEncuesta,
-    ExportResultado,
-    GoogleFormsPayload,
-    MensajeRespuesta,
     RespuestaEncuesta,
 )
 
@@ -653,7 +649,7 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
                     continue
                 if len(nombre) < 2:
                     nombre = f"Encuestado Fila {idx + 1}"  # Fallback si nombre muy corto
-            except:
+            except (ValueError, AttributeError, TypeError):
                 nombre = f"Encuestado Fila {idx + 1}"
 
             # Edad (con fallback a valor por defecto si es inválida)
@@ -934,7 +930,7 @@ async def health_check():
     return {
         "estado": "activo",
         "encuestas_registradas": len(db_encuestas),
-        "documentacion": "/docs",
+        "documentacion_swagger": "/docs",
         "redoc": "/redoc",
         "frontend": "/ui",
     }

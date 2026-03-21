@@ -27,8 +27,7 @@ DEPARTAMENTOS_COLOMBIA: List[str] = [
 # Mapeo para normalización (sin tildes → con tildes)
 _REEMPLAZOS_TILDES = {
     "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u",
-    "ü": "u", "ñ": "n", "Á": "a", "É": "e", "Í": "i",
-    "Ó": "o", "Ú": "u", "Ñ": "n",
+    "ü": "u", "ñ": "n",
 }
 
 _DEPT_NORMALIZADOS: List[str] = []

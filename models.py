@@ -389,6 +389,11 @@ class EncuestaCompleta(BaseModel):
         max_length=500,
         description="Notas sobre condiciones del levantamiento (modalidad, zona, etc.)",
     )
+    fuente: Optional[str] = Field(
+        default=None,
+        max_length=50,
+        description="Origen de los datos: 'manual', 'csv_upload', 'google_forms'",
+    )
 
     @model_validator(mode="after")
     def asignar_metadatos_servidor(self) -> "EncuestaCompleta":
