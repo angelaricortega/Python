@@ -476,6 +476,53 @@ async def eliminar_encuesta(request: Request, id_encuesta: str):
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.post(
+    "/encuestas/debug-columns/",
+    tags=["Upload/Export"],
+    summary="Debug: Ver columnas detectadas en CSV",
+    description="Subí un CSV y te devuelve qué columnas detectó el sistema.",
+    status_code=200,
+)
+async def debug_columns(request: Request, file: UploadFile = File(...)) -> dict:
+    """Endpoint de debug para ver qué columnas detecta el sistema."""
+    if not file.filename.lower().endswith('.csv'):
+        return {"error": "Solo archivos CSV"}
+
+    contenido = await file.read()
+    df = pd.read_csv(io.BytesIO(contenido), encoding='utf-8-sig', nrows=0)
+
+    columnas_originales = list(df.columns)
+    columnas_normalizadas = {str(c).lower().strip(): c for c in df.columns}
+
+    # Función auxiliar para buscar columna
+    def buscar_columna(variaciones):
+        for v in variaciones:
+            if v in columnas_normalizadas:
+                return columnas_normalizadas[v]
+        return None
+
+    # Detectar columnas demográficas
+    detecciones = {
+        'nombre': buscar_columna(['nombre', 'nombres', 'nombre completo']),
+        'edad': buscar_columna(['edad', 'edad (años)', 'edad en años']),
+        'genero': buscar_columna(['genero', 'género', 'sexo']),
+        'estrato': buscar_columna(['estrato', 'estrato socioeconomico']),
+        'departamento': buscar_columna(['departamento', 'depto', 'departamento/provincia']),
+        'municipio': buscar_columna(['municipio', 'ciudad', 'municipio o ciudad']),
+        'educacion': buscar_columna(['nivel_educativo', 'educacion', 'educación', 'escolaridad']),
+        'ocupacion': buscar_columna(['ocupacion', 'ocupación', 'trabajo', 'empleo']),
+    }
+
+    return {
+        'archivo': file.filename,
+        'total_columnas': len(columnas_originales),
+        'columnas_originales': columnas_originales,
+        'columnas_normalizadas': list(columnas_normalizadas.keys()),
+        'detecciones': detecciones,
+        'columnas_no_detectadas': [c for c in columnas_originales if str(c).lower().strip() not in [v for v in detecciones.values() if v]]
+    }
+
+
+@app.post(
     "/encuestas/upload-csv/",
     tags=["Upload/Export"],
     summary="Subir archivo CSV desde Google Forms",
@@ -516,6 +563,10 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
         raise HTTPException(status_code=400, detail="El archivo CSV está vacío")
 
     logger.info(f"UPLOAD CSV | Archivo: {file.filename} | Filas: {len(df)} | Columnas: {list(df.columns)}")
+
+    # DEBUG: Mostrar mapeo de columnas encontradas
+    col_map_debug = {str(c).lower().strip(): c for c in df.columns}
+    logger.info(f"UPLOAD CSV | Columnas normalizadas: {list(col_map_debug.keys())}")
 
     ids_creados = []
     errores = []

@@ -217,12 +217,17 @@
     <div class="panel-card">
       <div class="section-title"><span class="icon">📤</span> Upload CSV</div>
       <p style="color:var(--texto-2);margin-bottom:1.5rem;">Sube un archivo CSV exportado desde Google Forms. El sistema detecta automáticamente las columnas.</p>
-      
+
       <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
         <div class="upload-icon">📁</div>
         <h3>Arrastra tu archivo CSV aquí o haz clic para seleccionar</h3>
         <p style="color:var(--texto-2);margin-top:0.5rem;">Formato: .csv</p>
         <input type="file" id="file-input" accept=".csv" style="display:none;" onchange="handleFileSelect(event)" />
+      </div>
+
+      <div style="margin-top:1rem;text-align:center;">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-input-debug').click()">🔍 Debug: Ver columnas detectadas</button>
+        <input type="file" id="file-input-debug" accept=".csv" style="display:none;" onchange="handleFileDebug(event)" />
       </div>
 
       <div id="upload-progress" style="margin-top:1.5rem;display:none;">
@@ -236,12 +241,15 @@
 
       <div id="upload-alert" class="alert"></div>
       <div id="upload-json" class="json-viewer"></div>
+      <div id="debug-json" class="json-viewer"></div>
 
       <hr class="divider"/>
       <div class="section-title"><span class="icon">ℹ️</span> Columnas esperadas</div>
       <div style="background:var(--rosa-palido);padding:1rem;border-radius:10px;font-size:0.85rem;">
-        <p style="margin-bottom:0.5rem;"><strong>Demográficas:</strong></p>
-        <code>nombre, edad, genero, estrato, departamento, municipio, nivel_educativo, ocupacion</code>
+        <p style="margin-bottom:0.5rem;"><strong>Demográficas (requeridas):</strong></p>
+        <code>nombre, edad, genero, estrato, departamento, municipio</code>
+        <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Demográficas (opcionales):</strong></p>
+        <code>nivel_educativo, ocupacion</code>
         <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Respuestas:</strong></p>
         <p>Cualquier otra columna será tratada como pregunta. Valores 1-5 → Likert, 0-100 → Porcentaje, "si/no" → Sí/No.</p>
       </div>
@@ -722,6 +730,41 @@
   function handleFileSelect(event) {
     const file = event.target.files[0];
     if (file) uploadFile(file);
+  }
+
+  async function handleFileDebug(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const container = document.getElementById('debug-json');
+    container.classList.remove('show');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const resp = await fetch(`${API}/encuestas/debug-columns/`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await resp.json();
+
+      container.textContent = JSON.stringify(data, null, 2);
+      container.classList.add('show');
+
+      // Mostrar resumen
+      let resumen = `<strong>Columnas detectadas:</strong><br>`;
+      for (const [campo, columna] of Object.entries(data.detecciones)) {
+        resumen += `• ${campo}: ${columna ? '✅ ' + columna : '❌ No encontrada'}<br>`;
+      }
+      resumen += `<br><strong>Total columnas:</strong> ${data.total_columnas}<br>`;
+      resumen += `<strong>Columnas originales:</strong> ${data.columnas_originales.join(', ')}<br>`;
+
+      showAlert('upload-alert', resumen, data.detecciones.nombre && data.detecciones.edad ? 'success' : 'error');
+    } catch (err) {
+      showAlert('upload-alert', `Error: ${err.message}`, 'error');
+    }
   }
 
   async function uploadFile(file) {
