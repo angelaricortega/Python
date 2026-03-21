@@ -179,6 +179,11 @@
       <hr class="divider"/>
       <div class="section-title"><span class="icon">📝</span> Respuestas</div>
       <div id="respuestas-container" class="respuestas-container"></div>
+      <div id="no-preguntas-msg" style="text-align:center;padding:2rem;color:var(--texto-2);">
+        <div style="font-size:3rem;margin-bottom:0.5rem;">📝</div>
+        <p>No hay preguntas agregadas</p>
+        <p style="font-size:0.85rem;margin-top:0.5rem;">Haz clic en "+ Agregar pregunta" para comenzar</p>
+      </div>
       <button class="btn btn-secondary" style="margin-top:10px;" onclick="addRespuesta()">+ Agregar pregunta</button>
       <hr class="divider"/>
       <div class="form-group full"><label>Observaciones</label><textarea id="enc-observaciones" placeholder="Notas sobre el levantamiento…"></textarea></div>
@@ -328,32 +333,85 @@
   }
 
   /* CREAR ENCUESTA */
+  function updateNoPreguntasMsg() {
+    const container = document.getElementById('respuestas-container');
+    const msg = document.getElementById('no-preguntas-msg');
+    if (container.children.length === 0) {
+      msg.style.display = 'block';
+    } else {
+      msg.style.display = 'none';
+    }
+  }
+
   function addRespuesta() {
     const container = document.getElementById('respuestas-container');
     const idx = container.children.length + 1;
     const div = document.createElement('div');
     div.className = 'respuesta-card';
     div.innerHTML = `
-      <div class="resp-header"><span class="resp-num">Pregunta ${idx}</span></div>
+      <div class="resp-header">
+        <span class="resp-num">Pregunta ${idx}</span>
+        <button class="btn btn-danger btn-sm" onclick="removeRespuesta(this)" style="padding:4px 10px;font-size:0.7rem;">🗑️ Eliminar</button>
+      </div>
       <div class="form-grid" style="margin-bottom:0;">
-        <div class="form-group full"><label>Enunciado</label><input type="text" class="resp-enunciado" placeholder="¿Qué tan satisfecho está...?" /></div>
-        <div class="form-group"><label>Tipo</label><select class="resp-tipo" onchange="updateValorInput(this)"><option value="likert">Likert (1-5)</option><option value="porcentaje">Porcentaje (0-100)</option><option value="si_no">Sí/No</option><option value="texto_abierto">Texto abierto</option></select></div>
-        <div class="form-group"><label>Valor</label><input type="number" class="resp-valor" placeholder="Valor" /></div>
+        <div class="form-group full"><label>Enunciado</label><input type="text" class="resp-enunciado" placeholder="Ej: ¿Qué tan satisfecho está con el servicio de salud?" /></div>
+        <div class="form-group"><label>Tipo de pregunta</label><select class="resp-tipo" onchange="updateValorInput(this)"><option value="">Seleccionar…</option><option value="likert">Likert (1-5)</option><option value="porcentaje">Porcentaje (0-100)</option><option value="si_no">Sí/No</option><option value="texto_abierto">Texto abierto</option></select></div>
+        <div class="form-group"><label>Valor</label><input type="text" class="resp-valor" placeholder="Seleccione un tipo primero" disabled /></div>
       </div>
     `;
     container.appendChild(div);
+    updateNoPreguntasMsg();
+  }
+
+  function removeRespuesta(btn) {
+    const card = btn.closest('.respuesta-card');
+    card.remove();
+    // Renumerar preguntas
+    document.querySelectorAll('.respuesta-card').forEach((c, i) => {
+      c.querySelector('.resp-num').textContent = `Pregunta ${i + 1}`;
+    });
+    updateNoPreguntasMsg();
   }
 
   function updateValorInput(select) {
     const input = select.parentElement.nextElementSibling.querySelector('input');
     const tipo = select.value;
-    if (tipo === 'likert') { input.type = 'number'; input.min = 1; input.max = 5; input.placeholder = '1-5'; }
-    else if (tipo === 'porcentaje') { input.type = 'number'; input.min = 0; input.max = 100; input.placeholder = '0-100'; }
-    else if (tipo === 'si_no') { input.type = 'text'; input.placeholder = 'si o no'; }
-    else { input.type = 'text'; input.placeholder = 'Texto'; }
+
+    if (!tipo) {
+      input.disabled = true;
+      input.placeholder = 'Seleccione un tipo primero';
+      input.value = '';
+      return;
+    }
+
+    input.disabled = false;
+    if (tipo === 'likert') {
+      input.type = 'number';
+      input.min = 1;
+      input.max = 5;
+      input.placeholder = '1-5';
+    }
+    else if (tipo === 'porcentaje') {
+      input.type = 'number';
+      input.min = 0;
+      input.max = 100;
+      input.placeholder = '0-100';
+    }
+    else if (tipo === 'si_no') {
+      input.type = 'text';
+      input.placeholder = 'si o no';
+    }
+    else {
+      input.type = 'text';
+      input.placeholder = 'Texto';
+    }
   }
 
   async function crearEncuesta() {
+    // Limpiar alertas previas
+    document.getElementById('crear-alert').classList.remove('show');
+    document.getElementById('crear-json').classList.remove('show');
+
     const nombre = document.getElementById('enc-nombre').value.trim();
     const edad = parseInt(document.getElementById('enc-edad').value);
     const genero = document.getElementById('enc-genero').value;
@@ -364,8 +422,18 @@
     const ocupacion = document.getElementById('enc-ocupacion').value.trim();
     const observaciones = document.getElementById('enc-observaciones').value.trim();
 
-    if (!nombre || !edad || !genero || !estrato || !departamento) {
-      showAlert('crear-alert', 'Nombre, edad, género, estrato y departamento son requeridos', 'error');
+    // Validaciones básicas antes de enviar
+    const errores = [];
+    if (!nombre || nombre.length < 2) errores.push({campo: 'Nombre', mensaje: 'Debe tener al menos 2 caracteres'});
+    if (!edad || edad < 0 || edad > 120) errores.push({campo: 'Edad', mensaje: 'Debe estar entre 0 y 120 años'});
+    if (!genero) errores.push({campo: 'Género', mensaje: 'Debe seleccionar una opción'});
+    if (!estrato || estrato < 1 || estrato > 6) errores.push({campo: 'Estrato', mensaje: 'Debe estar entre 1 y 6'});
+    if (!departamento) errores.push({campo: 'Departamento', mensaje: 'Debe seleccionar uno'});
+    if (!municipio || municipio.length < 2) errores.push({campo: 'Municipio', mensaje: 'Debe tener al menos 2 caracteres'});
+    if (!nivel) errores.push({campo: 'Nivel educativo', mensaje: 'Debe seleccionar una opción'});
+
+    if (errores.length > 0) {
+      mostrarErroresAmigables(errores);
       return;
     }
 
@@ -374,14 +442,54 @@
       const enunciado = card.querySelector('.resp-enunciado').value.trim();
       const tipo = card.querySelector('.resp-tipo').value;
       let valor = card.querySelector('.resp-valor').value.trim();
-      if (!enunciado || !valor) return;
-      if (tipo === 'likert') valor = parseInt(valor);
-      else if (tipo === 'porcentaje') valor = parseFloat(valor);
+
+      // Validaciones de pregunta
+      if (!enunciado || enunciado.length < 5) {
+        errores.push({campo: `Pregunta ${idx + 1} - Enunciado`, mensaje: 'Debe tener al menos 5 caracteres'});
+        return;
+      }
+      if (!tipo) {
+        errores.push({campo: `Pregunta ${idx + 1} - Tipo`, mensaje: 'Debe seleccionar un tipo de pregunta'});
+        return;
+      }
+      if (!valor) {
+        errores.push({campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ingresar un valor'});
+        return;
+      }
+
+      if (tipo === 'likert') {
+        const num = parseInt(valor);
+        if (isNaN(num) || num < 1 || num > 5) {
+          errores.push({campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser un número entre 1 y 5'});
+          return;
+        }
+        valor = num;
+      }
+      else if (tipo === 'porcentaje') {
+        const num = parseFloat(valor);
+        if (isNaN(num) || num < 0 || num > 100) {
+          errores.push({campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser un número entre 0 y 100'});
+          return;
+        }
+        valor = num;
+      }
+      else if (tipo === 'si_no') {
+        valor = valor.toLowerCase();
+        if (valor !== 'si' && valor !== 'no') {
+          errores.push({campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser "si" o "no"'});
+          return;
+        }
+      }
+
       respuestas.push({ pregunta_id: idx + 1, enunciado, tipo_pregunta: tipo, valor });
     });
 
-    if (respuestas.length === 0) {
-      showAlert('crear-alert', 'Agrega al menos una respuesta', 'error');
+    if (respuestas.length === 0 && errores.length === 0) {
+      errores.push({campo: 'Respuestas', mensaje: 'Debe agregar al menos una pregunta'});
+    }
+
+    if (errores.length > 0) {
+      mostrarErroresAmigables(errores);
       return;
     }
 
@@ -395,17 +503,89 @@
       const resp = await fetch(`${API}/encuestas/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await resp.json();
       if (resp.ok) {
-        showAlert('crear-alert', `✅ Encuesta creada. ID: ${data.id_encuesta}`, 'success');
+        showAlert('crear-alert', `✅ Encuesta creada exitosamente. ID: ${data.id_encuesta.substring(0, 8)}...`, 'success');
         showJSON('crear-json', data);
         showToast('Encuesta creada', 'success');
         resetFormCrear();
+      } else if (resp.status === 422) {
+        // Mostrar errores de validación de forma amigable
+        mostrarErroresAmigablesDesdeAPI(data);
       } else {
-        showAlert('crear-alert', `❌ Error ${resp.status}: ${JSON.stringify(data)}`, 'error');
+        showAlert('crear-alert', `❌ Error ${resp.status}: ${data.error || data.detail || 'Error desconocido'}`, 'error');
         showToast(`Error ${resp.status}`, 'error');
       }
     } catch (err) {
-      showAlert('crear-alert', `❌ Sin conexión: ${err.message}`, 'error');
+      showAlert('crear-alert', `❌ Error de conexión: ${err.message}. Verifique que la API esté corriendo en ${API}`, 'error');
+      showToast('Error de conexión', 'error');
     }
+  }
+
+  function mostrarErroresAmigables(errores) {
+    const container = document.getElementById('crear-alert');
+    let html = '<strong>⚠️ Se encontraron los siguientes errores:</strong><ul style="margin-top:8px;padding-left:20px;">';
+    errores.forEach(e => {
+      html += `<li><strong>${e.campo}:</strong> ${e.mensaje}</li>`;
+    });
+    html += '</ul>';
+    container.innerHTML = html;
+    container.className = 'alert alert-error show';
+    showToast(`${errores.length} error(s) encontrado(s)`, 'error');
+  }
+
+  function mostrarErroresAmigablesDesdeAPI(data) {
+    const container = document.getElementById('crear-alert');
+    const detalles = data.detalle_errores || [];
+
+    if (detalles.length === 0) {
+      container.innerHTML = `<strong>❌ Error de validación</strong><p>${data.descripcion || 'Datos inválidos'}</p>`;
+      container.className = 'alert alert-error show';
+      return;
+    }
+
+    let html = '<strong>⚠️ Los siguientes campos tienen errores:</strong><ul style="margin-top:8px;padding-left:20px;">';
+
+    detalles.forEach(err => {
+      // Traducir el campo a algo más entendible
+      let campoAmigable = err.campo
+        .replace('body → encuestado → ', '')
+        .replace('body → respuestas → ', 'Pregunta ')
+        .replace(' → ', ' - ')
+        .replace(/(\d+)/, '#$1');
+
+      // Traducir mensajes comunes
+      let mensajeAmigable = err.mensaje;
+      if (err.tipo_error === 'string_too_short') {
+        const match = err.mensaje.match(/at least (\d+) characters/);
+        if (match) {
+          mensajeAmigable = `Debe tener al menos ${match[1]} caracteres`;
+        }
+      } else if (err.tipo_error === 'less_than_equal') {
+        const match = err.mensaje.match(/less than or equal to (\d+)/);
+        if (match) {
+          mensajeAmigable = `Debe ser menor o igual a ${match[1]}`;
+        }
+      } else if (err.tipo_error === 'greater_than_equal') {
+        const match = err.mensaje.match(/greater than or equal to (\d+)/);
+        if (match) {
+          mensajeAmigable = `Debe ser mayor o igual a ${match[1]}`;
+        }
+      } else if (err.tipo_error === 'literal_error') {
+        mensajeAmigable = 'Valor no permitido';
+      } else if (err.tipo_error === 'int_parsing') {
+        mensajeAmigable = 'Debe ser un número entero';
+      } else if (err.tipo_error === 'float_parsing') {
+        mensajeAmigable = 'Debe ser un número';
+      } else if (err.tipo_error === 'enum_violation') {
+        mensajeAmigable = 'Debe seleccionar una opción válida';
+      }
+
+      html += `<li><strong>${campoAmigable}:</strong> ${mensajeAmigable}</li>`;
+    });
+
+    html += '</ul>';
+    container.innerHTML = html;
+    container.className = 'alert alert-error show';
+    showToast(`${detalles.length} error(s) de validación`, 'error');
   }
 
   function resetFormCrear() {
@@ -419,7 +599,6 @@
     document.getElementById('enc-ocupacion').value = '';
     document.getElementById('enc-observaciones').value = '';
     document.getElementById('respuestas-container').innerHTML = '';
-    addRespuesta();
     document.getElementById('crear-alert').classList.remove('show');
     document.getElementById('crear-json').classList.remove('show');
   }
@@ -582,7 +761,7 @@
   /* INIT */
   document.addEventListener('DOMContentLoaded', () => {
     checkHealth();
-    addRespuesta();
+    // No agregar pregunta por defecto - el usuario debe agregarlas explícitamente
   });
 </script>
 </body>
