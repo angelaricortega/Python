@@ -497,7 +497,9 @@
     });
 
     if (respuestas.length === 0 && errores.length === 0) {
-      errores.push({campo: 'Respuestas', mensaje: 'Debe agregar al menos una pregunta'});
+      // Las respuestas ahora son opcionales, no es un error
+      // Solo agrego una nota informativa
+      console.log('Encuesta sin preguntas - solo datos demográficos');
     }
 
     if (errores.length > 0) {

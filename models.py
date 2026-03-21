@@ -380,9 +380,9 @@ class EncuestaCompleta(BaseModel):
     )
     # Lista de modelos anidados: List[RespuestaEncuesta]
     respuestas: List[RespuestaEncuesta] = Field(
-        ...,
-        min_length=1,
-        description="Lista de respuestas — mínimo 1 pregunta respondida por encuesta",
+        default_factory=list,
+        min_length=0,  # Ahora es opcional (puede ser 0)
+        description="Lista de respuestas (opcional)",
     )
     observaciones_generales: Optional[str] = Field(
         default=None,
