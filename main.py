@@ -48,7 +48,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from models import EncuestaCompleta, EstadisticasEncuesta, MensajeRespuesta
+from models import (
+    Encuestado,
+    EncuestaCompleta,
+    EstadisticasEncuesta,
+    GoogleFormsPayload,
+    MensajeRespuesta,
+    RespuestaEncuesta,
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Configuración de logging — auditoría de ingresos válidos e inválidos
@@ -453,6 +460,69 @@ async def eliminar_encuesta(request: Request, id_encuesta: str):
     del db_encuestas[id_encuesta]
     logger.info(f"ELIMINADA   | ID: {id_encuesta}")
     return None  # 204 No Content — la respuesta no lleva cuerpo
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ENDPOINT: Google Forms webhook (RF3 — endpoint adicional)
+# Recibe datos de Google Apps Script, los convierte a EncuestaCompleta
+# y los almacena con la misma validación Pydantic del CRUD principal.
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.post(
+    "/encuestas/google-forms/",
+    response_model=EncuestaCompleta,
+    status_code=201,
+    tags=["Encuestas"],
+    summary="Registrar encuesta desde Google Forms",
+    description=(
+        "**Webhook para Google Apps Script.** "
+        "Recibe el payload plano enviado por el script de integración, "
+        "normaliza los valores (capitalización, tildes, formatos numéricos) "
+        "y lo convierte al modelo `EncuestaCompleta` aplicando toda la "
+        "validación estadística estándar (edad [0-120], estrato [1-6], "
+        "departamento DANE, etc.). "
+        "Retorna **201 Created** con la encuesta completa o **422** si los "
+        "datos no pasan la validación.\n\n"
+        "Copia el Apps Script desde **GET /ui** (tab Google Forms)."
+    ),
+)
+@log_request
+async def crear_desde_google_forms(
+    request: Request,
+    payload: GoogleFormsPayload,
+) -> EncuestaCompleta:
+    """
+    Convierte GoogleFormsPayload → EncuestaCompleta y almacena.
+
+    El Apps Script de Google Forms envía un JSON plano (sin objetos anidados)
+    para simplificar su construcción en JavaScript. Este endpoint hace la
+    conversión al modelo tipado, reutilizando toda la validación de Pydantic.
+    """
+    encuesta = EncuestaCompleta(
+        encuestado=Encuestado(
+            nombre=payload.nombre,
+            edad=int(payload.edad),
+            genero=payload.genero,
+            estrato=int(payload.estrato),
+            departamento=payload.departamento,
+            municipio=payload.municipio,
+            nivel_educativo=payload.nivel_educativo,
+            ocupacion=payload.ocupacion,
+        ),
+        respuestas=[RespuestaEncuesta(**r) for r in payload.respuestas],
+        observaciones_generales=(
+            f"[Google Forms] {payload.observaciones_generales}"
+            if payload.observaciones_generales
+            else "[Google Forms]"
+        ),
+    )
+    db_encuestas[encuesta.id_encuesta] = encuesta
+    logger.info(
+        f"GOOGLE FORMS | ID: {encuesta.id_encuesta} | "
+        f"Encuestado: {encuesta.encuestado.nombre} | "
+        f"Fuente: {payload.fuente}"
+    )
+    return encuesta
 
 
 # ─────────────────────────────────────────────────────────────────────────────

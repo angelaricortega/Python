@@ -469,3 +469,151 @@ class MensajeRespuesta(BaseModel):
 
     mensaje: str
     id_encuesta: Optional[str] = None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MODELO: GoogleFormsPayload
+# Payload plano enviado por Google Apps Script al webhook /encuestas/google-forms/
+# Más simple que EncuestaCompleta: sin objetos anidados, facilita la
+# construcción del JSON en Apps Script (JavaScript sin tipado).
+# El endpoint receptor convierte este payload → EncuestaCompleta.
+# ══════════════════════════════════════════════════════════════════════════════
+
+class GoogleFormsPayload(BaseModel):
+    """
+    Payload recibido desde Google Apps Script (integración Google Forms).
+
+    Estructura plana que simplifica la construcción del JSON en Apps Script.
+    El servidor normaliza y convierte los valores antes de validar con Pydantic.
+
+    Mapeo de tipos de respuesta desde Google Forms:
+        Escala lineal (1-5)  → tipo_pregunta: "likert"
+        Respuesta corta num. → tipo_pregunta: "porcentaje"
+        Opción múltiple Si/No → tipo_pregunta: "si_no"
+        Párrafo / texto       → tipo_pregunta: "texto_abierto"
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "nombre": "María García",
+                "edad": 34,
+                "genero": "femenino",
+                "estrato": 3,
+                "departamento": "Antioquia",
+                "municipio": "Medellín",
+                "nivel_educativo": "universitario",
+                "ocupacion": "Docente",
+                "respuestas": [
+                    {
+                        "pregunta_id": 1,
+                        "enunciado": "Satisfacción con el servicio de salud en su municipio",
+                        "tipo_pregunta": "likert",
+                        "valor": 4,
+                    },
+                    {
+                        "pregunta_id": 2,
+                        "enunciado": "Nivel de confianza en las instituciones colombianas (%)",
+                        "tipo_pregunta": "porcentaje",
+                        "valor": 65.0,
+                    },
+                    {
+                        "pregunta_id": 3,
+                        "enunciado": "¿Ha utilizado servicios digitales del Estado en el último mes?",
+                        "tipo_pregunta": "si_no",
+                        "valor": "si",
+                    },
+                ],
+                "observaciones_generales": "Encuesta aplicada vía Google Forms.",
+                "fuente": "google_forms",
+            }
+        }
+    )
+
+    # ── Datos demográficos (planos) ──
+    nombre: str = Field(..., min_length=2, max_length=100)
+    edad: Union[int, str] = Field(..., description="Edad — se acepta como número o texto")
+    genero: str = Field(..., description="Género — se normaliza al guardar")
+    estrato: Union[int, str] = Field(..., description="Estrato — se acepta '1 - Bajo-bajo' o '1'")
+    departamento: str = Field(..., description="Departamento colombiano")
+    municipio: str = Field(..., min_length=2, max_length=100)
+    nivel_educativo: str = Field(..., description="Nivel educativo — se normaliza al guardar")
+    ocupacion: Optional[str] = Field(default=None, max_length=100)
+
+    # ── Respuestas (lista de dicts — misma estructura que RespuestaEncuesta) ──
+    respuestas: List[dict] = Field(..., min_length=1)
+
+    # ── Metadatos ──
+    observaciones_generales: Optional[str] = Field(default=None, max_length=500)
+    fuente: str = Field(default="google_forms", description="Origen del dato")
+
+    @field_validator("edad", mode="before")
+    @classmethod
+    def parsear_edad(cls, v: Union[int, str]) -> int:
+        """Convierte edad de string a int (Apps Script puede enviarla como texto)."""
+        try:
+            return int(str(v).strip())
+        except (ValueError, TypeError):
+            raise ValueError(f"Edad inválida: {v!r}. Debe ser un número entero.")
+
+    @field_validator("estrato", mode="before")
+    @classmethod
+    def parsear_estrato(cls, v: Union[int, str]) -> int:
+        """
+        Extrae el número del estrato aunque venga como '3 - Medio-bajo'.
+        Google Forms envía el texto completo de la opción seleccionada.
+        """
+        v_str = str(v).strip()
+        import re
+        match = re.match(r"^(\d)", v_str)
+        if match:
+            return int(match.group(1))
+        try:
+            return int(v_str)
+        except ValueError:
+            raise ValueError(f"Estrato inválido: {v!r}. Use un valor entre 1 y 6.")
+
+    @field_validator("genero", mode="before")
+    @classmethod
+    def normalizar_genero(cls, v: str) -> str:
+        """Normaliza variaciones de Google Forms: 'Masculino' → 'masculino', etc."""
+        mapa = {
+            "masculino":           "masculino",
+            "femenino":            "femenino",
+            "no binario":          "no_binario",
+            "no_binario":          "no_binario",
+            "prefiero no decir":   "prefiero_no_decir",
+            "prefiero_no_decir":   "prefiero_no_decir",
+        }
+        key = v.lower().strip()
+        if key in mapa:
+            return mapa[key]
+        raise ValueError(
+            f"Género '{v}' no reconocido. "
+            f"Valores válidos: masculino, femenino, no binario, prefiero no decir."
+        )
+
+    @field_validator("nivel_educativo", mode="before")
+    @classmethod
+    def normalizar_nivel(cls, v: str) -> str:
+        """Normaliza nivel educativo ignorando tildes y capitalización."""
+        mapa = {
+            "ninguno":       "ninguno",
+            "primaria":      "primaria",
+            "secundaria":    "secundaria",
+            "tecnico":       "tecnico",
+            "técnico":       "tecnico",
+            "universitario": "universitario",
+            "posgrado":      "posgrado",
+        }
+        key = v.lower().strip()
+        if key in mapa:
+            return mapa[key]
+        # Intentar sin tildes
+        sin_tildes = key.replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u")
+        if sin_tildes in mapa:
+            return mapa[sin_tildes]
+        raise ValueError(
+            f"Nivel educativo '{v}' no reconocido. "
+            f"Valores válidos: ninguno, primaria, secundaria, tecnico, universitario, posgrado."
+        )

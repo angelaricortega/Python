@@ -568,6 +568,7 @@
   <button class="tab-btn" onclick="showTab('listar')">📋 Ver Encuestas</button>
   <button class="tab-btn" onclick="showTab('buscar')">🔍 Buscar por ID</button>
   <button class="tab-btn" onclick="showTab('estadisticas')">📊 Estadísticas</button>
+  <button class="tab-btn" onclick="showTab('google')">🔗 Google Forms</button>
 </div>
 
 <div class="main-content">
@@ -855,6 +856,194 @@
     </div>
   </div>
 
+  <!-- ╔═════════════════ PANEL: GOOGLE FORMS ═════════════════╗ -->
+  <div id="panel-google" class="panel">
+    <div class="panel-card">
+
+      <!-- Hero -->
+      <div style="display:flex;align-items:center;gap:1.2rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <div style="font-size:3rem;">📋</div>
+        <div>
+          <div style="font-size:1.2rem;font-weight:700;color:var(--rosa-vivo);">Conectar Google Forms con la API</div>
+          <div style="font-size:0.85rem;color:var(--texto-2);margin-top:4px;">Cada vez que alguien envíe tu formulario, la respuesta llegará automáticamente a esta API mediante Google Apps Script.</div>
+        </div>
+        <div style="margin-left:auto;">
+          <span style="background:var(--menta);color:#1A7A52;padding:5px 14px;border-radius:50px;font-size:0.78rem;font-weight:700;">POST /encuestas/google-forms/</span>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+
+      <!-- Pasos -->
+      <div class="section-title"><span class="icon">🪜</span> Pasos de configuración</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
+        <div style="background:var(--rosa-palido);border-radius:14px;padding:1rem;border:1.5px solid var(--borde);">
+          <div style="font-size:1.6rem;font-weight:800;color:var(--rosa-vivo);line-height:1;">1</div>
+          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Crear el formulario</div>
+          <div style="font-size:.78rem;color:var(--texto-2);">En Google Forms, crea las preguntas con los títulos exactos de la tabla de abajo.</div>
+        </div>
+        <div style="background:var(--lila);border-radius:14px;padding:1rem;border:1.5px solid var(--lila-suave);">
+          <div style="font-size:1.6rem;font-weight:800;color:#7B3FBF;line-height:1;">2</div>
+          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Abrir Apps Script</div>
+          <div style="font-size:.78rem;color:var(--texto-2);">En el formulario: <b>⋮ → Editor de scripts</b>. Borra el contenido y pega el código.</div>
+        </div>
+        <div style="background:var(--menta);border-radius:14px;padding:1rem;border:1.5px solid #A8E6C6;">
+          <div style="font-size:1.6rem;font-weight:800;color:#1A7A52;line-height:1;">3</div>
+          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Cambiar la URL</div>
+          <div style="font-size:.78rem;color:#1A7A52;">Reemplaza <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;">API_URL</code> con la URL de tu servidor (necesitas ngrok o nube).</div>
+        </div>
+        <div style="background:var(--durazno);border-radius:14px;padding:1rem;border:1.5px solid #FFD0A8;">
+          <div style="font-size:1.6rem;font-weight:800;color:var(--durazno-vivo);line-height:1;">4</div>
+          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Configurar trigger</div>
+          <div style="font-size:.78rem;color:#8A4000;">Ícono del reloj <b>→ + Agregar activador → onFormSubmit → Al enviar formulario</b>.</div>
+        </div>
+        <div style="background:#EEF;border-radius:14px;padding:1rem;border:1.5px solid #CCC8F0;">
+          <div style="font-size:1.6rem;font-weight:800;color:#5050B0;line-height:1;">5</div>
+          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Probar</div>
+          <div style="font-size:.78rem;color:#5050B0;">Ejecuta <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;">probarWebhook()</code> en el editor o usa el botón de abajo.</div>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+
+      <!-- Estructura del formulario -->
+      <div class="section-title"><span class="icon">📋</span> Estructura requerida del formulario</div>
+      <div style="overflow-x:auto;margin-bottom:1.5rem;">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+          <thead>
+            <tr style="background:linear-gradient(90deg,var(--rosa-medio),var(--lila-suave));color:#fff;">
+              <th style="padding:10px 14px;text-align:left;border-radius:8px 0 0 0;">Título exacto de la pregunta</th>
+              <th style="padding:10px 14px;text-align:left;">Tipo en Google Forms</th>
+              <th style="padding:10px 14px;text-align:left;border-radius:0 8px 0 0;">Opciones / Formato</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:var(--rosa-palido);">
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Nombre completo</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Texto libre</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Edad</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Número entero</td>
+            </tr>
+            <tr style="background:var(--rosa-palido);">
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Género</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Opción múltiple</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Masculino · Femenino · No binario · Prefiero no decir</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Estrato socioeconómico</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Desplegable</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">1 - Bajo-bajo · 2 - Bajo · 3 - Medio-bajo · 4 - Medio · 5 - Medio-alto · 6 - Alto</td>
+            </tr>
+            <tr style="background:var(--rosa-palido);">
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Departamento</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Desplegable</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">33 departamentos DANE + Bogotá D.C.</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Municipio</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Texto libre</td>
+            </tr>
+            <tr style="background:var(--rosa-palido);">
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Nivel educativo</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Opción múltiple</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Ninguno · Primaria · Secundaria · Técnico · Universitario · Posgrado</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Ocupación <span style="color:#bbb;font-weight:400;">(opcional)</span></td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Texto libre</td>
+            </tr>
+            <tr style="background:var(--lila);">
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Satisfacción con el servicio de salud en su municipio</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Escala lineal</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:#5B2EA0;">Mínimo 1 — Máximo 5 → tipo: <b>likert</b></td>
+            </tr>
+            <tr style="background:var(--menta);">
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Nivel de confianza en las instituciones colombianas (%)</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:#1A7A52;">Número 0–100 → tipo: <b>porcentaje</b></td>
+            </tr>
+            <tr style="background:var(--durazno);">
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">¿Ha utilizado servicios digitales del Estado en el último mes?</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Opción múltiple</td>
+              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:#8A4000;">Sí · No → tipo: <b>si_no</b></td>
+            </tr>
+            <tr>
+              <td style="padding:8px 14px;font-weight:600;">Observaciones adicionales <span style="color:#bbb;font-weight:400;">(opcional)</span></td>
+              <td style="padding:8px 14px;">Párrafo</td>
+              <td style="padding:8px 14px;color:var(--texto-2);">Texto largo libre</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="divider"/>
+
+      <!-- Apps Script code block -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem;">
+        <div class="section-title" style="margin:0;border:none;padding:0;"><span class="icon">📜</span> Código Apps Script</div>
+        <button class="btn btn-secondary btn-sm" onclick="copiarAppsScript()">📋 Copiar código</button>
+      </div>
+      <div style="position:relative;">
+        <textarea id="apps-script-code" readonly
+          style="width:100%;height:320px;font-family:'Courier New',monospace;font-size:.76rem;
+                 background:#1E0830;color:#FFADCE;border:none;border-radius:12px;
+                 padding:1.2rem;resize:vertical;outline:none;line-height:1.6;"
+        ></textarea>
+      </div>
+      <div style="margin-top:.6rem;font-size:.75rem;color:var(--texto-2);">
+        ⚠️ <b>Recuerda:</b> cambia <code style="background:var(--rosa-palido);padding:1px 6px;border-radius:4px;">API_URL</code> por la URL pública de tu servidor antes de pegar en Apps Script.
+        Para pruebas locales usa <a href="https://ngrok.com" target="_blank">ngrok</a>:
+        <code style="background:var(--rosa-palido);padding:1px 6px;border-radius:4px;">ngrok http 8000</code>
+      </div>
+
+      <hr class="divider"/>
+
+      <!-- Probar webhook desde el navegador -->
+      <div class="section-title"><span class="icon">🧪</span> Probar el webhook desde el navegador</div>
+      <div style="background:var(--rosa-palido);border-radius:12px;padding:1.2rem;margin-bottom:1rem;">
+        <div style="font-size:.83rem;color:var(--texto-2);margin-bottom:.8rem;">
+          Simula el envío de un formulario con datos de prueba. Verifica que la conexión funciona <b>antes</b> de configurar el trigger real.
+        </div>
+        <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.7rem;">
+          <div class="form-group">
+            <label>Nombre de prueba</label>
+            <input type="text" id="gf-test-nombre" value="Prueba Google Forms"/>
+          </div>
+          <div class="form-group">
+            <label>Edad</label>
+            <input type="number" id="gf-test-edad" value="28" min="0" max="120"/>
+          </div>
+          <div class="form-group">
+            <label>Departamento</label>
+            <select id="gf-test-dept">
+              <option>Cundinamarca</option><option>Antioquia</option><option>Valle del Cauca</option>
+              <option>Atlántico</option><option>Santander</option><option>Boyacá</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Likert salud (1-5)</label>
+            <select id="gf-test-likert">
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+              <option value="4" selected>4</option><option value="5">5</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-actions" style="margin-top:.8rem;">
+          <button class="btn btn-primary" onclick="probarGoogleForms()">🚀 Enviar datos de prueba</button>
+        </div>
+      </div>
+      <div id="gf-alert" class="alert"></div>
+      <div id="gf-json" class="json-viewer"></div>
+
+    </div>
+  </div>
+
 </div><!-- /main-content -->
 
 <!-- Toast container -->
@@ -874,7 +1063,7 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('panel-' + id).classList.add('active');
     const btns = document.querySelectorAll('.tab-btn');
-    const labelMap = { inicio:'Inicio', crear:'Nueva', listar:'Ver', buscar:'Buscar', estadisticas:'Estadísticas' };
+    const labelMap = { inicio:'Inicio', crear:'Nueva', listar:'Ver', buscar:'Buscar', estadisticas:'Estadísticas', google:'Google' };
     btns.forEach(b => { if (b.textContent.includes(labelMap[id] || id)) b.classList.add('active'); });
   }
 
@@ -1312,10 +1501,174 @@
       </div>`).join('');
   }
 
+  /* ─────────────────── Google Forms ─────────────────── */
+
+  // El código fuente del Apps Script (se carga desde la API o se embebe)
+  const APPS_SCRIPT_CODE = `/** ════════════════════════════════════════════════════════════════
+ *  INTEGRACIÓN: Google Forms → API Encuestas Poblacionales
+ * ════════════════════════════════════════════════════════════════
+ *  INSTRUCCIONES:
+ *  1. Abre Google Form → ⋮ → Editor de scripts
+ *  2. Pega este código completo (reemplaza todo)
+ *  3. Cambia API_URL por la URL pública de tu servidor
+ *  4. Activadores → + Agregar activador:
+ *       Función: onFormSubmit | Evento: Al enviar formulario
+ *  5. Ejecuta probarWebhook() para verificar la conexión
+ * ════════════════════════════════════════════════════════════════ */
+
+var API_URL = 'https://TU-SERVIDOR.com/encuestas/google-forms/';
+
+var MAPA_GENERO = {
+  'masculino':'masculino','femenino':'femenino',
+  'no binario':'no_binario','no_binario':'no_binario',
+  'prefiero no decir':'prefiero_no_decir','prefiero_no_decir':'prefiero_no_decir',
+};
+var MAPA_NIVEL = {
+  'ninguno':'ninguno','primaria':'primaria','secundaria':'secundaria',
+  'tecnico':'tecnico','tecnico':'tecnico','universitario':'universitario','posgrado':'posgrado',
+};
+
+function onFormSubmit(e) {
+  try {
+    var itemResponses = e.response.getItemResponses();
+    var form = {};
+    for (var i = 0; i < itemResponses.length; i++) {
+      var titulo = itemResponses[i].getItem().getTitle().trim().toLowerCase();
+      form[titulo] = itemResponses[i].getResponse();
+    }
+    Logger.log('[INFO] Respuestas: ' + JSON.stringify(form));
+    var payload = {
+      nombre:          limpiar(obtener(form, ['nombre completo','nombre'])),
+      edad:            parseInt(obtener(form, ['edad']) || '0'),
+      genero:          mapearGenero(obtener(form, ['género','genero','sexo'])),
+      estrato:         extraerEstrato(obtener(form, ['estrato socioeconómico','estrato socieconomico','estrato'])),
+      departamento:    limpiar(obtener(form, ['departamento'])),
+      municipio:       limpiar(obtener(form, ['municipio','ciudad'])),
+      nivel_educativo: mapearNivel(obtener(form, ['nivel educativo','nivel_educativo','escolaridad'])),
+      ocupacion:       obtener(form, ['ocupación','ocupacion','profesion','profesión']) || null,
+      respuestas: [
+        buildRespuesta(1,'Satisfacción con el servicio de salud en su municipio','likert',
+          parseInt(obtener(form,['satisfacción con el servicio de salud en su municipio','satisfaccion con el servicio de salud en su municipio','satisfacción con el servicio de salud'])||'3')),
+        buildRespuesta(2,'Nivel de confianza en las instituciones colombianas (%)','porcentaje',
+          parseFloat(obtener(form,['nivel de confianza en las instituciones colombianas (%)','nivel de confianza en las instituciones','nivel de confianza'])||'50')),
+        buildRespuesta(3,'¿Ha utilizado servicios digitales del Estado en el último mes?','si_no',
+          normalizarSiNo(obtener(form,['¿ha utilizado servicios digitales del estado en el último mes?','¿ha utilizado servicios digitales del estado?','¿ha utilizado servicios digitales']))),
+      ],
+      observaciones_generales: obtener(form,['observaciones adicionales','observaciones','comentarios']) || null,
+      fuente: 'google_forms',
+    };
+    Logger.log('[INFO] Payload: ' + JSON.stringify(payload));
+    var resultado = enviarAAPI(payload);
+    if (resultado) Logger.log('[OK] ID: ' + resultado.id_encuesta);
+  } catch(err) {
+    Logger.log('[ERROR] ' + err.toString());
+  }
+}
+
+function obtener(data, claves) {
+  for (var i = 0; i < claves.length; i++) {
+    var val = data[claves[i]];
+    if (val !== undefined && val !== null && val !== '') return val;
+  }
+  return null;
+}
+function limpiar(t) { return t ? t.toString().trim().replace(/\\s+/g,' ') : ''; }
+function mapearGenero(v) { if (!v) return 'prefiero_no_decir'; return MAPA_GENERO[v.toLowerCase().trim()] || 'prefiero_no_decir'; }
+function extraerEstrato(v) { if (!v) return 3; var m = v.toString().match(/^(\\d)/); return m ? parseInt(m[1]) : parseInt(v)||3; }
+function mapearNivel(v) {
+  if (!v) return 'universitario';
+  var k = v.toLowerCase().trim().replace(/á/g,'a').replace(/é/g,'e').replace(/í/g,'i').replace(/ó/g,'o').replace(/ú/g,'u');
+  return MAPA_NIVEL[k] || 'universitario';
+}
+function normalizarSiNo(v) {
+  if (!v) return 'no';
+  var s = v.toString().toLowerCase().trim().replace(/sí/g,'si').replace(/yes/g,'si').replace(/true/g,'si');
+  return s === 'si' ? 'si' : 'no';
+}
+function buildRespuesta(id, enunciado, tipo, valor) { return {pregunta_id:id,enunciado:enunciado,tipo_pregunta:tipo,valor:valor}; }
+function enviarAAPI(payload) {
+  var opts = {method:'post',contentType:'application/json',payload:JSON.stringify(payload),muteHttpExceptions:true};
+  try {
+    var r = UrlFetchApp.fetch(API_URL, opts);
+    var code = r.getResponseCode();
+    Logger.log('[HTTP] ' + code + ' — ' + r.getContentText().substring(0, 200));
+    return code === 201 ? JSON.parse(r.getContentText()) : null;
+  } catch(err) { Logger.log('[ERROR] ' + err.toString()); throw err; }
+}
+function probarWebhook() {
+  var p = {nombre:'Prueba Apps Script',edad:30,genero:'femenino',estrato:3,departamento:'Cundinamarca',
+    municipio:'Bogota',nivel_educativo:'universitario',ocupacion:'Desarrolladora',
+    respuestas:[
+      {pregunta_id:1,enunciado:'Satisfacción con el servicio de salud en su municipio',tipo_pregunta:'likert',valor:4},
+      {pregunta_id:2,enunciado:'Nivel de confianza en las instituciones colombianas (%)',tipo_pregunta:'porcentaje',valor:70.0},
+      {pregunta_id:3,enunciado:'¿Ha utilizado servicios digitales del Estado en el último mes?',tipo_pregunta:'si_no',valor:'si'},
+    ],
+    observaciones_generales:'Test desde Apps Script',fuente:'google_forms'};
+  Logger.log('[TEST] Enviando a: ' + API_URL);
+  var r = enviarAAPI(p);
+  Logger.log(r ? '[TEST OK] ID: ' + r.id_encuesta : '[TEST FALLIDO] Revisa API_URL y los logs.');
+}`;
+
+  function cargarAppsScript() {
+    const ta = document.getElementById('apps-script-code');
+    if (ta) ta.value = APPS_SCRIPT_CODE;
+  }
+
+  function copiarAppsScript() {
+    const ta = document.getElementById('apps-script-code');
+    if (!ta) return;
+    navigator.clipboard.writeText(ta.value).then(() => {
+      showToast('📋 Código copiado al portapapeles', 'success');
+    }).catch(() => {
+      ta.select();
+      document.execCommand('copy');
+      showToast('📋 Código copiado', 'success');
+    });
+  }
+
+  async function probarGoogleForms() {
+    const nombre = document.getElementById('gf-test-nombre').value.trim() || 'Prueba';
+    const edad   = parseInt(document.getElementById('gf-test-edad').value) || 28;
+    const dept   = document.getElementById('gf-test-dept').value;
+    const likert = parseInt(document.getElementById('gf-test-likert').value) || 4;
+
+    const payload = {
+      nombre,
+      edad,
+      genero:          'femenino',
+      estrato:         3,
+      departamento:    dept,
+      municipio:       'Bogota',
+      nivel_educativo: 'universitario',
+      ocupacion:       'Prueba desde frontend',
+      respuestas: [
+        { pregunta_id: 1, enunciado: 'Satisfacción con el servicio de salud en su municipio',       tipo_pregunta: 'likert',     valor: likert },
+        { pregunta_id: 2, enunciado: 'Nivel de confianza en las instituciones colombianas (%)',      tipo_pregunta: 'porcentaje', valor: 68.0   },
+        { pregunta_id: 3, enunciado: '¿Ha utilizado servicios digitales del Estado en el último mes?', tipo_pregunta: 'si_no',   valor: 'si'   },
+      ],
+      observaciones_generales: 'Test enviado desde la interfaz web',
+      fuente: 'google_forms',
+    };
+
+    const { ok, status, data } = await apiCall('POST', '/encuestas/google-forms/', payload);
+    if (ok) {
+      showToast('✅ Webhook recibido correctamente', 'success');
+      showAlert('gf-alert', `✅ Encuesta registrada vía Google Forms. ID: ${data.id_encuesta}`, 'success');
+    } else {
+      showToast(`❌ Error ${status}`, 'error');
+      const msg = data?.detalle_errores
+        ? data.detalle_errores.map(e => `• ${e.campo}: ${e.mensaje}`).join('\n')
+        : data?.detail || 'Error desconocido';
+      showAlert('gf-alert', `❌ Error ${status}: ${msg}`, 'error');
+    }
+    showJSON('gf-json', data);
+  }
+
   /* ─────────────────── Init ─────────────────── */
   document.addEventListener('DOMContentLoaded', () => {
     checkHealth();
-    addRespuesta();  // Agregar una respuesta por defecto al cargar
+    addRespuesta();       // Agregar una respuesta por defecto al cargar
+    cargarAppsScript();   // Precargar el código Apps Script en el textarea
   });
 </script>
 </body>
