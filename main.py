@@ -481,7 +481,8 @@ async def eliminar_encuesta(request: Request, id_encuesta: str):
     summary="Subir archivo CSV desde Google Forms",
     description=(
         "Sube un archivo CSV exportado desde Google Forms o Google Sheets. "
-        "El sistema detecta automáticamente las columnas demográficas y de respuestas."
+        "El sistema detecta automáticamente las columnas demográficas y de respuestas. "
+        "**Filas inválidas se saltan, no se rechaza todo el archivo**."
     ),
     status_code=200,
 )
@@ -490,17 +491,22 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
     """
     Procesa archivo CSV de Google Forms y carga encuestas.
 
-    Columnas detectadas automáticamente:
-    - Demográficas: nombre, edad, genero, estrato, departamento, municipio, educacion, ocupacion
+    CARACTERÍSTICAS:
+    - Mapeo FLEXIBLE de columnas (acepta variaciones de nombres)
+    - Tolerante a errores: filas inválidas se saltan, no se rechaza todo el archivo
+    - Valores por defecto para campos opcionales inválidos
+
+    Columnas detectadas automáticamente (variaciones aceptadas):
+    - Demográficas: nombre, edad, genero/género, estrato, departamento, municipio, educacion, ocupacion
     - Respuestas: Cualquier otra columna numérica o de texto
 
-    Retorna el número de encuestas procesadas exitosamente.
+    Retorna el número de encuestas procesadas exitosamente y errores por fila.
     """
     if not file.filename.lower().endswith('.csv'):
         raise HTTPException(status_code=400, detail="Formato no soportado. Use solo archivos .csv")
 
     contenido = await file.read()
-    
+
     try:
         df = pd.read_csv(io.BytesIO(contenido), encoding='utf-8-sig')
     except Exception as e:
@@ -509,137 +515,222 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
     if df.empty:
         raise HTTPException(status_code=400, detail="El archivo CSV está vacío")
 
-    logger.info(f"UPLOAD CSV | Archivo: {file.filename} | Filas: {len(df)}")
+    logger.info(f"UPLOAD CSV | Archivo: {file.filename} | Filas: {len(df)} | Columnas: {list(df.columns)}")
 
     ids_creados = []
     errores = []
+    filas_saltadas = []
 
     for idx, row in df.iterrows():
         try:
-            # Mapeo flexible de columnas
+            # ═══════════════════════════════════════════════════════════════════════════════
+            # MAPEO FLEXIBLE DE COLUMNAS (acepta variaciones de Google Forms)
+            # ═══════════════════════════════════════════════════════════════════════════════
             col_map = {str(c).lower().strip(): c for c in df.columns}
-            
-            # Obtener valores con nombres flexibles
-            nombre_col = next((col_map[c] for c in ['nombre', 'nombres', 'nombre completo'] if c in col_map), None)
-            edad_col = next((col_map[c] for c in ['edad', 'edad (años)'] if c in col_map), None)
-            genero_col = next((col_map[c] for c in ['genero', 'género', 'sexo'] if c in col_map), None)
-            estrato_col = next((col_map[c] for c in ['estrato', 'estrato socioeconomico'] if c in col_map), None)
-            depto_col = next((col_map[c] for c in ['departamento', 'depto'] if c in col_map), None)
-            municipio_col = next((col_map[c] for c in ['municipio', 'ciudad'] if c in col_map), None)
-            edu_col = next((col_map[c] for c in ['nivel_educativo', 'educacion', 'escolaridad'] if c in col_map), None)
-            ocupacion_col = next((col_map[c] for c in ['ocupacion', 'ocupación', 'trabajo', 'empleo'] if c in col_map), None)
 
-            if not nombre_col or not edad_col:
-                raise ValueError(f"Fila {idx + 1}: Faltan columnas requeridas (nombre, edad)")
+            # Función auxiliar para buscar columna con variaciones
+            def buscar_columna(variaciones):
+                for v in variaciones:
+                    if v in col_map:
+                        return col_map[v]
+                return None
 
-            # Parsear edad
-            edad_raw = row.get(edad_col, 30)
+            # Mapeo con múltiples variaciones por campo
+            nombre_col = buscar_columna(['nombre', 'nombres', 'nombre completo', '¿nombre?', 'nombre del encuestado'])
+            edad_col = buscar_columna(['edad', 'edad (años)', '¿edad?', 'años'])
+            genero_col = buscar_columna(['genero', 'género', 'sexo', '¿género?', '¿sexo?'])
+            estrato_col = buscar_columna(['estrato', 'estrato socioeconomico', 'estrato socioeconómico', '¿estrato?'])
+            depto_col = buscar_columna(['departamento', 'depto', '¿departamento?', 'departamento de residencia'])
+            municipio_col = buscar_columna(['municipio', 'ciudad', '¿municipio?', '¿ciudad de residencia?'])
+            edu_col = buscar_columna(['nivel_educativo', 'educacion', 'educación', 'escolaridad', 'nivel educativo', '¿nivel educativo?'])
+            ocupacion_col = buscar_columna(['ocupacion', 'ocupación', 'trabajo', 'empleo', '¿ocupación?', 'actividad económica'])
+
+            # ═══════════════════════════════════════════════════════════════════════════════
+            # VALIDACIÓN DE CAMPOS REQUERIDOS (mínimos para crear encuesta)
+            # ═══════════════════════════════════════════════════════════════════════════════
+            if not nombre_col:
+                errores.append({"fila": idx + 1, "error": "No se encontró columna de nombre. Columnas disponibles: " + ", ".join(df.columns[:5])})
+                filas_saltadas.append(idx + 1)
+                continue
+
+            if not edad_col:
+                errores.append({"fila": idx + 1, "error": "No se encontró columna de edad. Columnas disponibles: " + ", ".join(df.columns[:5])})
+                filas_saltadas.append(idx + 1)
+                continue
+
+            # ═══════════════════════════════════════════════════════════════════════════════
+            # PARSEO DE VALORES CON TOLERANCIA A ERRORES
+            # ═══════════════════════════════════════════════════════════════════════════════
+            # Nombre (con fallback)
+            nombre_raw = row.get(nombre_col, "")
+            try:
+                nombre = str(nombre_raw).strip()
+                if len(nombre) < 2:
+                    nombre = f"Encuestado Fila {idx + 1}"  # Fallback si nombre muy corto
+            except:
+                nombre = f"Encuestado Fila {idx + 1}"
+
+            # Edad (con fallback a valor por defecto si es inválida)
+            edad_raw = row.get(edad_col, "")
             try:
                 edad = int(float(str(edad_raw).replace(",", ".")))
+                if edad < 0 or edad > 120:
+                    logger.warning(f"Fila {idx + 1}: Edad {edad} fuera de rango, usando 30 como default")
+                    edad = 30  # Fallback para edad inválida
             except (ValueError, TypeError):
+                logger.warning(f"Fila {idx + 1}: Edad '{edad_raw}' no es número, usando 30 como default")
                 edad = 30
 
-            # Parsear estrato
-            estrato_raw = row.get(estrato_col, 3) if estrato_col else 3
-            try:
-                estrato = int(float(str(estrato_raw).replace(",", ".")))
-            except (ValueError, TypeError):
-                estrato = 3
-
-            # Género
-            genero_raw = str(row.get(genero_col, "prefiero_no_decir")).strip().lower()
+            # Género (con fallback)
+            genero_raw = str(row.get(genero_col, "prefiero_no_decir") if genero_col else "prefiero_no_decir").strip().lower()
             genero_map = {
-                "m": "masculino", "masculino": "masculino", "hombre": "masculino",
-                "f": "femenino", "femenino": "femenino", "mujer": "femenino",
-                "no_binario": "no_binario", "no binario": "no_binario",
-                "prefiero_no_decir": "prefiero_no_decir", "prefiero no decir": "prefiero_no_decir",
+                "m": "masculino", "masculino": "masculino", "hombre": "masculino", "varon": "masculino", "varón": "masculino",
+                "f": "femenino", "femenino": "femenino", "mujer": "femenino", "dama": "femenino",
+                "no_binario": "no_binario", "no binario": "no_binario", "nb": "no_binario",
+                "prefiero_no_decir": "prefiero_no_decir", "prefiero no decir": "prefiero_no_decir", "no responde": "prefiero_no_decir",
             }
             genero = genero_map.get(genero_raw, "prefiero_no_decir")
 
-            # Nivel educativo
-            nivel_raw = str(row.get(edu_col, "otro")).strip().lower() if edu_col else "otro"
+            # Estrato (con fallback a 3 si es inválido)
+            estrato_raw = row.get(estrato_col, "3") if estrato_col else "3"
+            try:
+                estrato = int(float(str(estrato_raw).replace(",", ".")))
+                if estrato < 1 or estrato > 6:
+                    logger.warning(f"Fila {idx + 1}: Estrato {estrato} fuera de rango, usando 3 como default")
+                    estrato = 3
+            except (ValueError, TypeError):
+                estrato = 3
+
+            # Departamento (con fallback)
+            depto_raw = str(row.get(depto_col, "Bogotá D.C.") if depto_col else "Bogotá D.C.").strip()
+            try:
+                from validators import validar_departamento
+                departamento = validar_departamento(depto_raw)
+            except:
+                departamento = "Bogotá D.C."  # Fallback si departamento no es válido
+
+            # Municipio (con fallback)
+            municipio = str(row.get(municipio_col, "Desconocido") if municipio_col else "Desconocido").strip()
+            if len(municipio) < 2:
+                municipio = "Desconocido"
+
+            # Nivel educativo (con fallback)
+            nivel_raw = str(row.get(edu_col, "otro") if edu_col else "otro").strip().lower()
             nivel_map = {
                 "ninguno": "ninguno", "primaria": "primaria", "secundaria": "secundaria",
                 "tecnico": "tecnico", "técnico": "tecnico", "universitario": "universitario",
-                "posgrado": "posgrado", "postgrado": "posgrado",
+                "posgrado": "posgrado", "postgrado": "posgrado", "pregrado": "universitario",
+                "doctorado": "posgrado", "maestria": "posgrado", "maestría": "posgrado",
             }
             nivel_educativo = nivel_map.get(nivel_raw, "otro")
 
-            # Construir respuestas (columnas restantes)
+            # Ocupación (opcional, puede ser None)
+            ocupacion = str(row.get(ocupacion_col, "") if ocupacion_col else "").strip()
+            if ocupacion == "" or ocupacion.lower() in ("ninguno", "ninguna", "n/a", "no aplica"):
+                ocupacion = None
+
+            # ═══════════════════════════════════════════════════════════════════════════════
+            # CONSTRUCCIÓN DE RESPUESTAS (columnas restantes, tolerante a errores)
+            # ═══════════════════════════════════════════════════════════════════════════════
             respuestas = []
             pregunta_id = 1
             skip_cols = {nombre_col, edad_col, genero_col, estrato_col, depto_col, municipio_col, edu_col, ocupacion_col}
-            
+            respuestas_saltadas = []
+
             for col in df.columns:
                 if col in skip_cols:
                     continue
-                
-                valor = row.get(col)
-                if pd.isna(valor):
+
+                valor_raw = row.get(col)
+                if pd.isna(valor_raw):
+                    continue  # Saltar valores vacíos
+
+                try:
+                    # Determinar tipo de pregunta basado en el valor
+                    if isinstance(valor_raw, (int, float)):
+                        if 1 <= valor_raw <= 5:
+                            tipo = "likert"
+                            val = int(valor_raw) if isinstance(valor_raw, float) and valor_raw.is_integer() else float(valor_raw)
+                        elif 0 <= valor_raw <= 100:
+                            tipo = "porcentaje"
+                            val = float(valor_raw)
+                        else:
+                            tipo = "numerico"
+                            val = float(valor_raw)
+                    elif isinstance(valor_raw, str):
+                        valor_str = valor_raw.strip().lower()
+                        if valor_str in ('si', 'sí', 'no'):
+                            tipo = "si_no"
+                            val = "si" if valor_str in ('si', 'sí') else "no"
+                        elif len(valor_str) > 0:
+                            tipo = "texto_abierto"
+                            val = valor_raw.strip()
+                        else:
+                            continue  # Saltar string vacío
+                    else:
+                        continue
+
+                    respuestas.append({
+                        "pregunta_id": pregunta_id,
+                        "enunciado": str(col),
+                        "tipo_pregunta": tipo,
+                        "valor": val,
+                    })
+                    pregunta_id += 1
+
+                except Exception as e:
+                    # Si una respuesta falla, se registra pero no detiene el proceso
+                    respuestas_saltadas.append(f"Columna '{col}': {str(e)}")
                     continue
 
-                # Determinar tipo de pregunta
-                if isinstance(valor, (int, float)):
-                    if 1 <= valor <= 5:
-                        tipo = "likert"
-                        val = int(valor) if isinstance(valor, float) and valor.is_integer() else float(valor)
-                    elif 0 <= valor <= 100:
-                        tipo = "porcentaje"
-                        val = float(valor)
-                    else:
-                        tipo = "numerico"
-                        val = float(valor)
-                elif isinstance(valor, str):
-                    valor = valor.strip()
-                    if valor.lower() in ('si', 'sí', 'no'):
-                        tipo = "si_no"
-                        val = "si" if valor.lower() in ('si', 'sí') else "no"
-                    else:
-                        tipo = "texto_abierto"
-                        val = valor
-                else:
-                    continue
-
-                respuestas.append({
-                    "pregunta_id": pregunta_id,
-                    "enunciado": str(col),
-                    "tipo_pregunta": tipo,
-                    "valor": val,
-                })
-                pregunta_id += 1
-
+            # Si no hay respuestas válidas, saltar la fila
             if not respuestas:
-                raise ValueError(f"Fila {idx + 1}: No se encontraron respuestas")
+                errores.append({"fila": idx + 1, "error": f"No se encontraron respuestas válidas. Columnas saltadas: {respuestas_saltadas[:3]}"})
+                filas_saltadas.append(idx + 1)
+                continue
 
-            encuesta = EncuestaCompleta(
-                encuestado=Encuestado(
-                    nombre=str(row.get(nombre_col, f"Encuestado {idx + 1}")).strip(),
-                    edad=edad,
-                    genero=genero,
-                    estrato=estrato,
-                    departamento=str(row.get(depto_col, "Bogotá D.C.")).strip() if depto_col else "Bogotá D.C.",
-                    municipio=str(row.get(municipio_col, "Desconocido")).strip() if municipio_col else "Desconocido",
-                    nivel_educativo=nivel_educativo,
-                    ocupacion=str(row.get(ocupacion_col, "")).strip() if ocupacion_col else None,
-                ),
-                respuestas=respuestas,
-                observaciones_generales=f"[Upload CSV] Archivo: {file.filename}, Fila: {idx + 1}",
-                fuente="csv_upload",
-            )
-            db_encuestas[encuesta.id_encuesta] = encuesta
-            ids_creados.append(encuesta.id_encuesta)
+            # ═══════════════════════════════════════════════════════════════════════════════
+            # CREAR ENCUESTA (con validación Pydantic)
+            # ═══════════════════════════════════════════════════════════════════════════════
+            try:
+                encuesta = EncuestaCompleta(
+                    encuestado={
+                        "nombre": nombre,
+                        "edad": edad,
+                        "genero": genero,
+                        "estrato": estrato,
+                        "departamento": departamento,
+                        "municipio": municipio,
+                        "nivel_educativo": nivel_educativo,
+                        "ocupacion": ocupacion,
+                    },
+                    respuestas=respuestas,
+                    observaciones_generales=f"[Upload CSV] Archivo: {file.filename}, Fila: {idx + 1}" + (f" | Respuestas saltadas: {len(respuestas_saltadas)}" if respuestas_saltadas else ""),
+                    fuente="csv_upload",
+                )
+                db_encuestas[encuesta.id_encuesta] = encuesta
+                ids_creados.append(encuesta.id_encuesta)
+
+            except Exception as e:
+                # Si la validación Pydantic falla, registrar error detallado
+                errores.append({"fila": idx + 1, "error": f"Validación fallida: {str(e)[:200]}"})
+                filas_saltadas.append(idx + 1)
 
         except Exception as e:
-            errores.append({"fila": idx + 1, "error": str(e)})
+            # Error catastrófico en la fila (no debería pasar, pero por si acaso)
+            errores.append({"fila": idx + 1, "error": f"Error inesperado: {str(e)[:200]}"})
+            filas_saltadas.append(idx + 1)
 
-    logger.info(f"UPLOAD CSV COMPLETADO | Exitosos: {len(ids_creados)} | Errores: {len(errores)}")
+    logger.info(f"UPLOAD CSV COMPLETADO | Exitosos: {len(ids_creados)} | Saltadas: {len(filas_saltadas)}")
 
     return {
+        "mensaje": f"Procesamiento completado. {len(ids_creados)} encuestas creadas, {len(filas_saltadas)} filas saltadas.",
         "total_procesados": len(df),
         "exitosos": len(ids_creados),
-        "fallidos": len(errores),
-        "errores": errores[:10],  # Máximo 10 errores
+        "fallidos": len(filas_saltadas),
+        "errores": errores[:20],  # Máximo 20 errores para no saturar la respuesta
         "ids_creados": ids_creados[:10],  # Máximo 10 IDs
+        "filas_saltadas": filas_saltadas[:20],  # Máximo 20 filas saltadas
     }
 
 
