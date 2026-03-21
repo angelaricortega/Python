@@ -648,9 +648,13 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
                 try:
                     # Determinar tipo de pregunta basado en el valor
                     if isinstance(valor_raw, (int, float)):
+                        # Verificar si es entero o float
+                        es_entero = isinstance(valor_raw, int) or (isinstance(valor_raw, float) and valor_raw.is_integer())
+
                         if 1 <= valor_raw <= 5:
                             tipo = "likert"
-                            val = int(valor_raw) if isinstance(valor_raw, float) and valor_raw.is_integer() else float(valor_raw)
+                            # Likert requiere int, convertir si es float entero
+                            val = int(valor_raw) if es_entero else float(valor_raw)
                         elif 0 <= valor_raw <= 100:
                             tipo = "porcentaje"
                             val = float(valor_raw)
