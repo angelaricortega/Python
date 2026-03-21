@@ -640,59 +640,43 @@
   }
 
   async function cargarDatosEjemplo() {
-    if (!confirm('¿Cargar 10 encuestas de ejemplo? Esto agregará datos demográficos colombianos variados.')) return;
+    if (!confirm('¿Cargar 5 encuestas de ejemplo? Esto agregará datos demográficos colombianos variados.')) return;
 
-    try {
-      const resp = await fetch(`${API}/encuestas/upload-csv/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usar_datos_ejemplo: true
-        })
-      });
+    // Cargar datos de ejemplo directamente (sin depender del backend)
+    const ejemplos = [
+      { nombre: "María García", edad: 34, genero: "femenino", estrato: 3, departamento: "Antioquia", municipio: "Medellín", nivel_educativo: "universitario", ocupacion: "Docente" },
+      { nombre: "Carlos López", edad: 28, genero: "masculino", estrato: 2, departamento: "Valle del Cauca", municipio: "Cali", nivel_educativo: "tecnico", ocupacion: "Ingeniero" },
+      { nombre: "Ana Rodríguez", edad: 45, genero: "femenino", estrato: 4, departamento: "Bogotá D.C.", municipio: "Bogotá", nivel_educativo: "posgrado", ocupacion: "Abogada" },
+      { nombre: "Juan Pérez", edad: 52, genero: "masculino", estrato: 3, departamento: "Cundinamarca", municipio: "Bogotá", nivel_educativo: "universitario", ocupacion: "Contador" },
+      { nombre: "Luisa Gómez", edad: 23, genero: "femenino", estrato: 1, departamento: "Santander", municipio: "Bucaramanga", nivel_educativo: "secundaria", ocupacion: "Estudiante" },
+    ];
 
-      // Si el endpoint no existe, cargar datos manualmente
-      if (resp.status === 400 || resp.status === 404) {
-        // Cargar datos de ejemplo directamente
-        const ejemplos = [
-          { nombre: "María García", edad: 34, genero: "femenino", estrato: 3, departamento: "Antioquia", municipio: "Medellín", nivel_educativo: "universitario", ocupacion: "Docente" },
-          { nombre: "Carlos López", edad: 28, genero: "masculino", estrato: 2, departamento: "Valle del Cauca", municipio: "Cali", nivel_educativo: "tecnico", ocupacion: "Ingeniero" },
-          { nombre: "Ana Rodríguez", edad: 45, genero: "femenino", estrato: 4, departamento: "Bogotá D.C.", municipio: "Bogotá", nivel_educativo: "posgrado", ocupacion: "Abogada" },
-          { nombre: "Juan Pérez", edad: 52, genero: "masculino", estrato: 3, departamento: "Cundinamarca", municipio: "Bogotá", nivel_educativo: "universitario", ocupacion: "Contador" },
-          { nombre: "Luisa Gómez", edad: 23, genero: "femenino", estrato: 1, departamento: "Santander", municipio: "Bucaramanga", nivel_educativo: "secundaria", ocupacion: "Estudiante" },
-        ];
-
-        let cargadas = 0;
-        for (const ej of ejemplos) {
-          const resp = await fetch(`${API}/encuestas/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              encuestado: ej,
-              respuestas: [
-                { pregunta_id: 1, enunciado: "¿Satisfacción con servicios públicos?", tipo_pregunta: "likert", valor: Math.floor(Math.random() * 5) + 1 },
-                { pregunta_id: 2, enunciado: "¿Confianza en instituciones (%)?", tipo_pregunta: "porcentaje", valor: Math.floor(Math.random() * 100) }
-              ],
-              observaciones_generales: "[Datos de ejemplo]"
-            })
-          });
-          if (resp.ok) cargadas++;
-        }
-
-        if (cargadas > 0) {
-          showToast(`${cargadas} encuestas de ejemplo cargadas`, 'success');
-          loadEncuestas();
-        }
-        return;
+    let cargadas = 0;
+    for (const ej of ejemplos) {
+      try {
+        const resp = await fetch(`${API}/encuestas/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            encuestado: ej,
+            respuestas: [
+              { pregunta_id: 1, enunciado: "¿Satisfacción con servicios públicos?", tipo_pregunta: "likert", valor: Math.floor(Math.random() * 5) + 1 },
+              { pregunta_id: 2, enunciado: "¿Confianza en instituciones (%)?", tipo_pregunta: "porcentaje", valor: Math.floor(Math.random() * 100) }
+            ],
+            observaciones_generales: "[Datos de ejemplo]"
+          })
+        });
+        if (resp.ok) cargadas++;
+      } catch (err) {
+        console.error('Error al cargar ejemplo:', err);
       }
+    }
 
-      const data = await resp.json();
-      if (resp.ok) {
-        showToast(`${data.exitosos} encuestas cargadas`, 'success');
-        loadEncuestas();
-      }
-    } catch (err) {
-      showToast('Error al cargar ejemplo', 'error');
+    if (cargadas > 0) {
+      showToast(`${cargadas} encuestas de ejemplo cargadas`, 'success');
+      loadEncuestas();
+    } else {
+      showToast('Error: Verifica que la API esté corriendo', 'error');
     }
   }
 

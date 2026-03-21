@@ -555,20 +555,24 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
             ])
             depto_col = buscar_columna([
                 'departamento', 'depto', '¿departamento?', 'departamento de residencia',
-                'department', 'state', 'region', '¿en qué departamento vives?'
+                'department', 'state', 'region', '¿en qué departamento vives?',
+                'departamento/provincia de residencia', 'departamento/provincia'
             ])
             municipio_col = buscar_columna([
                 'municipio', 'ciudad', '¿municipio?', '¿ciudad de residencia?', 'city',
-                'town', 'municipality', '¿dónde vives?', 'ciudad/municipio'
+                'town', 'municipality', '¿dónde vives?', 'ciudad/municipio',
+                'municipio o ciudad de residencia', 'municipio/ciudad'
             ])
             edu_col = buscar_columna([
                 'nivel_educativo', 'educacion', 'educación', 'escolaridad', 'nivel educativo',
                 '¿nivel educativo?', 'education level', 'education', 'schooling',
-                '¿cuál es tu nivel de educación?', 'máximo nivel de estudios'
+                '¿cuál es tu nivel de educación?', 'máximo nivel de estudios',
+                'nivel educativo máximo alcanzado', 'nivel educativo maximo alcanzado'
             ])
             ocupacion_col = buscar_columna([
                 'ocupacion', 'ocupación', 'trabajo', 'empleo', '¿ocupación?', 'actividad económica',
-                'occupation', 'job', 'work', '¿a qué se dedica?', 'ocupación actual'
+                'occupation', 'job', 'work', '¿a qué se dedica?', 'ocupación actual',
+                'ocupación actual (describa brevemente su rol principal)', 'ocupacion actual'
             ])
 
             # ═══════════════════════════════════════════════════════════════════════════════
