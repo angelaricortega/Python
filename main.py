@@ -45,7 +45,8 @@ from typing import Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from models import EncuestaCompleta, EstadisticasEncuesta, MensajeRespuesta
 
@@ -97,6 +98,18 @@ uvicorn main:app --reload --port 8000
     ],
 )
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CORS — permite que el frontend (servido desde /ui) haga fetch a la API
+# sin restricciones de origen. En producción se restringiría a dominios
+# específicos. Aquí lo dejamos abierto para desarrollo local.
+# ─────────────────────────────────────────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Repositorio en memoria
@@ -440,6 +453,21 @@ async def eliminar_encuesta(request: Request, id_encuesta: str):
     del db_encuestas[id_encuesta]
     logger.info(f"ELIMINADA   | ID: {id_encuesta}")
     return None  # 204 No Content — la respuesta no lleva cuerpo
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Frontend — sirve el HTML de la interfaz gráfica
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get(
+    "/ui",
+    response_class=HTMLResponse,
+    include_in_schema=False,
+)
+def frontend():
+    """Sirve la interfaz gráfica HTML del sistema de encuestas."""
+    with open("frontend/index.html", encoding="utf-8") as f:
+        return HTMLResponse(f.read())
 
 
 # ─────────────────────────────────────────────────────────────────────────────
