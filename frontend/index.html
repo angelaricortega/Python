@@ -201,7 +201,11 @@
     <div class="panel-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
         <div class="section-title" style="margin:0;"><span class="icon">📋</span> Encuestas</div>
-        <button class="btn btn-secondary" onclick="loadEncuestas()">🔄 Actualizar</button>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="cargarDatosEjemplo()">📦 Cargar Ejemplo</button>
+          <button class="btn btn-danger btn-sm" onclick="borrarHistorial()">🗑️ Borrar Todo</button>
+          <button class="btn btn-secondary" onclick="loadEncuestas()">🔄 Actualizar</button>
+        </div>
       </div>
       <div id="encuestas-list" class="encuestas-list"></div>
       <div id="listar-json" class="json-viewer"></div>
@@ -610,7 +614,7 @@
       const data = await resp.json();
       const container = document.getElementById('encuestas-list');
       if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>No hay encuestas registradas</p></div>';
+        container.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>No hay encuestas registradas</p><p style="font-size:0.85rem;margin-top:0.5rem;">Crea una nueva o carga datos de ejemplo</p></div>';
         return;
       }
       container.innerHTML = data.map(enc => `
@@ -632,6 +636,81 @@
       `).join('');
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async function cargarDatosEjemplo() {
+    if (!confirm('¿Cargar 10 encuestas de ejemplo? Esto agregará datos demográficos colombianos variados.')) return;
+
+    try {
+      const resp = await fetch(`${API}/encuestas/upload-csv/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usar_datos_ejemplo: true
+        })
+      });
+
+      // Si el endpoint no existe, cargar datos manualmente
+      if (resp.status === 400 || resp.status === 404) {
+        // Cargar datos de ejemplo directamente
+        const ejemplos = [
+          { nombre: "María García", edad: 34, genero: "femenino", estrato: 3, departamento: "Antioquia", municipio: "Medellín", nivel_educativo: "universitario", ocupacion: "Docente" },
+          { nombre: "Carlos López", edad: 28, genero: "masculino", estrato: 2, departamento: "Valle del Cauca", municipio: "Cali", nivel_educativo: "tecnico", ocupacion: "Ingeniero" },
+          { nombre: "Ana Rodríguez", edad: 45, genero: "femenino", estrato: 4, departamento: "Bogotá D.C.", municipio: "Bogotá", nivel_educativo: "posgrado", ocupacion: "Abogada" },
+          { nombre: "Juan Pérez", edad: 52, genero: "masculino", estrato: 3, departamento: "Cundinamarca", municipio: "Bogotá", nivel_educativo: "universitario", ocupacion: "Contador" },
+          { nombre: "Luisa Gómez", edad: 23, genero: "femenino", estrato: 1, departamento: "Santander", municipio: "Bucaramanga", nivel_educativo: "secundaria", ocupacion: "Estudiante" },
+        ];
+
+        let cargadas = 0;
+        for (const ej of ejemplos) {
+          const resp = await fetch(`${API}/encuestas/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              encuestado: ej,
+              respuestas: [
+                { pregunta_id: 1, enunciado: "¿Satisfacción con servicios públicos?", tipo_pregunta: "likert", valor: Math.floor(Math.random() * 5) + 1 },
+                { pregunta_id: 2, enunciado: "¿Confianza en instituciones (%)?", tipo_pregunta: "porcentaje", valor: Math.floor(Math.random() * 100) }
+              ],
+              observaciones_generales: "[Datos de ejemplo]"
+            })
+          });
+          if (resp.ok) cargadas++;
+        }
+
+        if (cargadas > 0) {
+          showToast(`${cargadas} encuestas de ejemplo cargadas`, 'success');
+          loadEncuestas();
+        }
+        return;
+      }
+
+      const data = await resp.json();
+      if (resp.ok) {
+        showToast(`${data.exitosos} encuestas cargadas`, 'success');
+        loadEncuestas();
+      }
+    } catch (err) {
+      showToast('Error al cargar ejemplo', 'error');
+    }
+  }
+
+  async function borrarHistorial() {
+    if (!confirm('⚠️ ¿Estás seguro de que quieres BORRAR TODAS las encuestas? Esta acción no se puede deshacer.')) return;
+
+    try {
+      const resp = await fetch(`${API}/encuestas/`);
+      const encuestas = await resp.json();
+
+      for (const enc of encuestas) {
+        await fetch(`${API}/encuestas/${enc.id_encuesta}`, { method: 'DELETE' });
+      }
+
+      showToast('Historial borrado', 'success');
+      loadEncuestas();
+    } catch (err) {
+      showToast('Error al borrar', 'error');
     }
   }
 

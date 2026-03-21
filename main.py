@@ -535,15 +535,41 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
                         return col_map[v]
                 return None
 
-            # Mapeo con múltiples variaciones por campo
-            nombre_col = buscar_columna(['nombre', 'nombres', 'nombre completo', '¿nombre?', 'nombre del encuestado'])
-            edad_col = buscar_columna(['edad', 'edad (años)', '¿edad?', 'años'])
-            genero_col = buscar_columna(['genero', 'género', 'sexo', '¿género?', '¿sexo?'])
-            estrato_col = buscar_columna(['estrato', 'estrato socioeconomico', 'estrato socioeconómico', '¿estrato?'])
-            depto_col = buscar_columna(['departamento', 'depto', '¿departamento?', 'departamento de residencia'])
-            municipio_col = buscar_columna(['municipio', 'ciudad', '¿municipio?', '¿ciudad de residencia?'])
-            edu_col = buscar_columna(['nivel_educativo', 'educacion', 'educación', 'escolaridad', 'nivel educativo', '¿nivel educativo?'])
-            ocupacion_col = buscar_columna(['ocupacion', 'ocupación', 'trabajo', 'empleo', '¿ocupación?', 'actividad económica'])
+            # Mapeo con múltiples variaciones por campo (incluye formatos de Google Forms)
+            nombre_col = buscar_columna([
+                'nombre', 'nombres', 'nombre completo', '¿nombre?', 'nombre del encuestado',
+                'nombre completo:', 'full name', 'name'
+            ])
+            edad_col = buscar_columna([
+                'edad', 'edad (años)', '¿edad?', 'años', 'edad en años', 'age',
+                'edad (en años)', 'age (years)', '¿cuántos años tienes?'
+            ])
+            genero_col = buscar_columna([
+                'genero', 'género', 'sexo', '¿género?', '¿sexo?', 'gender', 'sex',
+                'género/sexo', 'gender/sex', '¿con qué género te identificas?'
+            ])
+            estrato_col = buscar_columna([
+                'estrato', 'estrato socioeconomico', 'estrato socioeconómico', '¿estrato?',
+                'estrato (clasificación de vivienda)', 'socioeconomic stratum', 'stratum',
+                'estrato socioeconómico (clasificación de vivienda)'
+            ])
+            depto_col = buscar_columna([
+                'departamento', 'depto', '¿departamento?', 'departamento de residencia',
+                'department', 'state', 'region', '¿en qué departamento vives?'
+            ])
+            municipio_col = buscar_columna([
+                'municipio', 'ciudad', '¿municipio?', '¿ciudad de residencia?', 'city',
+                'town', 'municipality', '¿dónde vives?', 'ciudad/municipio'
+            ])
+            edu_col = buscar_columna([
+                'nivel_educativo', 'educacion', 'educación', 'escolaridad', 'nivel educativo',
+                '¿nivel educativo?', 'education level', 'education', 'schooling',
+                '¿cuál es tu nivel de educación?', 'máximo nivel de estudios'
+            ])
+            ocupacion_col = buscar_columna([
+                'ocupacion', 'ocupación', 'trabajo', 'empleo', '¿ocupación?', 'actividad económica',
+                'occupation', 'job', 'work', '¿a qué se dedica?', 'ocupación actual'
+            ])
 
             # ═══════════════════════════════════════════════════════════════════════════════
             # VALIDACIÓN DE CAMPOS REQUERIDOS (mínimos para crear encuesta)
