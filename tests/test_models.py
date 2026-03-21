@@ -206,7 +206,7 @@ class TestRespuestaEncuesta:
         """0.0 y 100.0 son valores límite válidos para porcentaje."""
         for v in [0.0, 100.0]:
             r = RespuestaEncuesta(
-                pregunta_id=1, enunciado="P", tipo_pregunta="porcentaje", valor=v
+                pregunta_id=1, enunciado="Nivel de confianza", tipo_pregunta="porcentaje", valor=v
             )
             assert r.valor == v
 
@@ -214,20 +214,20 @@ class TestRespuestaEncuesta:
         """Porcentaje negativo es estadísticamente imposible — debe rechazarse."""
         with pytest.raises(ValidationError):
             RespuestaEncuesta(
-                pregunta_id=1, enunciado="P", tipo_pregunta="porcentaje", valor=-5.0
+                pregunta_id=1, enunciado="Nivel de confianza", tipo_pregunta="porcentaje", valor=-5.0
             )
 
     def test_porcentaje_mayor_100_rechazado(self):
         """Porcentaje > 100 es estadísticamente imposible — debe rechazarse."""
         with pytest.raises(ValidationError):
             RespuestaEncuesta(
-                pregunta_id=1, enunciado="P", tipo_pregunta="porcentaje", valor=110.0
+                pregunta_id=1, enunciado="Nivel de confianza", tipo_pregunta="porcentaje", valor=110.0
             )
 
     def test_porcentaje_con_coma_decimal_aceptado(self):
         """El validator mode='before' debe normalizar '75,5' → 75.5."""
         r = RespuestaEncuesta(
-            pregunta_id=1, enunciado="P", tipo_pregunta="porcentaje", valor="75,5"
+            pregunta_id=1, enunciado="Nivel de confianza", tipo_pregunta="porcentaje", valor="75,5"
         )
         assert r.valor == 75.5
 
@@ -235,14 +235,14 @@ class TestRespuestaEncuesta:
         """'si' y 'no' deben ser aceptados para tipo si_no."""
         for v in ["si", "no"]:
             r = RespuestaEncuesta(
-                pregunta_id=1, enunciado="P", tipo_pregunta="si_no", valor=v
+                pregunta_id=1, enunciado="¿Recomendaría el servicio?", tipo_pregunta="si_no", valor=v
             )
             assert r.valor == v
 
     def test_si_con_tilde_normalizado(self):
         """'sí' (con tilde) debe normalizarse a 'si'."""
         r = RespuestaEncuesta(
-            pregunta_id=1, enunciado="P", tipo_pregunta="si_no", valor="sí"
+            pregunta_id=1, enunciado="¿Recomendaría el servicio?", tipo_pregunta="si_no", valor="sí"
         )
         assert r.valor == "si"
 
@@ -250,7 +250,7 @@ class TestRespuestaEncuesta:
         """'tal vez' no es una respuesta dicotómica válida — debe rechazarse."""
         with pytest.raises(ValidationError):
             RespuestaEncuesta(
-                pregunta_id=1, enunciado="P", tipo_pregunta="si_no", valor="tal vez"
+                pregunta_id=1, enunciado="¿Recomendaría el servicio?", tipo_pregunta="si_no", valor="tal vez"
             )
 
     def test_texto_abierto_valido(self):
@@ -325,8 +325,8 @@ class TestEncuestaCompleta:
     def test_encuesta_detecta_preguntas_duplicadas(self):
         """Dos respuestas con el mismo pregunta_id deben rechazarse."""
         respuestas_duplicadas = [
-            {"pregunta_id": 1, "enunciado": "P1", "tipo_pregunta": "likert", "valor": 3},
-            {"pregunta_id": 1, "enunciado": "P1 duplicada", "tipo_pregunta": "likert", "valor": 4},
+            {"pregunta_id": 1, "enunciado": "Satisfacción con el servicio", "tipo_pregunta": "likert", "valor": 3},
+            {"pregunta_id": 1, "enunciado": "Satisfacción duplicada", "tipo_pregunta": "likert", "valor": 4},
         ]
         with pytest.raises(ValidationError) as exc_info:
             EncuestaCompleta(**self._encuesta_payload(respuestas=respuestas_duplicadas))
