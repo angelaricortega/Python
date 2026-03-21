@@ -999,7 +999,7 @@
       <div style="margin-top:.6rem;font-size:.75rem;color:var(--texto-2);">
         ⚠️ <b>Recuerda:</b> cambia <code style="background:var(--rosa-palido);padding:1px 6px;border-radius:4px;">API_URL</code> por la URL pública de tu servidor antes de pegar en Apps Script.
         Para pruebas locales usa <a href="https://ngrok.com" target="_blank">ngrok</a>:
-        <code style="background:var(--rosa-palido);padding:1px 6px;border-radius:4px;">ngrok http 8000</code>
+        <code style="background:var(--rosa-palido);padding:1px 6px;border-radius:4px;">ngrok http 8001</code>
       </div>
 
       <hr class="divider"/>
@@ -1053,7 +1053,7 @@
 <!-- ║                   JAVASCRIPT                          ║ -->
 <!-- ╚══════════════════════════════════════════════════════╝ -->
 <script>
-  const API = 'http://localhost:8000';
+  const API = 'http://localhost:8001';
   let respuestasCount = 0;
   let encuestaActualData = null;  // guarda la data completa al buscar
 
