@@ -695,15 +695,16 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
             if len(municipio) < 2:
                 municipio = "Desconocido"
 
-            # Nivel educativo (con fallback)
+            # Nivel educativo (con fallback a 'otro' si no es reconocido)
             nivel_raw = str(row.get(edu_col, "otro") if edu_col else "otro").strip().lower()
             nivel_map = {
                 "ninguno": "ninguno", "primaria": "primaria", "secundaria": "secundaria",
                 "tecnico": "tecnico", "técnico": "tecnico", "universitario": "universitario",
                 "posgrado": "posgrado", "postgrado": "posgrado", "pregrado": "universitario",
                 "doctorado": "posgrado", "maestria": "posgrado", "maestría": "posgrado",
+                "bachiller": "secundaria", "basica": "primaria", "básica": "primaria",
             }
-            nivel_educativo = nivel_map.get(nivel_raw, "otro")
+            nivel_educativo = nivel_map.get(nivel_raw, "otro")  # Default a 'otro' si no coincide
 
             # Ocupación (opcional, puede ser None)
             ocupacion = str(row.get(ocupacion_col, "") if ocupacion_col else "").strip()

@@ -245,7 +245,7 @@ class Encuestado(BaseModel):
         description="Municipio de residencia actual"
     )
     nivel_educativo: Literal[
-        "ninguno", "primaria", "secundaria", "tecnico", "universitario", "posgrado"
+        "ninguno", "primaria", "secundaria", "tecnico", "universitario", "posgrado", "otro"
     ] = Field(..., description="Nivel de escolaridad más alto alcanzado")
     ocupacion: Optional[str] = Field(
         default=None, max_length=100,
