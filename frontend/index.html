@@ -662,6 +662,7 @@
           </div>
           <div class="encuesta-actions">
             <button class="btn btn-sm btn-secondary" onclick="verEncuesta('${enc.id_encuesta}')">Ver</button>
+            <button class="btn btn-sm btn-danger" onclick="eliminarEncuesta('${enc.id_encuesta}')">🗑️ Eliminar</button>
           </div>
         </div>
       `).join('');
@@ -734,8 +735,32 @@
       const resp = await fetch(`${API}/encuestas/${id}`);
       const data = await resp.json();
       showJSON('listar-json', data);
+      // Agregar botón de eliminar arriba del JSON
+      const container = document.getElementById('listar-json');
+      const btnEliminar = document.createElement('button');
+      btnEliminar.className = 'btn btn-danger btn-sm';
+      btnEliminar.style.cssText = 'margin-bottom:10px;display:block;';
+      btnEliminar.textContent = '🗑️ Eliminar esta encuesta';
+      btnEliminar.onclick = () => eliminarEncuesta(id);
+      container.insertBefore(btnEliminar, container.firstChild);
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async function eliminarEncuesta(id) {
+    if (!confirm(`¿Eliminar la encuesta ${id.slice(0, 8)}...? Esta acción es irreversible.`)) return;
+    try {
+      const resp = await fetch(`${API}/encuestas/${id}`, { method: 'DELETE' });
+      if (resp.status === 204) {
+        showToast('Encuesta eliminada', 'success');
+        document.getElementById('listar-json').classList.remove('show');
+        loadEncuestas();
+      } else {
+        showToast('Error al eliminar', 'error');
+      }
+    } catch (err) {
+      showToast('Error de conexión', 'error');
     }
   }
 
