@@ -331,11 +331,12 @@ class TestManejoErrores:
         assert response.status_code == 422
 
     def test_error_validacion_respuestas_vacias(self, client, encuesta_valida):
-        """Test 20: POST sin respuestas debe retornar 422."""
-        encuesta_valida["respuestas"] = []  # Inválido (mínimo 1)
-        
+        """Test 20: POST sin respuestas ahora es VÁLIDO (respuestas opcionales)."""
+        encuesta_valida["respuestas"] = []  # Ahora es válido (min_length=0)
+
         response = client.post("/encuestas/", json=encuesta_valida)
-        assert response.status_code == 422
+        # Ahora debería ser 201, no 422, porque las respuestas son opcionales
+        assert response.status_code == 201
 
 
 # ══════════════════════════════════════════════════════════════════════════════
