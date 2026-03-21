@@ -436,13 +436,34 @@
 
     // Validaciones básicas antes de enviar
     const errores = [];
-    if (!nombre || nombre.length < 2) errores.push({campo: 'Nombre', mensaje: 'Debe tener al menos 2 caracteres'});
+
+    // Validar nombre (no aceptar números puros)
+    if (!nombre || nombre.length < 2) {
+      errores.push({campo: 'Nombre', mensaje: 'Debe tener al menos 2 caracteres'});
+    } else if (/^\d+$/.test(nombre)) {
+      errores.push({campo: 'Nombre', mensaje: `No puede ser un número ('${nombre}'). Ingresá un nombre válido`});
+    }
+
     if (!edad || edad < 0 || edad > 120) errores.push({campo: 'Edad', mensaje: 'Debe estar entre 0 y 120 años'});
     if (!genero) errores.push({campo: 'Género', mensaje: 'Debe seleccionar una opción'});
     if (!estrato || estrato < 1 || estrato > 6) errores.push({campo: 'Estrato', mensaje: 'Debe estar entre 1 y 6'});
     if (!departamento) errores.push({campo: 'Departamento', mensaje: 'Debe seleccionar uno'});
-    if (!municipio || municipio.length < 2) errores.push({campo: 'Municipio', mensaje: 'Debe tener al menos 2 caracteres'});
+
+    // Validar municipio (no aceptar números puros)
+    if (!municipio || municipio.length < 2) {
+      errores.push({campo: 'Municipio', mensaje: 'Debe tener al menos 2 caracteres'});
+    } else if (/^\d+$/.test(municipio)) {
+      errores.push({campo: 'Municipio', mensaje: `No puede ser un número ('${municipio}'). Ingresá un municipio válido`});
+    }
+
     if (!nivel) errores.push({campo: 'Nivel educativo', mensaje: 'Debe seleccionar una opción'});
+
+    // Validar ocupación (no aceptar números puros si está presente)
+    if (ocupacion && ocupacion.length > 0) {
+      if (/^\d+$/.test(ocupacion)) {
+        errores.push({campo: 'Ocupación', mensaje: `No puede ser un número ('${ocupacion}'). Ingresá una ocupación válida`});
+      }
+    }
 
     if (errores.length > 0) {
       mostrarErroresAmigables(errores);
