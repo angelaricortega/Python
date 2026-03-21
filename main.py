@@ -37,21 +37,27 @@ ASGI vs WSGI:
 ─────────────────────────────────────────────────────────────────────────────
 """
 
+import io
+import json
 import logging
+import pickle
 import time
 from datetime import datetime
 from functools import wraps
 from typing import Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, Request
+import httpx
+import pandas as pd
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
 from models import (
-    Encuestado,
     EncuestaCompleta,
+    Encuestado,
     EstadisticasEncuesta,
+    ExportResultado,
     GoogleFormsPayload,
     MensajeRespuesta,
     RespuestaEncuesta,
@@ -83,6 +89,8 @@ validación y análisis estadístico de encuestas poblacionales.
 - **Validación rigurosa**: edad [0-120], estrato [1-6], departamentos DANE
 - **Tipos polimórficos**: Likert (1-5), porcentaje (0-100), texto, si/no
 - **CRUD completo** con almacenamiento en memoria
+- **Upload de CSV** desde Google Forms o archivos locales
+- **Export a JSON/Pickle** para interoperabilidad
 - **Estadísticas agregadas** en tiempo real
 - **Manejo de errores HTTP 422** con mensajes descriptivos
 - **Documentación interactiva** en `/docs` (Swagger) y `/redoc` (Redoc)
@@ -92,7 +100,7 @@ validación y análisis estadístico de encuestas poblacionales.
 uvicorn main:app --reload --port 8000
 ```
     """,
-    version="1.0.0",
+    version="2.0.0",
     contact={
         "name": "Equipo de Desarrollo — Python para APIs e IA",
         "email": "dev@encuestas-co.edu",
@@ -100,6 +108,7 @@ uvicorn main:app --reload --port 8000
     license_info={"name": "MIT License"},
     openapi_tags=[
         {"name": "Encuestas", "description": "Operaciones CRUD sobre encuestas poblacionales"},
+        {"name": "Upload/Export", "description": "Carga y descarga de archivos"},
         {"name": "Estadísticas", "description": "Análisis estadístico agregado"},
         {"name": "Sistema", "description": "Health check y estado de la API"},
     ],
@@ -463,71 +472,243 @@ async def eliminar_encuesta(request: Request, id_encuesta: str):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ENDPOINT: Google Forms webhook (RF3 — endpoint adicional)
-# Recibe datos de Google Apps Script, los convierte a EncuestaCompleta
-# y los almacena con la misma validación Pydantic del CRUD principal.
+# ENDPOINTS UPLOAD CSV (Funcionalidad extra para Google Forms)
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.post(
-    "/encuestas/google-forms/",
-    response_model=EncuestaCompleta,
-    status_code=201,
-    tags=["Encuestas"],
-    summary="Registrar encuesta desde Google Forms",
+    "/encuestas/upload-csv/",
+    tags=["Upload/Export"],
+    summary="Subir archivo CSV desde Google Forms",
     description=(
-        "**Webhook para Google Apps Script.** "
-        "Recibe el payload plano enviado por el script de integración, "
-        "normaliza los valores (capitalización, tildes, formatos numéricos) "
-        "y lo convierte al modelo `EncuestaCompleta` aplicando toda la "
-        "validación estadística estándar (edad [0-120], estrato [1-6], "
-        "departamento DANE, etc.). "
-        "Retorna **201 Created** con la encuesta completa o **422** si los "
-        "datos no pasan la validación.\n\n"
-        "Copia el Apps Script desde **GET /ui** (tab Google Forms)."
+        "Sube un archivo CSV exportado desde Google Forms o Google Sheets. "
+        "El sistema detecta automáticamente las columnas demográficas y de respuestas."
     ),
+    status_code=200,
 )
 @log_request
-async def crear_desde_google_forms(
-    request: Request,
-    payload: GoogleFormsPayload,
-) -> EncuestaCompleta:
+async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
     """
-    Convierte GoogleFormsPayload → EncuestaCompleta y almacena.
+    Procesa archivo CSV de Google Forms y carga encuestas.
 
-    El Apps Script de Google Forms envía un JSON plano (sin objetos anidados)
-    para simplificar su construcción en JavaScript. Este endpoint hace la
-    conversión al modelo tipado, reutilizando toda la validación de Pydantic.
+    Columnas detectadas automáticamente:
+    - Demográficas: nombre, edad, genero, estrato, departamento, municipio, educacion, ocupacion
+    - Respuestas: Cualquier otra columna numérica o de texto
+
+    Retorna el número de encuestas procesadas exitosamente.
     """
-    encuesta = EncuestaCompleta(
-        encuestado=Encuestado(
-            nombre=payload.nombre,
-            edad=int(payload.edad),
-            genero=payload.genero,
-            estrato=int(payload.estrato),
-            departamento=payload.departamento,
-            municipio=payload.municipio,
-            nivel_educativo=payload.nivel_educativo,
-            ocupacion=payload.ocupacion,
-        ),
-        respuestas=[RespuestaEncuesta(**r) for r in payload.respuestas],
-        observaciones_generales=(
-            f"[Google Forms] {payload.observaciones_generales}"
-            if payload.observaciones_generales
-            else "[Google Forms]"
-        ),
-    )
-    db_encuestas[encuesta.id_encuesta] = encuesta
-    logger.info(
-        f"GOOGLE FORMS | ID: {encuesta.id_encuesta} | "
-        f"Encuestado: {encuesta.encuestado.nombre} | "
-        f"Fuente: {payload.fuente}"
-    )
-    return encuesta
+    if not file.filename.lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Formato no soportado. Use solo archivos .csv")
+
+    contenido = await file.read()
+    
+    try:
+        df = pd.read_csv(io.BytesIO(contenido), encoding='utf-8-sig')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al leer CSV: {str(e)}")
+
+    if df.empty:
+        raise HTTPException(status_code=400, detail="El archivo CSV está vacío")
+
+    logger.info(f"UPLOAD CSV | Archivo: {file.filename} | Filas: {len(df)}")
+
+    ids_creados = []
+    errores = []
+
+    for idx, row in df.iterrows():
+        try:
+            # Mapeo flexible de columnas
+            col_map = {str(c).lower().strip(): c for c in df.columns}
+            
+            # Obtener valores con nombres flexibles
+            nombre_col = next((col_map[c] for c in ['nombre', 'nombres', 'nombre completo'] if c in col_map), None)
+            edad_col = next((col_map[c] for c in ['edad', 'edad (años)'] if c in col_map), None)
+            genero_col = next((col_map[c] for c in ['genero', 'género', 'sexo'] if c in col_map), None)
+            estrato_col = next((col_map[c] for c in ['estrato', 'estrato socioeconomico'] if c in col_map), None)
+            depto_col = next((col_map[c] for c in ['departamento', 'depto'] if c in col_map), None)
+            municipio_col = next((col_map[c] for c in ['municipio', 'ciudad'] if c in col_map), None)
+            edu_col = next((col_map[c] for c in ['nivel_educativo', 'educacion', 'escolaridad'] if c in col_map), None)
+            ocupacion_col = next((col_map[c] for c in ['ocupacion', 'ocupación', 'trabajo', 'empleo'] if c in col_map), None)
+
+            if not nombre_col or not edad_col:
+                raise ValueError(f"Fila {idx + 1}: Faltan columnas requeridas (nombre, edad)")
+
+            # Parsear edad
+            edad_raw = row.get(edad_col, 30)
+            try:
+                edad = int(float(str(edad_raw).replace(",", ".")))
+            except (ValueError, TypeError):
+                edad = 30
+
+            # Parsear estrato
+            estrato_raw = row.get(estrato_col, 3) if estrato_col else 3
+            try:
+                estrato = int(float(str(estrato_raw).replace(",", ".")))
+            except (ValueError, TypeError):
+                estrato = 3
+
+            # Género
+            genero_raw = str(row.get(genero_col, "prefiero_no_decir")).strip().lower()
+            genero_map = {
+                "m": "masculino", "masculino": "masculino", "hombre": "masculino",
+                "f": "femenino", "femenino": "femenino", "mujer": "femenino",
+                "no_binario": "no_binario", "no binario": "no_binario",
+                "prefiero_no_decir": "prefiero_no_decir", "prefiero no decir": "prefiero_no_decir",
+            }
+            genero = genero_map.get(genero_raw, "prefiero_no_decir")
+
+            # Nivel educativo
+            nivel_raw = str(row.get(edu_col, "otro")).strip().lower() if edu_col else "otro"
+            nivel_map = {
+                "ninguno": "ninguno", "primaria": "primaria", "secundaria": "secundaria",
+                "tecnico": "tecnico", "técnico": "tecnico", "universitario": "universitario",
+                "posgrado": "posgrado", "postgrado": "posgrado",
+            }
+            nivel_educativo = nivel_map.get(nivel_raw, "otro")
+
+            # Construir respuestas (columnas restantes)
+            respuestas = []
+            pregunta_id = 1
+            skip_cols = {nombre_col, edad_col, genero_col, estrato_col, depto_col, municipio_col, edu_col, ocupacion_col}
+            
+            for col in df.columns:
+                if col in skip_cols:
+                    continue
+                
+                valor = row.get(col)
+                if pd.isna(valor):
+                    continue
+
+                # Determinar tipo de pregunta
+                if isinstance(valor, (int, float)):
+                    if 1 <= valor <= 5:
+                        tipo = "likert"
+                        val = int(valor) if isinstance(valor, float) and valor.is_integer() else float(valor)
+                    elif 0 <= valor <= 100:
+                        tipo = "porcentaje"
+                        val = float(valor)
+                    else:
+                        tipo = "numerico"
+                        val = float(valor)
+                elif isinstance(valor, str):
+                    valor = valor.strip()
+                    if valor.lower() in ('si', 'sí', 'no'):
+                        tipo = "si_no"
+                        val = "si" if valor.lower() in ('si', 'sí') else "no"
+                    else:
+                        tipo = "texto_abierto"
+                        val = valor
+                else:
+                    continue
+
+                respuestas.append({
+                    "pregunta_id": pregunta_id,
+                    "enunciado": str(col),
+                    "tipo_pregunta": tipo,
+                    "valor": val,
+                })
+                pregunta_id += 1
+
+            if not respuestas:
+                raise ValueError(f"Fila {idx + 1}: No se encontraron respuestas")
+
+            encuesta = EncuestaCompleta(
+                encuestado=Encuestado(
+                    nombre=str(row.get(nombre_col, f"Encuestado {idx + 1}")).strip(),
+                    edad=edad,
+                    genero=genero,
+                    estrato=estrato,
+                    departamento=str(row.get(depto_col, "Bogotá D.C.")).strip() if depto_col else "Bogotá D.C.",
+                    municipio=str(row.get(municipio_col, "Desconocido")).strip() if municipio_col else "Desconocido",
+                    nivel_educativo=nivel_educativo,
+                    ocupacion=str(row.get(ocupacion_col, "")).strip() if ocupacion_col else None,
+                ),
+                respuestas=respuestas,
+                observaciones_generales=f"[Upload CSV] Archivo: {file.filename}, Fila: {idx + 1}",
+                fuente="csv_upload",
+            )
+            db_encuestas[encuesta.id_encuesta] = encuesta
+            ids_creados.append(encuesta.id_encuesta)
+
+        except Exception as e:
+            errores.append({"fila": idx + 1, "error": str(e)})
+
+    logger.info(f"UPLOAD CSV COMPLETADO | Exitosos: {len(ids_creados)} | Errores: {len(errores)}")
+
+    return {
+        "total_procesados": len(df),
+        "exitosos": len(ids_creados),
+        "fallidos": len(errores),
+        "errores": errores[:10],  # Máximo 10 errores
+        "ids_creados": ids_creados[:10],  # Máximo 10 IDs
+    }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Frontend — sirve el HTML de la interfaz gráfica
-# ─────────────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# ENDPOINTS EXPORT (Bonificación +0.1 JSON vs Pickle)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get(
+    "/encuestas/export/json/",
+    tags=["Upload/Export"],
+    summary="Exportar encuestas a JSON",
+    description="Descarga todas las encuestas en formato JSON.",
+)
+async def export_json(request: Request):
+    """
+    Exporta todas las encuestas a JSON.
+
+    JSON es un formato de texto plano, legible por humanos, interoperable
+    con cualquier lenguaje de programación. Ideal para intercambio de datos
+    y almacenamiento a largo plazo.
+    """
+    if not db_encuestas:
+        raise HTTPException(status_code=404, detail="No hay encuestas para exportar")
+
+    encuestas_data = []
+    for enc in db_encuestas.values():
+        enc_dict = enc.model_dump()
+        enc_dict['fecha_registro'] = enc_dict['fecha_registro'].isoformat() if enc_dict['fecha_registro'] else None
+        encuestas_data.append(enc_dict)
+
+    json_bytes = io.BytesIO(json.dumps(encuestas_data, indent=2, ensure_ascii=False).encode('utf-8'))
+    
+    headers = {"Content-Disposition": "attachment; filename=encuestas.json"}
+    return StreamingResponse(json_bytes, media_type="application/json", headers=headers)
+
+
+@app.get(
+    "/encuestas/export/pickle/",
+    tags=["Upload/Export"],
+    summary="Exportar encuestas a Pickle",
+    description="Descarga todas las encuestas en formato Pickle (binario de Python).",
+)
+async def export_pickle(request: Request):
+    """
+    Exporta todas las encuestas a Pickle.
+
+    Pickle es un formato binario específico de Python que serializa objetos
+    preservando su estructura exacta (tipos, clases, referencias). Es más
+    rápido que JSON para cargar/guardar, pero NO es interoperable con otros
+    lenguajes y puede tener vulnerabilidades de seguridad al deserializar
+    datos de fuentes no confiables.
+
+    Diferencias clave JSON vs Pickle:
+    - JSON: texto plano, interoperable, seguro, más lento
+    - Pickle: binario, solo Python, rápido, requiere confianza en la fuente
+    """
+    if not db_encuestas:
+        raise HTTPException(status_code=404, detail="No hay encuestas para exportar")
+
+    # Serializar a pickle (protocolo 4 para compatibilidad)
+    pickle_bytes = io.BytesIO(pickle.dumps(list(db_encuestas.values()), protocol=4))
+    
+    headers = {"Content-Disposition": "attachment; filename=encuestas.pkl"}
+    return StreamingResponse(pickle_bytes, media_type="application/octet-stream", headers=headers)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SISTEMA
+# ══════════════════════════════════════════════════════════════════════════════
 
 @app.get(
     "/ui",
@@ -540,10 +721,6 @@ def frontend():
         return HTMLResponse(f.read())
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Health Check
-# ─────────────────────────────────────────────────────────────────────────────
-
 @app.get(
     "/",
     tags=["Sistema"],
@@ -554,9 +731,8 @@ async def health_check():
     """Endpoint de verificación de estado de la API."""
     return {
         "estado": "activo",
-        "api": "Encuestas Poblacionales v1.0.0",
-        "total_encuestas_en_memoria": len(db_encuestas),
-        "documentacion_swagger": "/docs",
-        "documentacion_redoc": "/redoc",
-        "timestamp": datetime.now().isoformat(),
+        "encuestas_registradas": len(db_encuestas),
+        "documentacion": "/docs",
+        "redoc": "/redoc",
+        "frontend": "/ui",
     }

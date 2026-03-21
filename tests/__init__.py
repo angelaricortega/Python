@@ -1,1 +1,1 @@
-# tests/__init__.py — Paquete de pruebas automatizadas
+# Tests unitarios para la API de Encuestas

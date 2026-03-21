@@ -3,555 +3,118 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Encuestas Poblacionales</title>
+  <title>API de Encuestas Poblacionales</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    /* ─────────────────── Variables de color ─────────────────── */
     :root {
-      --bg:           #FFF0F5;
-      --bg2:          #F8EEFF;
-      --card:         #FFFFFF;
-      --rosa-palido:  #FFE4EE;
-      --rosa-suave:   #FFB6C1;
-      --rosa-medio:   #FF8FAB;
-      --rosa-vivo:    #FF5C8A;
-      --lila:         #E8D5F5;
-      --lila-suave:   #C9A8E8;
-      --menta:        #D4F5E9;
-      --menta-vivo:   #4CAF84;
-      --durazno:      #FFE8D6;
-      --durazno-vivo: #FF9460;
-      --rojo-suave:   #FFD6D6;
-      --rojo-vivo:    #E05252;
-      --texto:        #3D1A47;
-      --texto-2:      #8A5F8A;
-      --borde:        #F0CFDF;
-      --sombra:       rgba(180, 80, 130, 0.10);
-      --sombra2:      rgba(180, 80, 130, 0.18);
+      --bg: #FFF0F5; --bg2: #F8EEFF; --card: #FFFFFF;
+      --rosa-palido: #FFE4EE; --rosa-suave: #FFB6C1; --rosa-medio: #FF8FAB; --rosa-vivo: #FF5C8A;
+      --lila: #E8D5F5; --lila-suave: #C9A8E8;
+      --menta: #D4F5E9; --menta-vivo: #4CAF84;
+      --texto: #3D1A47; --texto-2: #8A5F8A; --borde: #F0CFDF;
+      --sombra: rgba(180, 80, 130, 0.10);
     }
-
-    /* ─────────────────── Reset & Base ─────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
-      min-height: 100vh;
-      color: var(--texto);
-    }
-    a { color: var(--rosa-vivo); text-decoration: none; }
-
-    /* ─────────────────── Header ─────────────────── */
-    header {
-      background: linear-gradient(120deg, #FF8FAB 0%, #C06DD0 100%);
-      color: #fff;
-      padding: 1.2rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 4px 18px rgba(180,80,130,0.25);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px; }
-    header p  { font-size: 0.78rem; opacity: 0.88; margin-top: 2px; }
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 50px;
-      padding: 6px 14px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .status-badge:hover { background: rgba(255,255,255,0.3); }
-    .dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: #aaa;
-      transition: background .4s;
-    }
-    .dot.online  { background: #7EFF9A; box-shadow: 0 0 8px #7EFF9A; }
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%); min-height: 100vh; color: var(--texto); }
+    header { background: linear-gradient(120deg, #FF8FAB 0%, #C06DD0 100%); color: #fff; padding: 1.2rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 18px rgba(180,80,130,0.25); position: sticky; top: 0; z-index: 100; }
+    header h1 { font-size: 1.5rem; font-weight: 700; }
+    header p { font-size: 0.78rem; opacity: 0.88; margin-top: 2px; }
+    .status-badge { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); border-radius: 50px; padding: 6px 14px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #aaa; }
+    .dot.online { background: #7EFF9A; box-shadow: 0 0 8px #7EFF9A; }
     .dot.offline { background: #FF7E7E; }
-
-    /* ─────────────────── Nav Tabs ─────────────────── */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      padding: 1.2rem 2rem 0;
-      overflow-x: auto;
-    }
-    .tab-btn {
-      padding: 10px 22px;
-      border: 2px solid var(--borde);
-      border-bottom: none;
-      border-radius: 14px 14px 0 0;
-      background: var(--rosa-palido);
-      color: var(--texto-2);
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all .2s;
-      white-space: nowrap;
-    }
+    .tabs { display: flex; gap: 4px; padding: 1.2rem 2rem 0; overflow-x: auto; }
+    .tab-btn { padding: 10px 22px; border: 2px solid var(--borde); border-bottom: none; border-radius: 14px 14px 0 0; background: var(--rosa-palido); color: var(--texto-2); font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all .2s; }
     .tab-btn:hover { background: var(--lila); color: var(--texto); }
-    .tab-btn.active {
-      background: var(--card);
-      color: var(--rosa-vivo);
-      font-weight: 600;
-      border-color: var(--borde);
-      box-shadow: 0 -3px 0 var(--rosa-vivo) inset;
-    }
-
-    /* ─────────────────── Tab Panels ─────────────────── */
+    .tab-btn.active { background: var(--card); color: var(--rosa-vivo); font-weight: 600; border-color: var(--borde); box-shadow: 0 -3px 0 var(--rosa-vivo) inset; }
     .panel { display: none; }
     .panel.active { display: block; }
-    .main-content {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 2rem 3rem;
-    }
-    .panel-card {
-      background: var(--card);
-      border: 1px solid var(--borde);
-      border-radius: 0 16px 16px 16px;
-      padding: 2rem;
-      box-shadow: 0 8px 30px var(--sombra);
-    }
-
-    /* ─────────────────── Títulos de sección ─────────────────── */
-    .section-title {
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: var(--rosa-vivo);
-      margin-bottom: 1.2rem;
-      padding-bottom: 0.6rem;
-      border-bottom: 2px dashed var(--borde);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .section-title .icon { font-size: 1.3rem; }
-
-    /* ─────────────────── Formularios ─────────────────── */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.2rem;
-    }
+    .main-content { max-width: 1100px; margin: 0 auto; padding: 0 2rem 3rem; }
+    .panel-card { background: var(--card); border: 1px solid var(--borde); border-radius: 0 16px 16px 16px; padding: 2rem; box-shadow: 0 8px 30px var(--sombra); }
+    .section-title { font-size: 1.15rem; font-weight: 600; color: var(--rosa-vivo); margin-bottom: 1.2rem; padding-bottom: 0.6rem; border-bottom: 2px dashed var(--borde); display: flex; align-items: center; gap: 8px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.2rem; }
     .form-group { display: flex; flex-direction: column; gap: 5px; }
     .form-group.full { grid-column: 1 / -1; }
-    label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--texto-2);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    input, select, textarea {
-      padding: 10px 14px;
-      border: 1.5px solid var(--borde);
-      border-radius: 10px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.88rem;
-      color: var(--texto);
-      background: var(--bg);
-      transition: border-color .2s, box-shadow .2s;
-      outline: none;
-    }
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--rosa-medio);
-      box-shadow: 0 0 0 3px rgba(255,143,171,0.2);
-      background: #fff;
-    }
-    input[readonly] {
-      background: var(--rosa-palido);
-      color: var(--texto-2);
-      cursor: not-allowed;
-    }
+    label { font-size: 0.78rem; font-weight: 600; color: var(--texto-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    input, select, textarea { padding: 10px 14px; border: 1.5px solid var(--borde); border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 0.88rem; color: var(--texto); background: var(--bg); transition: border-color .2s, box-shadow .2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--rosa-medio); box-shadow: 0 0 0 3px rgba(255,143,171,0.2); background: #fff; }
     textarea { resize: vertical; min-height: 70px; }
-    .optional-tag {
-      font-size: 0.68rem;
-      color: #bbb;
-      font-weight: 400;
-      text-transform: none;
-    }
-
-    /* ─────────────────── Botones ─────────────────── */
-    .btn {
-      padding: 10px 22px;
-      border: none;
-      border-radius: 10px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--rosa-medio) 0%, var(--rosa-vivo) 100%);
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(255,92,138,0.3);
-    }
+    .btn { padding: 10px 22px; border: none; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 7px; }
+    .btn-primary { background: linear-gradient(135deg, var(--rosa-medio) 0%, var(--rosa-vivo) 100%); color: #fff; box-shadow: 0 4px 14px rgba(255,92,138,0.3); }
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,92,138,0.4); }
-    .btn-secondary {
-      background: var(--lila);
-      color: var(--texto);
-      border: 1.5px solid var(--lila-suave);
-    }
-    .btn-secondary:hover { background: var(--lila-suave); color: #fff; }
-    .btn-success {
-      background: linear-gradient(135deg, #5EC98A 0%, #38a16a 100%);
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(56,161,106,0.25);
-    }
-    .btn-success:hover { transform: translateY(-2px); }
-    .btn-danger {
-      background: var(--rojo-suave);
-      color: var(--rojo-vivo);
-      border: 1.5px solid #FFAFAF;
-    }
-    .btn-danger:hover { background: var(--rojo-vivo); color: #fff; }
+    .btn-secondary { background: var(--lila); color: var(--texto); border: 1.5px solid var(--lila-suave); }
+    .btn-success { background: linear-gradient(135deg, #5EC98A 0%, #38a16a 100%); color: #fff; }
+    .btn-danger { background: var(--rosa-suave); color: var(--rosa-vivo); border: 1.5px solid #FFAFAF; }
     .btn-sm { padding: 6px 14px; font-size: 0.78rem; }
     .btn-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1.2rem; }
-
-    /* ─────────────────── Respuestas dinámicas ─────────────────── */
     .respuestas-container { display: flex; flex-direction: column; gap: 14px; }
-    .respuesta-card {
-      background: var(--rosa-palido);
-      border: 1.5px solid var(--borde);
-      border-radius: 12px;
-      padding: 1rem 1.2rem;
-      position: relative;
-    }
-    .respuesta-card .resp-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.8rem;
-    }
-    .respuesta-card .resp-num {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--rosa-vivo);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* ─────────────────── Encuestas list ─────────────────── */
+    .respuesta-card { background: var(--rosa-palido); border: 1.5px solid var(--borde); border-radius: 12px; padding: 1rem 1.2rem; position: relative; }
     .encuestas-list { display: flex; flex-direction: column; gap: 14px; }
-    .encuesta-item {
-      background: var(--card);
-      border: 1.5px solid var(--borde);
-      border-radius: 14px;
-      padding: 1.2rem 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-      box-shadow: 0 3px 12px var(--sombra);
-      transition: transform .2s, box-shadow .2s;
-    }
-    .encuesta-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--sombra2); }
-    .encuesta-avatar {
-      width: 52px; height: 52px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--rosa-suave), var(--lila-suave));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      flex-shrink: 0;
-    }
+    .encuesta-item { background: var(--card); border: 1.5px solid var(--borde); border-radius: 14px; padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1.2rem; box-shadow: 0 3px 12px var(--sombra); }
+    .encuesta-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--sombra); }
+    .encuesta-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--rosa-suave), var(--lila-suave)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
     .encuesta-info { flex: 1; min-width: 0; }
-    .encuesta-info .nombre {
-      font-weight: 600;
-      font-size: 0.95rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .encuesta-info .meta {
-      font-size: 0.78rem;
-      color: var(--texto-2);
-      margin-top: 3px;
-    }
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 10px;
-      border-radius: 50px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      margin-right: 5px;
-    }
-    .chip-rosa  { background: var(--rosa-palido); color: var(--rosa-vivo); }
-    .chip-lila  { background: var(--lila);        color: #7B3FBF; }
-    .chip-menta { background: var(--menta);       color: #1A7A52; }
+    .encuesta-info .nombre { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .encuesta-info .meta { font-size: 0.78rem; color: var(--texto-2); margin-top: 3px; }
+    .chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 50px; font-size: 0.72rem; font-weight: 600; margin-right: 5px; }
+    .chip-rosa { background: var(--rosa-palido); color: var(--rosa-vivo); }
+    .chip-lila { background: var(--lila); color: #7B3FBF; }
+    .chip-menta { background: var(--menta); color: #1A7A52; }
     .encuesta-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
-    /* ─────────────────── JSON viewer ─────────────────── */
-    .json-viewer {
-      background: #1E0830;
-      color: #FFADCE;
-      border-radius: 12px;
-      padding: 1.2rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.8rem;
-      max-height: 320px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-      margin-top: 1rem;
-      display: none;
-    }
+    .json-viewer { background: #1E0830; color: #FFADCE; border-radius: 12px; padding: 1.2rem; font-family: 'Courier New', monospace; font-size: 0.8rem; max-height: 320px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin-top: 1rem; display: none; }
     .json-viewer.show { display: block; }
-    .json-key   { color: #FFB3D4; }
-    .json-str   { color: #B5FFCA; }
-    .json-num   { color: #FFFFA0; }
-    .json-bool  { color: #FFD580; }
-    .json-null  { color: #FF9090; }
-
-    /* ─────────────────── Estadísticas ─────────────────── */
-    .stats-kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.8rem;
-    }
-    .kpi-card {
-      background: linear-gradient(135deg, var(--rosa-palido), var(--lila));
-      border: 1.5px solid var(--borde);
-      border-radius: 16px;
-      padding: 1.3rem;
-      text-align: center;
-      box-shadow: 0 4px 14px var(--sombra);
-    }
-    .kpi-value {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--rosa-vivo);
-      line-height: 1;
-    }
-    .kpi-label {
-      font-size: 0.75rem;
-      color: var(--texto-2);
-      margin-top: 6px;
-      font-weight: 500;
-    }
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.2rem;
-    }
-    .chart-card {
-      background: var(--card);
-      border: 1.5px solid var(--borde);
-      border-radius: 14px;
-      padding: 1.3rem;
-      box-shadow: 0 3px 12px var(--sombra);
-    }
-    .chart-card h3 {
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--texto-2);
-      margin-bottom: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .bar-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .bar-label {
-      font-size: 0.78rem;
-      min-width: 120px;
-      color: var(--texto);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .bar-track {
-      flex: 1;
-      background: var(--rosa-palido);
-      border-radius: 50px;
-      height: 20px;
-      position: relative;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--rosa-suave), var(--rosa-vivo));
-      border-radius: 50px;
-      transition: width .6s ease;
-      min-width: 4px;
-    }
-    .bar-fill.lila  { background: linear-gradient(90deg, var(--lila), var(--lila-suave)); }
-    .bar-fill.menta { background: linear-gradient(90deg, var(--menta), var(--menta-vivo)); }
-    .bar-fill.durazno { background: linear-gradient(90deg, var(--durazno), var(--durazno-vivo)); }
-    .bar-value {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--texto);
-    }
-
-    /* ─────────────────── Alerts ─────────────────── */
-    .alert {
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      margin-top: 1rem;
-      display: none;
-    }
+    .stats-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 1.8rem; }
+    .kpi-card { background: linear-gradient(135deg, var(--rosa-palido), var(--lila)); border: 1.5px solid var(--borde); border-radius: 16px; padding: 1.3rem; text-align: center; box-shadow: 0 4px 14px var(--sombra); }
+    .kpi-value { font-size: 2.2rem; font-weight: 700; color: var(--rosa-vivo); line-height: 1; }
+    .kpi-label { font-size: 0.75rem; color: var(--texto-2); margin-top: 6px; font-weight: 500; }
+    .alert { padding: 12px 18px; border-radius: 10px; font-size: 0.85rem; margin-top: 1rem; display: none; }
     .alert.show { display: block; }
-    .alert-error   { background: var(--rojo-suave);  color: var(--rojo-vivo); border: 1px solid #FFAFAF; }
-    .alert-success { background: var(--menta);       color: #1A7A52;          border: 1px solid #A8E6C6; }
-    .alert-info    { background: var(--lila);        color: #6B3FA0;          border: 1px solid var(--lila-suave); }
-
-    /* ─────────────────── Toast ─────────────────── */
-    #toast-container {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .toast {
-      padding: 13px 20px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: #fff;
-      min-width: 260px;
-      max-width: 380px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-      animation: slideInToast .3s ease;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .alert-error { background: #FFD6D6; color: #E05252; border: 1px solid #FFAFAF; }
+    .alert-success { background: var(--menta); color: #1A7A52; border: 1px solid #A8E6C6; }
+    .alert-info { background: var(--lila); color: #6B3FA0; border: 1px solid var(--lila-suave); }
+    #toast-container { position: fixed; bottom: 28px; right: 28px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 13px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; color: #fff; min-width: 260px; box-shadow: 0 6px 20px rgba(0,0,0,0.18); animation: slideInToast .3s ease; display: flex; align-items: center; gap: 10px; }
     .toast.success { background: linear-gradient(135deg, #5EC98A, #38a16a); }
-    .toast.error   { background: linear-gradient(135deg, #FF7E7E, #E05252); }
-    .toast.info    { background: linear-gradient(135deg, #C9A8E8, #9B67D9); }
-    @keyframes slideInToast {
-      from { opacity: 0; transform: translateX(60px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    /* ─────────────────── Divider ─────────────────── */
-    .divider {
-      border: none;
-      border-top: 2px dashed var(--borde);
-      margin: 1.5rem 0;
-    }
-
-    /* ─────────────────── Empty state ─────────────────── */
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: var(--texto-2);
-    }
-    .empty-state .emoji { font-size: 3rem; margin-bottom: 0.5rem; }
-    .empty-state p { font-size: 0.9rem; }
-
-    /* ─────────────────── Loading ─────────────────── */
-    .spinner {
-      display: inline-block;
-      width: 18px; height: 18px;
-      border: 3px solid rgba(255,255,255,0.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ─────────────────── Panel inicio ─────────────────── */
-    .welcome-hero {
-      text-align: center;
-      padding: 2rem 1rem;
-    }
+    .toast.error { background: linear-gradient(135deg, #FF7E7E, #E05252); }
+    .toast.info { background: linear-gradient(135deg, #C9A8E8, #9B67D9); }
+    @keyframes slideInToast { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+    .divider { border: none; border-top: 2px dashed var(--borde); margin: 1.5rem 0; }
+    .upload-area { border: 3px dashed var(--borde); border-radius: 16px; padding: 3rem 2rem; text-align: center; background: var(--rosa-palido); cursor: pointer; transition: all .3s; }
+    .upload-area:hover { border-color: var(--rosa-vivo); background: var(--rosa-suave); }
+    .upload-area.dragover { border-color: var(--menta-vivo); background: var(--menta); }
+    .upload-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .welcome-hero { text-align: center; padding: 2rem 1rem; }
     .welcome-hero .hero-emoji { font-size: 4rem; }
-    .welcome-hero h2 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin: 0.8rem 0 0.4rem;
-      background: linear-gradient(135deg, var(--rosa-vivo), #9B67D9);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    .welcome-hero h2 { font-size: 1.8rem; font-weight: 700; margin: 0.8rem 0 0.4rem; background: linear-gradient(135deg, var(--rosa-vivo), #9B67D9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .welcome-hero p { color: var(--texto-2); font-size: 0.92rem; max-width: 520px; margin: 0 auto 1.5rem; }
-    .endpoints-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 0.9rem;
-      margin-top: 1.5rem;
-    }
-    .endpoint-chip {
-      background: var(--rosa-palido);
-      border: 1.5px solid var(--borde);
-      border-radius: 12px;
-      padding: 0.9rem 1rem;
-      text-align: left;
-    }
-    .endpoint-chip .method {
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 5px;
-      margin-right: 6px;
-    }
-    .method.POST   { background: #D4FADF; color: #1A7A52; }
-    .method.GET    { background: #DAE8FF; color: #1A50A0; }
-    .method.PUT    { background: #FFF3CC; color: #8A6000; }
-    .method.DELETE { background: var(--rojo-suave); color: var(--rojo-vivo); }
-    .endpoint-chip .path {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--texto);
-      display: block;
-      margin-top: 5px;
-    }
+    .endpoint-chip { background: var(--rosa-palido); border: 1.5px solid var(--borde); border-radius: 12px; padding: 0.9rem 1rem; text-align: left; }
+    .endpoint-chip .method { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 5px; margin-right: 6px; }
+    .method.POST { background: #D4FADF; color: #1A7A52; }
+    .method.GET { background: #DAE8FF; color: #1A50A0; }
+    .method.PUT { background: #FFF3CC; color: #8A6000; }
+    .method.DELETE { background: #FFD6D6; color: #E05252; }
+    .endpoint-chip .path { font-size: 0.8rem; font-weight: 600; color: var(--texto); display: block; margin-top: 5px; }
     .endpoint-chip .desc { font-size: 0.73rem; color: var(--texto-2); margin-top: 3px; }
-
-    /* ─────────────────── Scrollbar ─────────────────── */
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: var(--rosa-palido); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb { background: var(--rosa-suave); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--rosa-medio); }
-
-    /* ─────────────────── Responsive ─────────────────── */
-    @media (max-width: 640px) {
-      header { flex-direction: column; gap: 0.8rem; text-align: center; }
-      .tabs  { padding: 0.8rem 1rem 0; }
-      .main-content { padding: 0 1rem 2rem; }
-      .panel-card   { padding: 1.2rem; }
-    }
+    .endpoints-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.9rem; margin-top: 1.5rem; }
+    .export-card { background: linear-gradient(135deg, var(--menta), var(--lila)); border: 1.5px solid var(--borde); border-radius: 16px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
+    .export-card h3 { color: var(--texto); margin-bottom: 0.5rem; }
+    .export-card p { color: var(--texto-2); font-size: 0.85rem; margin-bottom: 1rem; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bar-label { font-size: 0.78rem; min-width: 120px; color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; background: var(--rosa-palido); border-radius: 50px; height: 20px; position: relative; overflow: hidden; }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, var(--rosa-suave), var(--rosa-vivo)); border-radius: 50px; min-width: 4px; }
+    .bar-fill.lila { background: linear-gradient(90deg, var(--lila), var(--lila-suave)); }
+    .bar-fill.menta { background: linear-gradient(90deg, var(--menta), var(--menta-vivo)); }
+    .bar-value { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.72rem; font-weight: 700; color: var(--texto); }
+    @media (max-width: 640px) { header { flex-direction: column; gap: 0.8rem; text-align: center; } .tabs { padding: 0.8rem 1rem 0; } .main-content { padding: 0 1rem 2rem; } .panel-card { padding: 1.2rem; } }
   </style>
 </head>
 <body>
 
-<!-- ╔══════════════════════════════════════╗ -->
-<!-- ║             HEADER                    ║ -->
-<!-- ╚══════════════════════════════════════╝ -->
 <header>
   <div>
     <h1>🌸 Encuestas Poblacionales</h1>
-    <p>API REST · FastAPI + Pydantic v2 · Colombia</p>
+    <p>FastAPI + Pydantic v2 · Colombia</p>
   </div>
   <div class="status-badge" onclick="checkHealth()">
     <div class="dot" id="status-dot"></div>
@@ -559,1116 +122,467 @@
   </div>
 </header>
 
-<!-- ╔══════════════════════════════════════╗ -->
-<!-- ║             TABS                      ║ -->
-<!-- ╚══════════════════════════════════════╝ -->
 <div class="tabs">
   <button class="tab-btn active" onclick="showTab('inicio')">🏠 Inicio</button>
-  <button class="tab-btn" onclick="showTab('crear')">✏️ Nueva Encuesta</button>
-  <button class="tab-btn" onclick="showTab('listar')">📋 Ver Encuestas</button>
-  <button class="tab-btn" onclick="showTab('buscar')">🔍 Buscar por ID</button>
+  <button class="tab-btn" onclick="showTab('crear')">✏️ Nueva</button>
+  <button class="tab-btn" onclick="showTab('listar')">📋 Listar</button>
+  <button class="tab-btn" onclick="showTab('upload')">📤 Upload CSV</button>
+  <button class="tab-btn" onclick="showTab('export')">📥 Exportar</button>
   <button class="tab-btn" onclick="showTab('estadisticas')">📊 Estadísticas</button>
-  <button class="tab-btn" onclick="showTab('google')">🔗 Google Forms</button>
 </div>
 
 <div class="main-content">
 
-  <!-- ╔═════════════════ PANEL: INICIO ═════════════════╗ -->
+  <!-- INICIO -->
   <div id="panel-inicio" class="panel active">
     <div class="panel-card">
       <div class="welcome-hero">
         <div class="hero-emoji">🌺</div>
         <h2>Sistema de Encuestas Poblacionales</h2>
-        <p>Plataforma para la recolección y análisis estadístico de datos demográficos colombianos. Validación rigurosa basada en catálogo DANE.</p>
+        <p>Plataforma para recolección y análisis estadístico de datos demográficos colombianos. Validación rigurosa basada en catálogo DANE.</p>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="showTab('crear')">✏️ Crear encuesta</button>
-          <button class="btn btn-secondary" onclick="showTab('estadisticas');loadEstadisticas()">📊 Ver estadísticas</button>
+          <button class="btn btn-secondary" onclick="showTab('upload')">📤 Subir CSV</button>
           <a href="/docs" target="_blank" class="btn btn-secondary" style="text-decoration:none;">📖 Swagger UI</a>
         </div>
       </div>
       <hr class="divider"/>
-      <div class="section-title"><span class="icon">🔗</span> Endpoints disponibles</div>
+      <div class="section-title"><span class="icon">🔗</span> Endpoints</div>
       <div class="endpoints-grid">
-        <div class="endpoint-chip"><span class="method POST">POST</span><span class="path">/encuestas/</span><div class="desc">Registrar encuesta</div></div>
-        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/</span><div class="desc">Listar todas</div></div>
-        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/{id}</span><div class="desc">Obtener por ID</div></div>
+        <div class="endpoint-chip"><span class="method POST">POST</span><span class="path">/encuestas/</span><div class="desc">Crear</div></div>
+        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/</span><div class="desc">Listar</div></div>
+        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/{id}</span><div class="desc">Obtener</div></div>
         <div class="endpoint-chip"><span class="method PUT">PUT</span><span class="path">/encuestas/{id}</span><div class="desc">Actualizar</div></div>
         <div class="endpoint-chip"><span class="method DELETE">DELETE</span><span class="path">/encuestas/{id}</span><div class="desc">Eliminar</div></div>
-        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/estadisticas/</span><div class="desc">Estadísticas</div></div>
+        <div class="endpoint-chip"><span class="method POST">POST</span><span class="path">/encuestas/upload-csv/</span><div class="desc">Upload CSV</div></div>
+        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/export/json/</span><div class="desc">Export JSON</div></div>
+        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/export/pickle/</span><div class="desc">Export Pickle</div></div>
       </div>
-      <div id="health-result" class="json-viewer" style="margin-top:1.2rem;"></div>
+      <div id="health-result" class="json-viewer"></div>
     </div>
   </div>
 
-  <!-- ╔═════════════════ PANEL: CREAR ═════════════════╗ -->
+  <!-- CREAR -->
   <div id="panel-crear" class="panel">
     <div class="panel-card">
       <div class="section-title"><span class="icon">👤</span> Datos del Encuestado</div>
       <div class="form-grid">
-        <div class="form-group">
-          <label>Nombre completo</label>
-          <input type="text" id="enc-nombre" placeholder="Ej: María García" />
-        </div>
-        <div class="form-group">
-          <label>Edad <span style="color:#FF9BAB;">(0 – 120)</span></label>
-          <input type="number" id="enc-edad" min="0" max="120" placeholder="34" />
-        </div>
-        <div class="form-group">
-          <label>Género</label>
-          <select id="enc-genero">
-            <option value="">Seleccionar…</option>
-            <option value="masculino">Masculino</option>
-            <option value="femenino">Femenino</option>
-            <option value="no_binario">No binario</option>
-            <option value="prefiero_no_decir">Prefiero no decir</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Estrato <span style="color:#FF9BAB;">(1 – 6)</span></label>
-          <select id="enc-estrato">
-            <option value="">Seleccionar…</option>
-            <option value="1">1 — Bajo-bajo</option>
-            <option value="2">2 — Bajo</option>
-            <option value="3">3 — Medio-bajo</option>
-            <option value="4">4 — Medio</option>
-            <option value="5">5 — Medio-alto</option>
-            <option value="6">6 — Alto</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Departamento <span style="color:#FF9BAB;">(catálogo DANE)</span></label>
-          <select id="enc-departamento">
-            <option value="">Seleccionar…</option>
-            <option>Amazonas</option><option>Antioquia</option><option>Arauca</option>
-            <option>Atlántico</option><option>Bolívar</option><option>Boyacá</option>
-            <option>Caldas</option><option>Caquetá</option><option>Casanare</option>
-            <option>Cauca</option><option>Cesar</option><option>Chocó</option>
-            <option>Córdoba</option><option>Cundinamarca</option><option>Guainía</option>
-            <option>Guaviare</option><option>Huila</option><option>La Guajira</option>
-            <option>Magdalena</option><option>Meta</option><option>Nariño</option>
-            <option>Norte de Santander</option><option>Putumayo</option><option>Quindío</option>
-            <option>Risaralda</option><option>San Andrés y Providencia</option>
-            <option>Santander</option><option>Sucre</option><option>Tolima</option>
-            <option>Valle del Cauca</option><option>Vaupés</option><option>Vichada</option>
-            <option>Bogotá D.C.</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Municipio</label>
-          <input type="text" id="enc-municipio" placeholder="Ej: Bogotá" />
-        </div>
-        <div class="form-group">
-          <label>Nivel educativo</label>
-          <select id="enc-nivel">
-            <option value="">Seleccionar…</option>
-            <option value="ninguno">Ninguno</option>
-            <option value="primaria">Primaria</option>
-            <option value="secundaria">Secundaria</option>
-            <option value="tecnico">Técnico</option>
-            <option value="universitario">Universitario</option>
-            <option value="posgrado">Posgrado</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Ocupación <span class="optional-tag">(opcional)</span></label>
-          <input type="text" id="enc-ocupacion" placeholder="Ej: Docente" />
-        </div>
+        <div class="form-group"><label>Nombre completo</label><input type="text" id="enc-nombre" placeholder="María García" /></div>
+        <div class="form-group"><label>Edad (0-120)</label><input type="number" id="enc-edad" min="0" max="120" placeholder="34" /></div>
+        <div class="form-group"><label>Género</label><select id="enc-genero"><option value="">Seleccionar…</option><option value="masculino">Masculino</option><option value="femenino">Femenino</option><option value="no_binario">No binario</option><option value="prefiero_no_decir">Prefiero no decir</option></select></div>
+        <div class="form-group"><label>Estrato (1-6)</label><select id="enc-estrato"><option value="">Seleccionar…</option><option value="1">1 — Bajo-bajo</option><option value="2">2 — Bajo</option><option value="3">3 — Medio-bajo</option><option value="4">4 — Medio</option><option value="5">5 — Medio-alto</option><option value="6">6 — Alto</option></select></div>
+        <div class="form-group"><label>Departamento</label><select id="enc-departamento"><option value="">Seleccionar…</option><option>Amazonas</option><option>Antioquia</option><option>Arauca</option><option>Atlántico</option><option>Bolívar</option><option>Boyacá</option><option>Caldas</option><option>Caquetá</option><option>Casanare</option><option>Cauca</option><option>Cesar</option><option>Chocó</option><option>Córdoba</option><option>Cundinamarca</option><option>Guainía</option><option>Guaviare</option><option>Huila</option><option>La Guajira</option><option>Magdalena</option><option>Meta</option><option>Nariño</option><option>Norte de Santander</option><option>Putumayo</option><option>Quindío</option><option>Risaralda</option><option>San Andrés y Providencia</option><option>Santander</option><option>Sucre</option><option>Tolima</option><option>Valle del Cauca</option><option>Vaupés</option><option>Vichada</option><option>Bogotá D.C.</option></select></div>
+        <div class="form-group"><label>Municipio</label><input type="text" id="enc-municipio" placeholder="Medellín" /></div>
+        <div class="form-group"><label>Nivel educativo</label><select id="enc-nivel"><option value="">Seleccionar…</option><option value="ninguno">Ninguno</option><option value="primaria">Primaria</option><option value="secundaria">Secundaria</option><option value="tecnico">Técnico</option><option value="universitario">Universitario</option><option value="posgrado">Posgrado</option></select></div>
+        <div class="form-group"><label>Ocupación</label><input type="text" id="enc-ocupacion" placeholder="Docente" /></div>
       </div>
-
       <hr class="divider"/>
-      <div class="section-title"><span class="icon">📝</span> Respuestas de la Encuesta</div>
+      <div class="section-title"><span class="icon">📝</span> Respuestas</div>
       <div id="respuestas-container" class="respuestas-container"></div>
       <button class="btn btn-secondary" style="margin-top:10px;" onclick="addRespuesta()">+ Agregar pregunta</button>
-
       <hr class="divider"/>
-      <div class="form-group full">
-        <label>Observaciones generales <span class="optional-tag">(opcional)</span></label>
-        <textarea id="enc-observaciones" placeholder="Notas sobre condiciones del levantamiento…"></textarea>
-      </div>
-
+      <div class="form-group full"><label>Observaciones</label><textarea id="enc-observaciones" placeholder="Notas sobre el levantamiento…"></textarea></div>
       <div class="btn-actions">
-        <button class="btn btn-primary" onclick="crearEncuesta()">🚀 Enviar encuesta</button>
+        <button class="btn btn-primary" onclick="crearEncuesta()">🚀 Enviar</button>
         <button class="btn btn-secondary" onclick="resetFormCrear()">🔄 Limpiar</button>
       </div>
-
       <div id="crear-alert" class="alert"></div>
       <div id="crear-json" class="json-viewer"></div>
     </div>
   </div>
 
-  <!-- ╔═════════════════ PANEL: LISTAR ═════════════════╗ -->
+  <!-- LISTAR -->
   <div id="panel-listar" class="panel">
     <div class="panel-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
-        <div class="section-title" style="margin:0;border:none;padding:0;"><span class="icon">📋</span> Encuestas registradas</div>
-        <button class="btn btn-primary btn-sm" onclick="listarEncuestas()">🔄 Actualizar</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <div class="section-title" style="margin:0;"><span class="icon">📋</span> Encuestas</div>
+        <button class="btn btn-secondary" onclick="loadEncuestas()">🔄 Actualizar</button>
       </div>
-      <div id="listar-list" class="encuestas-list">
-        <div class="empty-state"><div class="emoji">🌸</div><p>Carga las encuestas con el botón Actualizar</p></div>
-      </div>
+      <div id="encuestas-list" class="encuestas-list"></div>
       <div id="listar-json" class="json-viewer"></div>
     </div>
   </div>
 
-  <!-- ╔═════════════════ PANEL: BUSCAR ═════════════════╗ -->
-  <div id="panel-buscar" class="panel">
+  <!-- UPLOAD -->
+  <div id="panel-upload" class="panel">
     <div class="panel-card">
-      <div class="section-title"><span class="icon">🔍</span> Buscar encuesta por ID</div>
-      <div style="display:flex;gap:10px;align-items:flex-end;">
-        <div class="form-group" style="flex:1;">
-          <label>ID de encuesta (UUID)</label>
-          <input type="text" id="buscar-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
-        </div>
-        <button class="btn btn-primary" onclick="buscarEncuesta()">🔍 Buscar</button>
+      <div class="section-title"><span class="icon">📤</span> Upload CSV</div>
+      <p style="color:var(--texto-2);margin-bottom:1.5rem;">Sube un archivo CSV exportado desde Google Forms. El sistema detecta automáticamente las columnas.</p>
+      
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+        <div class="upload-icon">📁</div>
+        <h3>Arrastra tu archivo CSV aquí o haz clic para seleccionar</h3>
+        <p style="color:var(--texto-2);margin-top:0.5rem;">Formato: .csv</p>
+        <input type="file" id="file-input" accept=".csv" style="display:none;" onchange="handleFileSelect(event)" />
       </div>
 
-      <div id="buscar-result" style="margin-top:1.4rem;display:none;">
-        <hr class="divider"/>
-
-        <!-- Detalle encuesta -->
-        <div id="detalle-card" style="background:var(--rosa-palido);border-radius:14px;padding:1.3rem;"></div>
-
-        <hr class="divider"/>
-        <div class="section-title" style="margin-top:0;"><span class="icon">✏️</span> Editar encuestado (PUT)</div>
-        <div class="form-grid" id="edit-form-grid">
-          <div class="form-group">
-            <label>Nombre</label>
-            <input type="text" id="edit-nombre"/>
+      <div id="upload-progress" style="margin-top:1.5rem;display:none;">
+        <div style="background:var(--rosa-palido);border-radius:10px;padding:1rem;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+            <div class="spinner"></div>
+            <span id="upload-text">Procesando archivo...</span>
           </div>
-          <div class="form-group">
-            <label>Edad</label>
-            <input type="number" id="edit-edad" min="0" max="120"/>
-          </div>
-          <div class="form-group">
-            <label>Género</label>
-            <select id="edit-genero">
-              <option value="masculino">Masculino</option>
-              <option value="femenino">Femenino</option>
-              <option value="no_binario">No binario</option>
-              <option value="prefiero_no_decir">Prefiero no decir</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Estrato</label>
-            <select id="edit-estrato">
-              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-              <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Departamento</label>
-            <select id="edit-departamento">
-              <option>Amazonas</option><option>Antioquia</option><option>Arauca</option>
-              <option>Atlántico</option><option>Bolívar</option><option>Boyacá</option>
-              <option>Caldas</option><option>Caquetá</option><option>Casanare</option>
-              <option>Cauca</option><option>Cesar</option><option>Chocó</option>
-              <option>Córdoba</option><option>Cundinamarca</option><option>Guainía</option>
-              <option>Guaviare</option><option>Huila</option><option>La Guajira</option>
-              <option>Magdalena</option><option>Meta</option><option>Nariño</option>
-              <option>Norte de Santander</option><option>Putumayo</option><option>Quindío</option>
-              <option>Risaralda</option><option>San Andrés y Providencia</option>
-              <option>Santander</option><option>Sucre</option><option>Tolima</option>
-              <option>Valle del Cauca</option><option>Vaupés</option><option>Vichada</option>
-              <option>Bogotá D.C.</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Municipio</label>
-            <input type="text" id="edit-municipio"/>
-          </div>
-          <div class="form-group">
-            <label>Nivel educativo</label>
-            <select id="edit-nivel">
-              <option value="ninguno">Ninguno</option><option value="primaria">Primaria</option>
-              <option value="secundaria">Secundaria</option><option value="tecnico">Técnico</option>
-              <option value="universitario">Universitario</option><option value="posgrado">Posgrado</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Ocupación</label>
-            <input type="text" id="edit-ocupacion"/>
-          </div>
-        </div>
-        <div class="btn-actions">
-          <button class="btn btn-success" onclick="actualizarEncuesta()">💾 Guardar cambios</button>
-          <button class="btn btn-danger"  onclick="eliminarEncuesta()">🗑️ Eliminar encuesta</button>
         </div>
       </div>
 
-      <div id="buscar-alert" class="alert"></div>
-      <div id="buscar-json" class="json-viewer"></div>
+      <div id="upload-alert" class="alert"></div>
+      <div id="upload-json" class="json-viewer"></div>
+
+      <hr class="divider"/>
+      <div class="section-title"><span class="icon">ℹ️</span> Columnas esperadas</div>
+      <div style="background:var(--rosa-palido);padding:1rem;border-radius:10px;font-size:0.85rem;">
+        <p style="margin-bottom:0.5rem;"><strong>Demográficas:</strong></p>
+        <code>nombre, edad, genero, estrato, departamento, municipio, nivel_educativo, ocupacion</code>
+        <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Respuestas:</strong></p>
+        <p>Cualquier otra columna será tratada como pregunta. Valores 1-5 → Likert, 0-100 → Porcentaje, "si/no" → Sí/No.</p>
+      </div>
     </div>
   </div>
 
-  <!-- ╔═════════════════ PANEL: ESTADÍSTICAS ═════════════════╗ -->
+  <!-- EXPORT -->
+  <div id="panel-export" class="panel">
+    <div class="panel-card">
+      <div class="section-title"><span class="icon">📥</span> Exportar Resultados</div>
+      <p style="color:var(--texto-2);margin-bottom:1.5rem;">Descarga todas las encuestas en formato JSON o Pickle.</p>
+      
+      <div class="export-card">
+        <h3>📄 Exportar a JSON</h3>
+        <p>Formato universal, legible por humanos, interoperable con cualquier lenguaje.</p>
+        <button class="btn btn-primary" onclick="exportJSON()">⬇️ Descargar JSON</button>
+      </div>
+
+      <div class="export-card">
+        <h3>🥒 Exportar a Pickle</h3>
+        <p>Formato binario de Python, más rápido pero solo compatible con Python.</p>
+        <button class="btn btn-secondary" onclick="exportPickle()">⬇️ Descargar Pickle</button>
+      </div>
+
+      <div id="export-alert" class="alert"></div>
+    </div>
+  </div>
+
+  <!-- ESTADISTICAS -->
   <div id="panel-estadisticas" class="panel">
     <div class="panel-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;">
-        <div class="section-title" style="margin:0;border:none;padding:0;"><span class="icon">📊</span> Dashboard estadístico</div>
-        <button class="btn btn-primary btn-sm" onclick="loadEstadisticas()">🔄 Actualizar</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <div class="section-title" style="margin:0;"><span class="icon">📊</span> Estadísticas</div>
+        <button class="btn btn-secondary" onclick="loadEstadisticas()">🔄 Actualizar</button>
       </div>
-
-      <!-- KPIs -->
-      <div class="stats-kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-total">—</div>
-          <div class="kpi-label">Total encuestas</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-avg">—</div>
-          <div class="kpi-label">Edad promedio</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-min">—</div>
-          <div class="kpi-label">Edad mínima</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-max">—</div>
-          <div class="kpi-label">Edad máxima</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-value" id="kpi-resp">—</div>
-          <div class="kpi-label">Respuestas prom.</div>
-        </div>
-      </div>
-
-      <!-- Charts -->
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h3>📈 Por Estrato Socioeconómico</h3>
-          <div id="chart-estrato"><div class="empty-state" style="padding:1rem;"><p>Sin datos</p></div></div>
-        </div>
-        <div class="chart-card">
-          <h3>👤 Por Género</h3>
-          <div id="chart-genero"><div class="empty-state" style="padding:1rem;"><p>Sin datos</p></div></div>
-        </div>
-        <div class="chart-card">
-          <h3>🎓 Por Nivel Educativo</h3>
-          <div id="chart-educativo"><div class="empty-state" style="padding:1rem;"><p>Sin datos</p></div></div>
-        </div>
-        <div class="chart-card">
-          <h3>🗺️ Por Departamento</h3>
-          <div id="chart-departamento"><div class="empty-state" style="padding:1rem;"><p>Sin datos</p></div></div>
-        </div>
-      </div>
-
-      <div id="stats-json" class="json-viewer" style="margin-top:1.2rem;"></div>
+      <div id="stats-kpi" class="stats-kpi-grid"></div>
+      
+      <div class="section-title"><span class="icon">📈</span> Distribuciones</div>
+      <div id="stats-charts"></div>
+      <div id="stats-json" class="json-viewer"></div>
     </div>
   </div>
 
-  <!-- ╔═════════════════ PANEL: GOOGLE FORMS ═════════════════╗ -->
-  <div id="panel-google" class="panel">
-    <div class="panel-card">
+</div>
 
-      <!-- Hero -->
-      <div style="display:flex;align-items:center;gap:1.2rem;margin-bottom:1.5rem;flex-wrap:wrap;">
-        <div style="font-size:3rem;">📋</div>
-        <div>
-          <div style="font-size:1.2rem;font-weight:700;color:var(--rosa-vivo);">Conectar Google Forms con la API</div>
-          <div style="font-size:0.85rem;color:var(--texto-2);margin-top:4px;">Cada vez que alguien envíe tu formulario, la respuesta llegará automáticamente a esta API mediante Google Apps Script.</div>
-        </div>
-        <div style="margin-left:auto;">
-          <span style="background:var(--menta);color:#1A7A52;padding:5px 14px;border-radius:50px;font-size:0.78rem;font-weight:700;">POST /encuestas/google-forms/</span>
-        </div>
-      </div>
-
-      <hr class="divider"/>
-
-      <!-- Pasos -->
-      <div class="section-title"><span class="icon">🪜</span> Pasos de configuración</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
-        <div style="background:var(--rosa-palido);border-radius:14px;padding:1rem;border:1.5px solid var(--borde);">
-          <div style="font-size:1.6rem;font-weight:800;color:var(--rosa-vivo);line-height:1;">1</div>
-          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Crear el formulario</div>
-          <div style="font-size:.78rem;color:var(--texto-2);">En Google Forms, crea las preguntas con los títulos exactos de la tabla de abajo.</div>
-        </div>
-        <div style="background:var(--lila);border-radius:14px;padding:1rem;border:1.5px solid var(--lila-suave);">
-          <div style="font-size:1.6rem;font-weight:800;color:#7B3FBF;line-height:1;">2</div>
-          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Abrir Apps Script</div>
-          <div style="font-size:.78rem;color:var(--texto-2);">En el formulario: <b>⋮ → Editor de scripts</b>. Borra el contenido y pega el código.</div>
-        </div>
-        <div style="background:var(--menta);border-radius:14px;padding:1rem;border:1.5px solid #A8E6C6;">
-          <div style="font-size:1.6rem;font-weight:800;color:#1A7A52;line-height:1;">3</div>
-          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Cambiar la URL</div>
-          <div style="font-size:.78rem;color:#1A7A52;">Reemplaza <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;">API_URL</code> con la URL de tu servidor (necesitas ngrok o nube).</div>
-        </div>
-        <div style="background:var(--durazno);border-radius:14px;padding:1rem;border:1.5px solid #FFD0A8;">
-          <div style="font-size:1.6rem;font-weight:800;color:var(--durazno-vivo);line-height:1;">4</div>
-          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Configurar trigger</div>
-          <div style="font-size:.78rem;color:#8A4000;">Ícono del reloj <b>→ + Agregar activador → onFormSubmit → Al enviar formulario</b>.</div>
-        </div>
-        <div style="background:#EEF;border-radius:14px;padding:1rem;border:1.5px solid #CCC8F0;">
-          <div style="font-size:1.6rem;font-weight:800;color:#5050B0;line-height:1;">5</div>
-          <div style="font-weight:600;margin:.4rem 0 .3rem;font-size:.9rem;">Probar</div>
-          <div style="font-size:.78rem;color:#5050B0;">Ejecuta <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;">probarWebhook()</code> en el editor o usa el botón de abajo.</div>
-        </div>
-      </div>
-
-      <hr class="divider"/>
-
-      <!-- Estructura del formulario -->
-      <div class="section-title"><span class="icon">📋</span> Estructura requerida del formulario</div>
-      <div style="overflow-x:auto;margin-bottom:1.5rem;">
-        <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
-          <thead>
-            <tr style="background:linear-gradient(90deg,var(--rosa-medio),var(--lila-suave));color:#fff;">
-              <th style="padding:10px 14px;text-align:left;border-radius:8px 0 0 0;">Título exacto de la pregunta</th>
-              <th style="padding:10px 14px;text-align:left;">Tipo en Google Forms</th>
-              <th style="padding:10px 14px;text-align:left;border-radius:0 8px 0 0;">Opciones / Formato</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="background:var(--rosa-palido);">
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Nombre completo</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Texto libre</td>
-            </tr>
-            <tr>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Edad</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Número entero</td>
-            </tr>
-            <tr style="background:var(--rosa-palido);">
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Género</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Opción múltiple</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Masculino · Femenino · No binario · Prefiero no decir</td>
-            </tr>
-            <tr>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Estrato socioeconómico</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Desplegable</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">1 - Bajo-bajo · 2 - Bajo · 3 - Medio-bajo · 4 - Medio · 5 - Medio-alto · 6 - Alto</td>
-            </tr>
-            <tr style="background:var(--rosa-palido);">
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Departamento</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Desplegable</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">33 departamentos DANE + Bogotá D.C.</td>
-            </tr>
-            <tr>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Municipio</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Texto libre</td>
-            </tr>
-            <tr style="background:var(--rosa-palido);">
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Nivel educativo</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Opción múltiple</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Ninguno · Primaria · Secundaria · Técnico · Universitario · Posgrado</td>
-            </tr>
-            <tr>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Ocupación <span style="color:#bbb;font-weight:400;">(opcional)</span></td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:var(--texto-2);">Texto libre</td>
-            </tr>
-            <tr style="background:var(--lila);">
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Satisfacción con el servicio de salud en su municipio</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Escala lineal</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:#5B2EA0;">Mínimo 1 — Máximo 5 → tipo: <b>likert</b></td>
-            </tr>
-            <tr style="background:var(--menta);">
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">Nivel de confianza en las instituciones colombianas (%)</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Respuesta corta</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:#1A7A52;">Número 0–100 → tipo: <b>porcentaje</b></td>
-            </tr>
-            <tr style="background:var(--durazno);">
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);font-weight:600;">¿Ha utilizado servicios digitales del Estado en el último mes?</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);">Opción múltiple</td>
-              <td style="padding:8px 14px;border-bottom:1px solid var(--borde);color:#8A4000;">Sí · No → tipo: <b>si_no</b></td>
-            </tr>
-            <tr>
-              <td style="padding:8px 14px;font-weight:600;">Observaciones adicionales <span style="color:#bbb;font-weight:400;">(opcional)</span></td>
-              <td style="padding:8px 14px;">Párrafo</td>
-              <td style="padding:8px 14px;color:var(--texto-2);">Texto largo libre</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <hr class="divider"/>
-
-      <!-- Apps Script code block -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem;">
-        <div class="section-title" style="margin:0;border:none;padding:0;"><span class="icon">📜</span> Código Apps Script</div>
-        <button class="btn btn-secondary btn-sm" onclick="copiarAppsScript()">📋 Copiar código</button>
-      </div>
-      <div style="position:relative;">
-        <textarea id="apps-script-code" readonly
-          style="width:100%;height:320px;font-family:'Courier New',monospace;font-size:.76rem;
-                 background:#1E0830;color:#FFADCE;border:none;border-radius:12px;
-                 padding:1.2rem;resize:vertical;outline:none;line-height:1.6;"
-        ></textarea>
-      </div>
-      <div style="margin-top:.6rem;font-size:.75rem;color:var(--texto-2);">
-        ⚠️ <b>Recuerda:</b> cambia <code style="background:var(--rosa-palido);padding:1px 6px;border-radius:4px;">API_URL</code> por la URL pública de tu servidor antes de pegar en Apps Script.
-        Para pruebas locales usa <a href="https://ngrok.com" target="_blank">ngrok</a>:
-        <code style="background:var(--rosa-palido);padding:1px 6px;border-radius:4px;">ngrok http 8001</code>
-      </div>
-
-      <hr class="divider"/>
-
-      <!-- Probar webhook desde el navegador -->
-      <div class="section-title"><span class="icon">🧪</span> Probar el webhook desde el navegador</div>
-      <div style="background:var(--rosa-palido);border-radius:12px;padding:1.2rem;margin-bottom:1rem;">
-        <div style="font-size:.83rem;color:var(--texto-2);margin-bottom:.8rem;">
-          Simula el envío de un formulario con datos de prueba. Verifica que la conexión funciona <b>antes</b> de configurar el trigger real.
-        </div>
-        <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.7rem;">
-          <div class="form-group">
-            <label>Nombre de prueba</label>
-            <input type="text" id="gf-test-nombre" value="Prueba Google Forms"/>
-          </div>
-          <div class="form-group">
-            <label>Edad</label>
-            <input type="number" id="gf-test-edad" value="28" min="0" max="120"/>
-          </div>
-          <div class="form-group">
-            <label>Departamento</label>
-            <select id="gf-test-dept">
-              <option>Cundinamarca</option><option>Antioquia</option><option>Valle del Cauca</option>
-              <option>Atlántico</option><option>Santander</option><option>Boyacá</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Likert salud (1-5)</label>
-            <select id="gf-test-likert">
-              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-              <option value="4" selected>4</option><option value="5">5</option>
-            </select>
-          </div>
-        </div>
-        <div class="btn-actions" style="margin-top:.8rem;">
-          <button class="btn btn-primary" onclick="probarGoogleForms()">🚀 Enviar datos de prueba</button>
-        </div>
-      </div>
-      <div id="gf-alert" class="alert"></div>
-      <div id="gf-json" class="json-viewer"></div>
-
-    </div>
-  </div>
-
-</div><!-- /main-content -->
-
-<!-- Toast container -->
 <div id="toast-container"></div>
 
-<!-- ╔══════════════════════════════════════════════════════╗ -->
-<!-- ║                   JAVASCRIPT                          ║ -->
-<!-- ╚══════════════════════════════════════════════════════╝ -->
 <script>
-  const API = 'http://localhost:8001';
-  let respuestasCount = 0;
-  let encuestaActualData = null;  // guarda la data completa al buscar
+  const API = "http://localhost:8000";
 
-  /* ─────────────────── Tabs ─────────────────── */
-  function showTab(id) {
+  function showTab(tabId) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('panel-' + id).classList.add('active');
-    const btns = document.querySelectorAll('.tab-btn');
-    const labelMap = { inicio:'Inicio', crear:'Nueva', listar:'Ver', buscar:'Buscar', estadisticas:'Estadísticas', google:'Google' };
-    btns.forEach(b => { if (b.textContent.includes(labelMap[id] || id)) b.classList.add('active'); });
+    document.getElementById('panel-' + tabId).classList.add('active');
+    event.target.classList.add('active');
+    if (tabId === 'listar') loadEncuestas();
+    if (tabId === 'estadisticas') loadEstadisticas();
   }
 
-  /* ─────────────────── Toast ─────────────────── */
-  function showToast(msg, type = 'info') {
-    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-    const el = document.createElement('div');
-    el.className = `toast ${type}`;
-    el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
-    document.getElementById('toast-container').appendChild(el);
-    setTimeout(() => el.remove(), 3800);
+  async function checkHealth() {
+    try {
+      const resp = await fetch(`${API}/`);
+      const data = await resp.json();
+      document.getElementById('status-dot').className = 'dot online';
+      document.getElementById('status-text').textContent = 'En línea';
+      return data;
+    } catch {
+      document.getElementById('status-dot').className = 'dot offline';
+      document.getElementById('status-text').textContent = 'Sin conexión';
+      return null;
+    }
   }
 
-  /* ─────────────────── Alert helper ─────────────────── */
-  function showAlert(id, msg, type) {
-    const el = document.getElementById(id);
-    el.textContent = msg;
-    el.className = `alert alert-${type} show`;
-    setTimeout(() => el.classList.remove('show'), 5000);
+  function showToast(mensaje, tipo) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
+    toast.textContent = mensaje;
+    document.getElementById('toast-container').appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
   }
 
-  /* ─────────────────── JSON viewer ─────────────────── */
-  function syntaxHighlight(json) {
-    if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
-    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
-      let cls = 'json-num';
-      if (/^"/.test(match)) {
-        cls = /:$/.test(match) ? 'json-key' : 'json-str';
-      } else if (/true|false/.test(match)) {
-        cls = 'json-bool';
-      } else if (/null/.test(match)) {
-        cls = 'json-null';
-      }
-      return '<span class="' + cls + '">' + match + '</span>';
-    });
+  function showAlert(containerId, mensaje, tipo) {
+    const alert = document.getElementById(containerId);
+    alert.className = `alert ${tipo} show`;
+    alert.textContent = mensaje;
+    setTimeout(() => alert.classList.remove('show'), 5000);
   }
-  function showJSON(id, data) {
-    const el = document.getElementById(id);
-    el.innerHTML = syntaxHighlight(data);
+
+  function showJSON(elementId, data) {
+    const el = document.getElementById(elementId);
+    el.textContent = JSON.stringify(data, null, 2);
     el.classList.add('show');
   }
 
-  /* ─────────────────── API call wrapper ─────────────────── */
-  async function apiCall(method, path, body = null) {
-    const opts = {
-      method,
-      headers: { 'Content-Type': 'application/json' }
-    };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(API + path, opts);
-    let data = null;
-    if (res.status !== 204) {
-      try { data = await res.json(); } catch(e) { data = {}; }
-    }
-    return { ok: res.ok, status: res.status, data };
-  }
-
-  /* ─────────────────── Health check ─────────────────── */
-  async function checkHealth() {
-    const dot  = document.getElementById('status-dot');
-    const text = document.getElementById('status-text');
-    try {
-      const { ok, data } = await apiCall('GET', '/');
-      if (ok) {
-        dot.className = 'dot online';
-        text.textContent = `API activa · ${data.total_encuestas_en_memoria} encuestas`;
-        showJSON('health-result', data);
-        document.getElementById('health-result').classList.add('show');
-      } else {
-        throw new Error();
-      }
-    } catch {
-      dot.className = 'dot offline';
-      text.textContent = 'API no disponible';
-    }
-  }
-
-  /* ─────────────────── Respuestas dinámicas ─────────────────── */
-  function addRespuesta(defaultData = null) {
-    respuestasCount++;
-    const idx = respuestasCount;
+  /* CREAR ENCUESTA */
+  function addRespuesta() {
     const container = document.getElementById('respuestas-container');
+    const idx = container.children.length + 1;
     const div = document.createElement('div');
     div.className = 'respuesta-card';
-    div.id = `resp-${idx}`;
-    const tipo = defaultData?.tipo_pregunta || 'likert';
     div.innerHTML = `
-      <div class="resp-header">
-        <span class="resp-num">Pregunta #${idx}</span>
-        <button class="btn btn-danger btn-sm" onclick="removeRespuesta(${idx})">✕ Eliminar</button>
+      <div class="resp-header"><span class="resp-num">Pregunta ${idx}</span></div>
+      <div class="form-grid" style="margin-bottom:0;">
+        <div class="form-group full"><label>Enunciado</label><input type="text" class="resp-enunciado" placeholder="¿Qué tan satisfecho está...?" /></div>
+        <div class="form-group"><label>Tipo</label><select class="resp-tipo" onchange="updateValorInput(this)"><option value="likert">Likert (1-5)</option><option value="porcentaje">Porcentaje (0-100)</option><option value="si_no">Sí/No</option><option value="texto_abierto">Texto abierto</option></select></div>
+        <div class="form-group"><label>Valor</label><input type="number" class="resp-valor" placeholder="Valor" /></div>
       </div>
-      <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.7rem;">
-        <div class="form-group">
-          <label>ID pregunta</label>
-          <input type="number" id="resp-${idx}-id" value="${idx}" min="1"/>
-        </div>
-        <div class="form-group" style="grid-column:span 2;">
-          <label>Enunciado</label>
-          <input type="text" id="resp-${idx}-enunciado" placeholder="¿Cómo evalúa el servicio de salud?" value="${defaultData?.enunciado||''}"/>
-        </div>
-        <div class="form-group">
-          <label>Tipo de escala</label>
-          <select id="resp-${idx}-tipo" onchange="updateValorInput(${idx})">
-            <option value="likert"        ${tipo==='likert'?'selected':''}>Likert (1-5)</option>
-            <option value="porcentaje"    ${tipo==='porcentaje'?'selected':''}>Porcentaje (0-100)</option>
-            <option value="si_no"         ${tipo==='si_no'?'selected':''}>Sí / No</option>
-            <option value="texto_abierto" ${tipo==='texto_abierto'?'selected':''}>Texto libre</option>
-          </select>
-        </div>
-        <div class="form-group" id="resp-${idx}-valor-group">
-          <!-- Se rellena con updateValorInput -->
-        </div>
-        <div class="form-group" style="grid-column:span 2;">
-          <label>Observación <span class="optional-tag">(opcional)</span></label>
-          <input type="text" id="resp-${idx}-obs" placeholder="Comentario adicional…" value="${defaultData?.observacion||''}"/>
-        </div>
-      </div>`;
+    `;
     container.appendChild(div);
-    updateValorInput(idx, defaultData?.valor);
   }
 
-  function removeRespuesta(idx) {
-    document.getElementById(`resp-${idx}`)?.remove();
+  function updateValorInput(select) {
+    const input = select.parentElement.nextElementSibling.querySelector('input');
+    const tipo = select.value;
+    if (tipo === 'likert') { input.type = 'number'; input.min = 1; input.max = 5; input.placeholder = '1-5'; }
+    else if (tipo === 'porcentaje') { input.type = 'number'; input.min = 0; input.max = 100; input.placeholder = '0-100'; }
+    else if (tipo === 'si_no') { input.type = 'text'; input.placeholder = 'si o no'; }
+    else { input.type = 'text'; input.placeholder = 'Texto'; }
   }
 
-  function updateValorInput(idx, defaultVal = null) {
-    const tipo = document.getElementById(`resp-${idx}-tipo`)?.value;
-    const group = document.getElementById(`resp-${idx}-valor-group`);
-    if (!group) return;
-    let html = '<label>Valor de respuesta</label>';
-    if (tipo === 'likert') {
-      html += `<select id="resp-${idx}-valor">
-        <option value="">Seleccionar…</option>
-        <option value="1" ${defaultVal==1?'selected':''}>1 — Muy insatisfecho</option>
-        <option value="2" ${defaultVal==2?'selected':''}>2 — Insatisfecho</option>
-        <option value="3" ${defaultVal==3?'selected':''}>3 — Neutral</option>
-        <option value="4" ${defaultVal==4?'selected':''}>4 — Satisfecho</option>
-        <option value="5" ${defaultVal==5?'selected':''}>5 — Muy satisfecho</option>
-      </select>`;
-    } else if (tipo === 'porcentaje') {
-      html += `<input type="number" id="resp-${idx}-valor" min="0" max="100" step="0.1" placeholder="0 – 100" value="${defaultVal ?? ''}"/>`;
-    } else if (tipo === 'si_no') {
-      html += `<select id="resp-${idx}-valor">
-        <option value="">Seleccionar…</option>
-        <option value="si" ${defaultVal==='si'?'selected':''}>Sí</option>
-        <option value="no" ${defaultVal==='no'?'selected':''}>No</option>
-      </select>`;
-    } else {
-      html += `<input type="text" id="resp-${idx}-valor" placeholder="Respuesta libre…" value="${defaultVal ?? ''}"/>`;
-    }
-    group.innerHTML = html;
-  }
-
-  function getRespuestasData() {
-    const cards = document.querySelectorAll('.respuesta-card');
-    const result = [];
-    for (const card of cards) {
-      const idx = card.id.replace('resp-', '');
-      const pregunta_id = parseInt(document.getElementById(`resp-${idx}-id`)?.value);
-      const enunciado   = document.getElementById(`resp-${idx}-enunciado`)?.value?.trim();
-      const tipo        = document.getElementById(`resp-${idx}-tipo`)?.value;
-      const valorRaw    = document.getElementById(`resp-${idx}-valor`)?.value;
-      const observacion = document.getElementById(`resp-${idx}-obs`)?.value?.trim() || null;
-      let valor;
-      if (tipo === 'likert')     valor = parseInt(valorRaw);
-      else if (tipo === 'porcentaje') valor = parseFloat(valorRaw);
-      else valor = valorRaw;
-      result.push({ pregunta_id, enunciado, tipo_pregunta: tipo, valor, observacion });
-    }
-    return result;
-  }
-
-  /* ─────────────────── Crear encuesta ─────────────────── */
   async function crearEncuesta() {
-    const nombre      = document.getElementById('enc-nombre').value.trim();
-    const edad        = parseInt(document.getElementById('enc-edad').value);
-    const genero      = document.getElementById('enc-genero').value;
-    const estrato     = parseInt(document.getElementById('enc-estrato').value);
-    const departamento= document.getElementById('enc-departamento').value;
-    const municipio   = document.getElementById('enc-municipio').value.trim();
-    const nivel       = document.getElementById('enc-nivel').value;
-    const ocupacion   = document.getElementById('enc-ocupacion').value.trim() || null;
-    const obs         = document.getElementById('enc-observaciones').value.trim() || null;
-    const respuestas  = getRespuestasData();
+    const nombre = document.getElementById('enc-nombre').value.trim();
+    const edad = parseInt(document.getElementById('enc-edad').value);
+    const genero = document.getElementById('enc-genero').value;
+    const estrato = parseInt(document.getElementById('enc-estrato').value);
+    const departamento = document.getElementById('enc-departamento').value;
+    const municipio = document.getElementById('enc-municipio').value.trim();
+    const nivel = document.getElementById('enc-nivel').value;
+    const ocupacion = document.getElementById('enc-ocupacion').value.trim();
+    const observaciones = document.getElementById('enc-observaciones').value.trim();
 
-    if (!nombre || !genero || !estrato || !departamento || !municipio || !nivel) {
-      showAlert('crear-alert', '⚠️ Completa todos los campos obligatorios del encuestado.', 'error');
+    if (!nombre || !edad || !genero || !estrato || !departamento) {
+      showAlert('crear-alert', 'Nombre, edad, género, estrato y departamento son requeridos', 'error');
       return;
     }
+
+    const respuestas = [];
+    document.querySelectorAll('.respuesta-card').forEach((card, idx) => {
+      const enunciado = card.querySelector('.resp-enunciado').value.trim();
+      const tipo = card.querySelector('.resp-tipo').value;
+      let valor = card.querySelector('.resp-valor').value.trim();
+      if (!enunciado || !valor) return;
+      if (tipo === 'likert') valor = parseInt(valor);
+      else if (tipo === 'porcentaje') valor = parseFloat(valor);
+      respuestas.push({ pregunta_id: idx + 1, enunciado, tipo_pregunta: tipo, valor });
+    });
+
     if (respuestas.length === 0) {
-      showAlert('crear-alert', '⚠️ Agrega al menos una pregunta respondida.', 'error');
+      showAlert('crear-alert', 'Agrega al menos una respuesta', 'error');
       return;
     }
 
     const payload = {
-      encuestado: { nombre, edad, genero, estrato, departamento, municipio,
-                    nivel_educativo: nivel, ocupacion },
+      encuestado: { nombre, edad, genero, estrato, departamento, municipio, nivel_educativo: nivel, ocupacion: ocupacion || null },
       respuestas,
-      observaciones_generales: obs
+      observaciones_generales: observaciones || null,
     };
 
-    const { ok, status, data } = await apiCall('POST', '/encuestas/', payload);
-    if (ok) {
-      showToast('✅ Encuesta registrada exitosamente', 'success');
-      showAlert('crear-alert', `✅ Encuesta creada. ID: ${data.id_encuesta}`, 'success');
-      showJSON('crear-json', data);
-      resetFormCrear();
-    } else {
-      showToast(`❌ Error ${status}: Validación fallida`, 'error');
-      const msg = data?.detalle_errores
-        ? data.detalle_errores.map(e => `• ${e.campo}: ${e.mensaje}`).join('\n')
-        : JSON.stringify(data, null, 2);
-      showAlert('crear-alert', `❌ Error ${status}\n${msg}`, 'error');
-      showJSON('crear-json', data);
+    try {
+      const resp = await fetch(`${API}/encuestas/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await resp.json();
+      if (resp.ok) {
+        showAlert('crear-alert', `✅ Encuesta creada. ID: ${data.id_encuesta}`, 'success');
+        showJSON('crear-json', data);
+        showToast('Encuesta creada', 'success');
+        resetFormCrear();
+      } else {
+        showAlert('crear-alert', `❌ Error ${resp.status}: ${JSON.stringify(data)}`, 'error');
+        showToast(`Error ${resp.status}`, 'error');
+      }
+    } catch (err) {
+      showAlert('crear-alert', `❌ Sin conexión: ${err.message}`, 'error');
     }
   }
 
   function resetFormCrear() {
-    ['enc-nombre','enc-municipio','enc-ocupacion','enc-observaciones'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-    ['enc-genero','enc-estrato','enc-departamento','enc-nivel'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
+    document.getElementById('enc-nombre').value = '';
     document.getElementById('enc-edad').value = '';
+    document.getElementById('enc-genero').value = '';
+    document.getElementById('enc-estrato').value = '';
+    document.getElementById('enc-departamento').value = '';
+    document.getElementById('enc-municipio').value = '';
+    document.getElementById('enc-nivel').value = '';
+    document.getElementById('enc-ocupacion').value = '';
+    document.getElementById('enc-observaciones').value = '';
     document.getElementById('respuestas-container').innerHTML = '';
-    respuestasCount = 0;
+    addRespuesta();
+    document.getElementById('crear-alert').classList.remove('show');
+    document.getElementById('crear-json').classList.remove('show');
   }
 
-  /* ─────────────────── Listar encuestas ─────────────────── */
-  async function listarEncuestas() {
-    const { ok, data } = await apiCall('GET', '/encuestas/');
-    const container = document.getElementById('listar-list');
-    if (!ok || !data || data.length === 0) {
-      container.innerHTML = '<div class="empty-state"><div class="emoji">🌸</div><p>No hay encuestas registradas aún.</p></div>';
-      showToast('Sin encuestas disponibles', 'info');
-      return;
-    }
-    const generoEmojis = { masculino:'👨', femenino:'👩', no_binario:'🧑', prefiero_no_decir:'🙂' };
-    container.innerHTML = data.map(enc => `
-      <div class="encuesta-item">
-        <div class="encuesta-avatar">${generoEmojis[enc.encuestado.genero] || '👤'}</div>
-        <div class="encuesta-info">
-          <div class="nombre">${enc.encuestado.nombre}</div>
-          <div class="meta">
-            <span class="chip chip-rosa">🎂 ${enc.encuestado.edad} años</span>
-            <span class="chip chip-lila">📍 ${enc.encuestado.departamento}</span>
-            <span class="chip chip-menta">Estrato ${enc.encuestado.estrato}</span>
-          </div>
-          <div class="meta" style="margin-top:4px;font-size:0.72rem;color:#bbb;">
-            🕐 ${new Date(enc.fecha_registro).toLocaleString('es-CO')} · ${enc.respuestas.length} respuesta(s)
-          </div>
-        </div>
-        <div class="encuesta-actions">
-          <button class="btn btn-secondary btn-sm" onclick="irABuscar('${enc.id_encuesta}')">👁️ Ver</button>
-          <button class="btn btn-danger btn-sm"    onclick="eliminarDesdeListar('${enc.id_encuesta}', this)">🗑️</button>
-        </div>
-      </div>`).join('');
-    showToast(`${data.length} encuesta(s) cargadas`, 'success');
-    showJSON('listar-json', data);
-  }
-
-  async function eliminarDesdeListar(id, btn) {
-    if (!confirm('¿Eliminar esta encuesta? Esta acción es irreversible.')) return;
-    const { ok, status } = await apiCall('DELETE', `/encuestas/${id}`);
-    if (ok || status === 204) {
-      showToast('Encuesta eliminada', 'success');
-      listarEncuestas();
-    } else {
-      showToast('Error al eliminar', 'error');
-    }
-  }
-
-  function irABuscar(id) {
-    document.getElementById('buscar-id').value = id;
-    showTab('buscar');
-    buscarEncuesta();
-  }
-
-  /* ─────────────────── Buscar encuesta ─────────────────── */
-  async function buscarEncuesta() {
-    const id = document.getElementById('buscar-id').value.trim();
-    if (!id) { showAlert('buscar-alert', '⚠️ Ingresa un ID válido.', 'error'); return; }
-
-    const { ok, status, data } = await apiCall('GET', `/encuestas/${id}`);
-    const resultDiv = document.getElementById('buscar-result');
-
-    if (ok) {
-      encuestaActualData = data;
-      resultDiv.style.display = 'block';
-      renderDetalleEncuesta(data);
-      prefillEditForm(data);
-      showJSON('buscar-json', data);
-      showToast('Encuesta encontrada', 'success');
-    } else {
-      resultDiv.style.display = 'none';
-      encuestaActualData = null;
-      showAlert('buscar-alert', `❌ Error ${status}: ${data?.detail || 'No encontrada'}`, 'error');
-      showJSON('buscar-json', data);
-      showToast('Encuesta no encontrada', 'error');
-    }
-  }
-
-  function renderDetalleEncuesta(enc) {
-    const card = document.getElementById('detalle-card');
-    const respHTML = enc.respuestas.map(r => `
-      <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;">
-        <span class="chip chip-lila">#${r.pregunta_id} ${r.tipo_pregunta}</span>
-        <div>
-          <div style="font-size:0.82rem;font-weight:600;">${r.enunciado}</div>
-          <div style="font-size:0.78rem;color:var(--rosa-vivo);">Valor: <b>${r.valor}</b>${r.observacion ? ' · ' + r.observacion : ''}</div>
-        </div>
-      </div>`).join('');
-    card.innerHTML = `
-      <div style="display:flex;gap:1.2rem;flex-wrap:wrap;align-items:flex-start;">
-        <div style="font-size:2.5rem;">👤</div>
-        <div style="flex:1;">
-          <div style="font-size:1.1rem;font-weight:700;">${enc.encuestado.nombre}</div>
-          <div style="font-size:0.8rem;color:var(--texto-2);margin:4px 0;">
-            ${enc.encuestado.edad} años · ${enc.encuestado.genero} · Estrato ${enc.encuestado.estrato}
-          </div>
-          <div style="font-size:0.8rem;color:var(--texto-2);">
-            📍 ${enc.encuestado.municipio}, ${enc.encuestado.departamento} · 🎓 ${enc.encuestado.nivel_educativo}
-            ${enc.encuestado.ocupacion ? ' · 💼 ' + enc.encuestado.ocupacion : ''}
-          </div>
-          <div style="font-size:0.72rem;color:#bbb;margin-top:4px;">ID: ${enc.id_encuesta}</div>
-        </div>
-      </div>
-      <hr style="border:none;border-top:1px dashed var(--borde);margin:1rem 0;"/>
-      <div style="font-size:0.8rem;font-weight:600;color:var(--texto-2);margin-bottom:8px;">RESPUESTAS (${enc.respuestas.length})</div>
-      ${respHTML}`;
-  }
-
-  function prefillEditForm(enc) {
-    document.getElementById('edit-nombre').value     = enc.encuestado.nombre;
-    document.getElementById('edit-edad').value       = enc.encuestado.edad;
-    document.getElementById('edit-genero').value     = enc.encuestado.genero;
-    document.getElementById('edit-estrato').value    = enc.encuestado.estrato;
-    document.getElementById('edit-departamento').value = enc.encuestado.departamento;
-    document.getElementById('edit-municipio').value  = enc.encuestado.municipio;
-    document.getElementById('edit-nivel').value      = enc.encuestado.nivel_educativo;
-    document.getElementById('edit-ocupacion').value  = enc.encuestado.ocupacion || '';
-  }
-
-  /* ─────────────────── Actualizar encuesta ─────────────────── */
-  async function actualizarEncuesta() {
-    if (!encuestaActualData) return;
-    const id = encuestaActualData.id_encuesta;
-    const payload = {
-      ...encuestaActualData,
-      encuestado: {
-        nombre:           document.getElementById('edit-nombre').value.trim(),
-        edad:             parseInt(document.getElementById('edit-edad').value),
-        genero:           document.getElementById('edit-genero').value,
-        estrato:          parseInt(document.getElementById('edit-estrato').value),
-        departamento:     document.getElementById('edit-departamento').value,
-        municipio:        document.getElementById('edit-municipio').value.trim(),
-        nivel_educativo:  document.getElementById('edit-nivel').value,
-        ocupacion:        document.getElementById('edit-ocupacion').value.trim() || null,
+  /* LISTAR */
+  async function loadEncuestas() {
+    try {
+      const resp = await fetch(`${API}/encuestas/`);
+      const data = await resp.json();
+      const container = document.getElementById('encuestas-list');
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>No hay encuestas registradas</p></div>';
+        return;
       }
-    };
-    const { ok, status, data } = await apiCall('PUT', `/encuestas/${id}`, payload);
-    if (ok) {
-      encuestaActualData = data;
-      renderDetalleEncuesta(data);
-      showJSON('buscar-json', data);
-      showToast('Encuesta actualizada', 'success');
-      showAlert('buscar-alert', '✅ Cambios guardados exitosamente.', 'success');
-    } else {
-      showToast(`Error ${status}`, 'error');
-      showJSON('buscar-json', data);
-      const msg = data?.detalle_errores
-        ? data.detalle_errores.map(e => `• ${e.campo}: ${e.mensaje}`).join('\n')
-        : data?.detail || 'Error desconocido';
-      showAlert('buscar-alert', `❌ ${msg}`, 'error');
-    }
-  }
-
-  /* ─────────────────── Eliminar encuesta ─────────────────── */
-  async function eliminarEncuesta() {
-    if (!encuestaActualData) return;
-    if (!confirm('¿Eliminar esta encuesta definitivamente?')) return;
-    const id = encuestaActualData.id_encuesta;
-    const { ok, status } = await apiCall('DELETE', `/encuestas/${id}`);
-    if (ok || status === 204) {
-      document.getElementById('buscar-result').style.display = 'none';
-      document.getElementById('buscar-id').value = '';
-      encuestaActualData = null;
-      showAlert('buscar-alert', '🗑️ Encuesta eliminada correctamente.', 'info');
-      showToast('Encuesta eliminada', 'success');
-    } else {
-      showToast('Error al eliminar', 'error');
-    }
-  }
-
-  /* ─────────────────── Estadísticas ─────────────────── */
-  async function loadEstadisticas() {
-    const { ok, data } = await apiCall('GET', '/encuestas/estadisticas/');
-    if (!ok) { showToast('Error al cargar estadísticas', 'error'); return; }
-
-    document.getElementById('kpi-total').textContent = data.total_encuestas;
-    document.getElementById('kpi-avg').textContent   = data.edad_promedio || '—';
-    document.getElementById('kpi-min').textContent   = data.edad_minima   ?? '—';
-    document.getElementById('kpi-max').textContent   = data.edad_maxima   ?? '—';
-    document.getElementById('kpi-resp').textContent  = data.promedio_respuestas_por_encuesta || '—';
-
-    const colorClasses = ['', 'lila', 'menta', 'durazno', '', 'lila'];
-    renderBars('chart-estrato',      data.distribucion_por_estrato,          colorClasses);
-    renderBars('chart-genero',       data.distribucion_por_genero,           colorClasses);
-    renderBars('chart-educativo',    data.distribucion_por_nivel_educativo,  colorClasses);
-    renderBars('chart-departamento', data.distribucion_por_departamento,     colorClasses);
-
-    showJSON('stats-json', data);
-    showToast('Estadísticas actualizadas', 'success');
-  }
-
-  function renderBars(containerId, distData, colorClasses) {
-    const container = document.getElementById(containerId);
-    if (!distData || Object.keys(distData).length === 0) {
-      container.innerHTML = '<div class="empty-state" style="padding:1rem;"><p>Sin datos aún</p></div>';
-      return;
-    }
-    const max = Math.max(...Object.values(distData), 1);
-    const entries = Object.entries(distData).sort((a,b) => b[1] - a[1]);
-    const colors = ['', 'lila', 'menta', 'durazno', '', 'lila', 'menta'];
-    container.innerHTML = entries.map(([key, val], i) => `
-      <div class="bar-row">
-        <span class="bar-label" title="${key}">${key}</span>
-        <div class="bar-track">
-          <div class="bar-fill ${colors[i % colors.length]}" style="width:${Math.max((val/max)*100, 4)}%"></div>
-          <span class="bar-value">${val}</span>
+      container.innerHTML = data.map(enc => `
+        <div class="encuesta-item">
+          <div class="encuesta-avatar">👤</div>
+          <div class="encuesta-info">
+            <div class="nombre">${enc.encuestado.nombre}</div>
+            <div class="meta">
+              <span class="chip chip-rosa">${enc.encuestado.edad} años</span>
+              <span class="chip chip-lila">E${enc.encuestado.estrato}</span>
+              <span class="chip chip-menta">${enc.encuestado.departamento}</span>
+              <span style="color:var(--texto-2);font-size:0.75rem;">${enc.respuestas.length} preguntas</span>
+            </div>
+          </div>
+          <div class="encuesta-actions">
+            <button class="btn btn-sm btn-secondary" onclick="verEncuesta('${enc.id_encuesta}')">Ver</button>
+          </div>
         </div>
-      </div>`).join('');
-  }
-
-  /* ─────────────────── Google Forms ─────────────────── */
-
-  // El código fuente del Apps Script (se carga desde la API o se embebe)
-  const APPS_SCRIPT_CODE = `/** ════════════════════════════════════════════════════════════════
- *  INTEGRACIÓN: Google Forms → API Encuestas Poblacionales
- * ════════════════════════════════════════════════════════════════
- *  INSTRUCCIONES:
- *  1. Abre Google Form → ⋮ → Editor de scripts
- *  2. Pega este código completo (reemplaza todo)
- *  3. Cambia API_URL por la URL pública de tu servidor
- *  4. Activadores → + Agregar activador:
- *       Función: onFormSubmit | Evento: Al enviar formulario
- *  5. Ejecuta probarWebhook() para verificar la conexión
- * ════════════════════════════════════════════════════════════════ */
-
-var API_URL = 'https://TU-SERVIDOR.com/encuestas/google-forms/';
-
-var MAPA_GENERO = {
-  'masculino':'masculino','femenino':'femenino',
-  'no binario':'no_binario','no_binario':'no_binario',
-  'prefiero no decir':'prefiero_no_decir','prefiero_no_decir':'prefiero_no_decir',
-};
-var MAPA_NIVEL = {
-  'ninguno':'ninguno','primaria':'primaria','secundaria':'secundaria',
-  'tecnico':'tecnico','tecnico':'tecnico','universitario':'universitario','posgrado':'posgrado',
-};
-
-function onFormSubmit(e) {
-  try {
-    var itemResponses = e.response.getItemResponses();
-    var form = {};
-    for (var i = 0; i < itemResponses.length; i++) {
-      var titulo = itemResponses[i].getItem().getTitle().trim().toLowerCase();
-      form[titulo] = itemResponses[i].getResponse();
+      `).join('');
+    } catch (err) {
+      console.error(err);
     }
-    Logger.log('[INFO] Respuestas: ' + JSON.stringify(form));
-    var payload = {
-      nombre:          limpiar(obtener(form, ['nombre completo','nombre'])),
-      edad:            parseInt(obtener(form, ['edad']) || '0'),
-      genero:          mapearGenero(obtener(form, ['género','genero','sexo'])),
-      estrato:         extraerEstrato(obtener(form, ['estrato socioeconómico','estrato socieconomico','estrato'])),
-      departamento:    limpiar(obtener(form, ['departamento'])),
-      municipio:       limpiar(obtener(form, ['municipio','ciudad'])),
-      nivel_educativo: mapearNivel(obtener(form, ['nivel educativo','nivel_educativo','escolaridad'])),
-      ocupacion:       obtener(form, ['ocupación','ocupacion','profesion','profesión']) || null,
-      respuestas: [
-        buildRespuesta(1,'Satisfacción con el servicio de salud en su municipio','likert',
-          parseInt(obtener(form,['satisfacción con el servicio de salud en su municipio','satisfaccion con el servicio de salud en su municipio','satisfacción con el servicio de salud'])||'3')),
-        buildRespuesta(2,'Nivel de confianza en las instituciones colombianas (%)','porcentaje',
-          parseFloat(obtener(form,['nivel de confianza en las instituciones colombianas (%)','nivel de confianza en las instituciones','nivel de confianza'])||'50')),
-        buildRespuesta(3,'¿Ha utilizado servicios digitales del Estado en el último mes?','si_no',
-          normalizarSiNo(obtener(form,['¿ha utilizado servicios digitales del estado en el último mes?','¿ha utilizado servicios digitales del estado?','¿ha utilizado servicios digitales']))),
-      ],
-      observaciones_generales: obtener(form,['observaciones adicionales','observaciones','comentarios']) || null,
-      fuente: 'google_forms',
-    };
-    Logger.log('[INFO] Payload: ' + JSON.stringify(payload));
-    var resultado = enviarAAPI(payload);
-    if (resultado) Logger.log('[OK] ID: ' + resultado.id_encuesta);
-  } catch(err) {
-    Logger.log('[ERROR] ' + err.toString());
-  }
-}
-
-function obtener(data, claves) {
-  for (var i = 0; i < claves.length; i++) {
-    var val = data[claves[i]];
-    if (val !== undefined && val !== null && val !== '') return val;
-  }
-  return null;
-}
-function limpiar(t) { return t ? t.toString().trim().replace(/\\s+/g,' ') : ''; }
-function mapearGenero(v) { if (!v) return 'prefiero_no_decir'; return MAPA_GENERO[v.toLowerCase().trim()] || 'prefiero_no_decir'; }
-function extraerEstrato(v) { if (!v) return 3; var m = v.toString().match(/^(\\d)/); return m ? parseInt(m[1]) : parseInt(v)||3; }
-function mapearNivel(v) {
-  if (!v) return 'universitario';
-  var k = v.toLowerCase().trim().replace(/á/g,'a').replace(/é/g,'e').replace(/í/g,'i').replace(/ó/g,'o').replace(/ú/g,'u');
-  return MAPA_NIVEL[k] || 'universitario';
-}
-function normalizarSiNo(v) {
-  if (!v) return 'no';
-  var s = v.toString().toLowerCase().trim().replace(/sí/g,'si').replace(/yes/g,'si').replace(/true/g,'si');
-  return s === 'si' ? 'si' : 'no';
-}
-function buildRespuesta(id, enunciado, tipo, valor) { return {pregunta_id:id,enunciado:enunciado,tipo_pregunta:tipo,valor:valor}; }
-function enviarAAPI(payload) {
-  var opts = {method:'post',contentType:'application/json',payload:JSON.stringify(payload),muteHttpExceptions:true};
-  try {
-    var r = UrlFetchApp.fetch(API_URL, opts);
-    var code = r.getResponseCode();
-    Logger.log('[HTTP] ' + code + ' — ' + r.getContentText().substring(0, 200));
-    return code === 201 ? JSON.parse(r.getContentText()) : null;
-  } catch(err) { Logger.log('[ERROR] ' + err.toString()); throw err; }
-}
-function probarWebhook() {
-  var p = {nombre:'Prueba Apps Script',edad:30,genero:'femenino',estrato:3,departamento:'Cundinamarca',
-    municipio:'Bogota',nivel_educativo:'universitario',ocupacion:'Desarrolladora',
-    respuestas:[
-      {pregunta_id:1,enunciado:'Satisfacción con el servicio de salud en su municipio',tipo_pregunta:'likert',valor:4},
-      {pregunta_id:2,enunciado:'Nivel de confianza en las instituciones colombianas (%)',tipo_pregunta:'porcentaje',valor:70.0},
-      {pregunta_id:3,enunciado:'¿Ha utilizado servicios digitales del Estado en el último mes?',tipo_pregunta:'si_no',valor:'si'},
-    ],
-    observaciones_generales:'Test desde Apps Script',fuente:'google_forms'};
-  Logger.log('[TEST] Enviando a: ' + API_URL);
-  var r = enviarAAPI(p);
-  Logger.log(r ? '[TEST OK] ID: ' + r.id_encuesta : '[TEST FALLIDO] Revisa API_URL y los logs.');
-}`;
-
-  function cargarAppsScript() {
-    const ta = document.getElementById('apps-script-code');
-    if (ta) ta.value = APPS_SCRIPT_CODE;
   }
 
-  function copiarAppsScript() {
-    const ta = document.getElementById('apps-script-code');
-    if (!ta) return;
-    navigator.clipboard.writeText(ta.value).then(() => {
-      showToast('📋 Código copiado al portapapeles', 'success');
-    }).catch(() => {
-      ta.select();
-      document.execCommand('copy');
-      showToast('📋 Código copiado', 'success');
-    });
-  }
-
-  async function probarGoogleForms() {
-    const nombre = document.getElementById('gf-test-nombre').value.trim() || 'Prueba';
-    const edad   = parseInt(document.getElementById('gf-test-edad').value) || 28;
-    const dept   = document.getElementById('gf-test-dept').value;
-    const likert = parseInt(document.getElementById('gf-test-likert').value) || 4;
-
-    const payload = {
-      nombre,
-      edad,
-      genero:          'femenino',
-      estrato:         3,
-      departamento:    dept,
-      municipio:       'Bogota',
-      nivel_educativo: 'universitario',
-      ocupacion:       'Prueba desde frontend',
-      respuestas: [
-        { pregunta_id: 1, enunciado: 'Satisfacción con el servicio de salud en su municipio',       tipo_pregunta: 'likert',     valor: likert },
-        { pregunta_id: 2, enunciado: 'Nivel de confianza en las instituciones colombianas (%)',      tipo_pregunta: 'porcentaje', valor: 68.0   },
-        { pregunta_id: 3, enunciado: '¿Ha utilizado servicios digitales del Estado en el último mes?', tipo_pregunta: 'si_no',   valor: 'si'   },
-      ],
-      observaciones_generales: 'Test enviado desde la interfaz web',
-      fuente: 'google_forms',
-    };
-
-    const { ok, status, data } = await apiCall('POST', '/encuestas/google-forms/', payload);
-    if (ok) {
-      showToast('✅ Webhook recibido correctamente', 'success');
-      showAlert('gf-alert', `✅ Encuesta registrada vía Google Forms. ID: ${data.id_encuesta}`, 'success');
-    } else {
-      showToast(`❌ Error ${status}`, 'error');
-      const msg = data?.detalle_errores
-        ? data.detalle_errores.map(e => `• ${e.campo}: ${e.mensaje}`).join('\n')
-        : data?.detail || 'Error desconocido';
-      showAlert('gf-alert', `❌ Error ${status}: ${msg}`, 'error');
+  async function verEncuesta(id) {
+    try {
+      const resp = await fetch(`${API}/encuestas/${id}`);
+      const data = await resp.json();
+      showJSON('listar-json', data);
+    } catch (err) {
+      console.error(err);
     }
-    showJSON('gf-json', data);
   }
 
-  /* ─────────────────── Init ─────────────────── */
+  /* UPLOAD */
+  const uploadArea = document.getElementById('upload-area');
+  uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) uploadFile(file);
+  });
+
+  function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) uploadFile(file);
+  }
+
+  async function uploadFile(file) {
+    document.getElementById('upload-progress').style.display = 'block';
+    document.getElementById('upload-text').textContent = `Procesando ${file.name}...`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const resp = await fetch(`${API}/encuestas/upload-csv/`, { method: 'POST', body: formData });
+      const data = await resp.json();
+      document.getElementById('upload-progress').style.display = 'none';
+      if (resp.ok) {
+        showAlert('upload-alert', `✅ ${data.exitosos} encuestas cargadas. Errores: ${data.fallidos}`, 'success');
+        showJSON('upload-json', data);
+        showToast(`${data.exitosos} encuestas cargadas`, 'success');
+      } else {
+        showAlert('upload-alert', `❌ Error ${resp.status}: ${JSON.stringify(data)}`, 'error');
+        showToast(`Error ${resp.status}`, 'error');
+      }
+    } catch (err) {
+      document.getElementById('upload-progress').style.display = 'none';
+      showAlert('upload-alert', `❌ Sin conexión: ${err.message}`, 'error');
+    }
+  }
+
+  /* EXPORT */
+  function exportJSON() {
+    window.open(`${API}/encuestas/export/json/`, '_blank');
+    showToast('Descargando JSON...', 'info');
+  }
+
+  function exportPickle() {
+    window.open(`${API}/encuestas/export/pickle/`, '_blank');
+    showToast('Descargando Pickle...', 'info');
+  }
+
+  /* ESTADISTICAS */
+  async function loadEstadisticas() {
+    try {
+      const resp = await fetch(`${API}/encuestas/estadisticas/`);
+      const data = await resp.json();
+      
+      // KPIs
+      const container = document.getElementById('stats-kpi');
+      container.innerHTML = `
+        <div class="kpi-card"><div class="kpi-value">${data.total_encuestas}</div><div class="kpi-label">Total encuestas</div></div>
+        <div class="kpi-card"><div class="kpi-value">${data.edad_promedio.toFixed(1)}</div><div class="kpi-label">Edad promedio</div></div>
+        <div class="kpi-card"><div class="kpi-value">${data.edad_minima} - ${data.edad_maxima}</div><div class="kpi-label">Rango edad</div></div>
+        <div class="kpi-card"><div class="kpi-value">${data.promedio_respuestas_por_encuesta.toFixed(1)}</div><div class="kpi-label">Promedio preguntas</div></div>
+      `;
+
+      // Gráficos de barras
+      const chartsContainer = document.getElementById('stats-charts');
+      chartsContainer.innerHTML = '';
+
+      // Estrato
+      if (data.distribucion_por_estrato && Object.keys(data.distribucion_por_estrato).length > 0) {
+        let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Estrato</h4>';
+        const maxVal = Math.max(...Object.values(data.distribucion_por_estrato));
+        for (const [key, val] of Object.entries(data.distribucion_por_estrato)) {
+          const width = (val / maxVal) * 100;
+          html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+        }
+        html += '</div>';
+        chartsContainer.innerHTML += html;
+      }
+
+      // Género
+      if (data.distribucion_por_genero && Object.keys(data.distribucion_por_genero).length > 0) {
+        let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Género</h4>';
+        const maxVal = Math.max(...Object.values(data.distribucion_por_genero));
+        for (const [key, val] of Object.entries(data.distribucion_por_genero)) {
+          const width = (val / maxVal) * 100;
+          html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill lila" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+        }
+        html += '</div>';
+        chartsContainer.innerHTML += html;
+      }
+
+      // Nivel educativo
+      if (data.distribucion_por_nivel_educativo && Object.keys(data.distribucion_por_nivel_educativo).length > 0) {
+        let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Nivel educativo</h4>';
+        const maxVal = Math.max(...Object.values(data.distribucion_por_nivel_educativo));
+        for (const [key, val] of Object.entries(data.distribucion_por_nivel_educativo)) {
+          const width = (val / maxVal) * 100;
+          html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill menta" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+        }
+        html += '</div>';
+        chartsContainer.innerHTML += html;
+      }
+
+      showJSON('stats-json', data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  /* INIT */
   document.addEventListener('DOMContentLoaded', () => {
     checkHealth();
-    addRespuesta();       // Agregar una respuesta por defecto al cargar
-    cargarAppsScript();   // Precargar el código Apps Script en el textarea
+    addRespuesta();
   });
 </script>
 </body>

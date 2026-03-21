@@ -27,6 +27,8 @@ from typing_extensions import Annotated
 from validators import (
     DEPARTAMENTOS_COLOMBIA,
     validar_departamento,
+    validar_edad,
+    validar_estrato,
     validar_porcentaje,
     validar_rango_likert,
 )
@@ -132,7 +134,7 @@ class RespuestaEncuesta(BaseModel):
 
         Restricciones por tipo:
             likert       → int en [1, 5]
-            porcentaje   → float/int en [0.0, 100.0]
+            porcentaje   → float/int en [0.0-100.0]
             si_no        → str "si" o "no" (normaliza "sí")
             texto_abierto → str no vacío
         """
@@ -293,12 +295,19 @@ class Encuestado(BaseModel):
         Valores fuera de rango (ej. 999) son invariablemente errores de digitación
         que contaminarían cualquier análisis de tendencia central.
         """
-        if v < 0 or v > 120:
-            raise ValueError(
-                f"Edad {v} viola la restricción biológica [0, 120] años. "
-                f"Verifique el dato ingresado — probablemente sea un error de captura."
-            )
-        return v
+        return validar_edad(v)
+
+    @field_validator("estrato", mode="after")
+    @classmethod
+    def auditar_clasificacion_socioeconomica(cls, v: int) -> int:
+        """
+        mode='after': Verificación post-conversión de la clasificación DANE.
+
+        El estrato socioeconómico en Colombia es una política pública de
+        subsidios cruzados. Valores fuera de [1,6] indicarían error de captura
+        que afectaría análisis de segmentación socioeconómica.
+        """
+        return validar_estrato(v)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -617,3 +626,14 @@ class GoogleFormsPayload(BaseModel):
             f"Nivel educativo '{v}' no reconocido. "
             f"Valores válidos: ninguno, primaria, secundaria, tecnico, universitario, posgrado."
         )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MODELOS PARA EXPORTACIÓN (Bonificación +0.1 JSON vs Pickle)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class ExportResultado(BaseModel):
+    """Resultado de operación de exportación."""
+    total_exportados: int
+    formato: str
+    mensaje: str

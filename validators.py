@@ -1,8 +1,8 @@
 """
-validators.py — Validadores auxiliares para la API de Encuestas Poblacionales.
+validators.py — Validadores para encuestas poblacionales colombianas.
 
-Centraliza las constantes de dominio colombiano y funciones de validación
-reutilizables, manteniendo los modelos Pydantic limpios y enfocados.
+Centraliza constantes del dominio colombiano y funciones de validación
+reutilizables para los modelos Pydantic.
 """
 
 from typing import List
@@ -24,7 +24,7 @@ DEPARTAMENTOS_COLOMBIA: List[str] = [
     "Bogotá D.C.",
 ]
 
-# Versión normalizada (sin tildes, lowercase) para comparación robusta
+# Mapeo para normalización (sin tildes → con tildes)
 _REEMPLAZOS_TILDES = {
     "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u",
     "ü": "u", "ñ": "n", "Á": "a", "É": "e", "Í": "i",
@@ -84,7 +84,7 @@ def validar_departamento(departamento: str) -> str:
 
 def validar_rango_likert(valor: int) -> int:
     """
-    Valida que un valor esté en la escala Likert colombiana estándar (1-5).
+    Valida que un valor esté en la escala Likert estándar (1-5).
 
     Escala:
         1 = Muy insatisfecho / Totalmente en desacuerdo
@@ -99,11 +99,16 @@ def validar_rango_likert(valor: int) -> int:
     Raises:
         ValueError: Si el valor no está en el rango 1-5.
     """
-    if not isinstance(valor, int) or not (1 <= valor <= 5):
+    if not isinstance(valor, int) or isinstance(valor, bool):
         raise ValueError(
             f"Escala Likert debe ser un entero entre 1 y 5. Recibido: {valor!r}. "
             f"Escala: 1=Muy insatisfecho, 2=Insatisfecho, 3=Neutral, "
             f"4=Satisfecho, 5=Muy satisfecho."
+        )
+    if not (1 <= valor <= 5):
+        raise ValueError(
+            f"Escala Likert debe estar entre 1 y 5. Recibido: {valor}. "
+            f"Valores válidos: 1, 2, 3, 4, 5"
         )
     return valor
 
@@ -116,10 +121,10 @@ def validar_porcentaje(valor: float) -> float:
         valor: Número a validar como porcentaje.
 
     Returns:
-        El valor como float si es válido.
+        El valor como float redondeado a 4 decimales si es válido.
 
     Raises:
-        ValueError: Si el valor está fuera del rango 0-100.
+        ValueError: Si el valor está fuera del rango 0-100 o no es numérico.
     """
     try:
         v = float(valor)
@@ -132,3 +137,52 @@ def validar_porcentaje(valor: float) -> float:
             f"Recibido: {v}. Un porcentaje no puede ser negativo ni superar el 100%."
         )
     return round(v, 4)
+
+
+def validar_edad(valor: int) -> int:
+    """
+    Valida la edad dentro del rango biológico humano (0-120 años).
+
+    Args:
+        valor: Edad a validar.
+
+    Returns:
+        La misma edad si es válida.
+
+    Raises:
+        ValueError: Si la edad está fuera del rango 0-120.
+    """
+    if not isinstance(valor, int) or isinstance(valor, bool):
+        raise ValueError(f"La edad debe ser un número entero. Recibido: {valor!r}")
+    
+    if not (0 <= valor <= 120):
+        raise ValueError(
+            f"La edad debe estar entre 0 y 120 años. Recibido: {valor}. "
+            f"Valores fuera de rango indican error de captura (restricción biológica)."
+        )
+    return valor
+
+
+def validar_estrato(valor: int) -> int:
+    """
+    Valida el estrato socioeconómico colombiano (1-6).
+
+    Args:
+        valor: Estrato a validar.
+
+    Returns:
+        El mismo estrato si es válido.
+
+    Raises:
+        ValueError: Si el estrato está fuera del rango 1-6.
+    """
+    if not isinstance(valor, int) or isinstance(valor, bool):
+        raise ValueError(f"El estrato debe ser un número entero. Recibido: {valor!r}")
+    
+    if not (1 <= valor <= 6):
+        raise ValueError(
+            f"El estrato socioeconómico debe estar entre 1 y 6. Recibido: {valor}. "
+            f"Clasificación DANE: 1=Bajo-bajo, 2=Bajo, 3=Medio-bajo, "
+            f"4=Medio, 5=Medio-alto, 6=Alto"
+        )
+    return valor
