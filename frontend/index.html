@@ -674,6 +674,20 @@
       color: var(--texto);
     }
 
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--rosa-palido);
+      border-top-color: var(--rosa-vivo);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 1.5rem auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     @media (max-width: 640px) {
       header {
         flex-direction: column;
@@ -764,6 +778,30 @@
           <div class="endpoint-chip"><span class="method GET">GET</span><span
               class="path">/encuestas/export/pickle/</span>
             <div class="desc">Export Pickle</div>
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:1.5rem;"><span class="icon">🏛️</span> Censo 2018</div>
+        <div class="endpoints-grid">
+          <div class="endpoint-chip"><span class="method POST">POST</span><span class="path">/censo-2018/upload-csv/</span>
+            <div class="desc">Cargar CSV</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/censo-2018/estadisticas/</span>
+            <div class="desc">Estadísticas</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/censo-2018/indice/masculinidad/</span>
+            <div class="desc">Índice masculinidad</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/censo-2018/indice/dependencia/</span>
+            <div class="desc">Índice dependencia</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/censo-2018/registros/</span>
+            <div class="desc">Listar registros</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/censo-2018/registros/{id}/</span>
+            <div class="desc">Registro por ID</div>
+          </div>
+          <div class="endpoint-chip"><span class="method DELETE">DELETE</span><span class="path">/censo-2018/borrar-todo/</span>
+            <div class="desc">Borrar datos</div>
           </div>
         </div>
         <div id="health-result" class="json-viewer"></div>
@@ -1747,10 +1785,22 @@
         }
 
         const kpiContainer = document.getElementById('censo-stats-kpi');
+        const hombres = data.distribucion_por_sexo?.['Hombre'] || 0;
+        const mujeres = data.distribucion_por_sexo?.['Mujer'] || 0;
+        const pctHombres = data.total_registros > 0 ? ((hombres / data.total_registros) * 100).toFixed(1) : '—';
+        const pctMujeres = data.total_registros > 0 ? ((mujeres / data.total_registros) * 100).toFixed(1) : '—';
         kpiContainer.innerHTML = `
           <div class="kpi-card">
             <div class="kpi-value">${data.total_registros.toLocaleString()}</div>
             <div class="kpi-label">Total Registros</div>
+          </div>
+          <div class="kpi-card" style="background:linear-gradient(135deg,#DAE8FF,#B6D4FE);">
+            <div class="kpi-value" style="color:#084298;">♂ ${hombres.toLocaleString()}</div>
+            <div class="kpi-label" style="color:#084298;">Hombres (${pctHombres}%)</div>
+          </div>
+          <div class="kpi-card" style="background:linear-gradient(135deg,#FFE4EE,#FFB6C1);">
+            <div class="kpi-value" style="color:#9c2761;">♀ ${mujeres.toLocaleString()}</div>
+            <div class="kpi-label" style="color:#9c2761;">Mujeres (${pctMujeres}%)</div>
           </div>
         `;
 
@@ -1826,6 +1876,48 @@
           rangosEdadDiv.innerHTML = html;
         }
 
+        // Municipios más poblados (top 15)
+        if (data.distribucion_por_municipio && Object.keys(data.distribucion_por_municipio).length > 0) {
+          const mpioEntries = Object.entries(data.distribucion_por_municipio);
+          const maxMpio = Math.max(...mpioEntries.map(([, v]) => v));
+          let mpioHtml = '<div style="margin-top:2rem;">';
+          mpioHtml += '<h3 style="color:var(--rosa-vivo);margin-bottom:1rem;">🏙️ Top 15 Municipios</h3>';
+          mpioHtml += '<div style="background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 10px rgba(0,0,0,0.1);">';
+          for (const [mpio, cantidad] of mpioEntries) {
+            const pct = (cantidad / maxMpio) * 100;
+            mpioHtml += '<div style="display:flex;align-items:center;margin-bottom:8px;">';
+            mpioHtml += `<div style="width:180px;font-size:0.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${mpio}</div>`;
+            mpioHtml += '<div style="flex:1;background:#f0e0e8;height:22px;border-radius:6px;overflow:hidden;">';
+            mpioHtml += `<div style="background:linear-gradient(90deg,#C9A8E8,#9c2761);height:100%;width:${pct}%;border-radius:6px;"></div>`;
+            mpioHtml += '</div>';
+            mpioHtml += `<div style="width:80px;text-align:right;font-weight:700;font-size:0.82rem;padding-right:6px;">${cantidad.toLocaleString()}</div>`;
+            mpioHtml += '</div>';
+          }
+          mpioHtml += '</div></div>';
+          rangosEdadDiv.innerHTML += mpioHtml;
+        }
+
+        // Distribución por departamento (top 10)
+        if (data.distribucion_por_departamento && Object.keys(data.distribucion_por_departamento).length > 0) {
+          const deptoEntries = Object.entries(data.distribucion_por_departamento).slice(0, 10);
+          const maxDepto = Math.max(...deptoEntries.map(([, v]) => v));
+          let deptoHtml = '<div style="margin-top:2rem;">';
+          deptoHtml += '<h3 style="color:var(--rosa-vivo);margin-bottom:1rem;">🗺️ Distribución por Departamento (top 10)</h3>';
+          deptoHtml += '<div style="background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 10px rgba(0,0,0,0.1);">';
+          for (const [depto, cantidad] of deptoEntries) {
+            const pct = (cantidad / maxDepto) * 100;
+            deptoHtml += '<div style="display:flex;align-items:center;margin-bottom:8px;">';
+            deptoHtml += `<div style="width:160px;font-size:0.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${depto}</div>`;
+            deptoHtml += '<div style="flex:1;background:#d4f5e9;height:22px;border-radius:6px;overflow:hidden;">';
+            deptoHtml += `<div style="background:linear-gradient(90deg,#4CAF84,#0A5F2E);height:100%;width:${pct}%;border-radius:6px;"></div>`;
+            deptoHtml += '</div>';
+            deptoHtml += `<div style="width:80px;text-align:right;font-weight:700;font-size:0.82rem;padding-right:6px;">${cantidad.toLocaleString()}</div>`;
+            deptoHtml += '</div>';
+          }
+          deptoHtml += '</div></div>';
+          rangosEdadDiv.innerHTML += deptoHtml;
+        }
+
         showJSON('censo-stats-json', data);
         showToast('✓ Estadísticas cargadas correctamente', 'success');
       } catch (err) {
@@ -1897,8 +1989,10 @@
 
         if (response.ok) {
           showToast(`✓ ${data.registros_borrados} registros borrados`, 'success');
-          // Limpiar panel
+          // Limpiar todos los paneles de resultados del censo
           document.getElementById('censo-stats-kpi').innerHTML = '';
+          document.getElementById('censo-grupos-edad').innerHTML = '';
+          document.getElementById('censo-rangos-edad').innerHTML = '';
           document.getElementById('censo-indices-result').innerHTML = '';
           document.getElementById('censo-stats-json').textContent = '';
           document.getElementById('censo-stats-json').className = 'json-viewer';

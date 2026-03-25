@@ -4,18 +4,24 @@ models_censo.py — Modelos ORM y Pydantic para el Censo 2018 Colombia.
 Fuente: DANE - Censo Nacional de Población y Vivienda 2018
 Tabla: Individual (Personas)
 
-Variables seleccionadas para el proyecto:
-- U_DPTO: Código de departamento (1-32 + Bogotá D.C.)
-- U_MPIO: Código de municipio (según codificación DANE)
-- P_SEXO: Sexo (1=Hombre, 2=Mujer)
-- P_EDADR: Edad en años (0-100+)
-- P_NIVEL_ANOSR: Años de educación aprobados (0-11, 99=Ignorado)
-- PA1_GRP_ETNIC: Pertenencia étnica (1-6, 9=Ignorado)
-- P_ENFERMO: Enfermedad crónica (1=Sí, 2=No, 9=Ignorado)
-- P_EST_CIVIL: Estado civil (1-7, 9=Ignorado)
-- P_TRABAJO: Situación laboral (0-9)
-- P_ALFABETA: Alfabetismo (1=Sí, 2=No, 9=Ignorado)
-- PA_ASISTENCIA: Asistencia educativa (1=Sí, 2=No, 9=Ignorado)
+Variables principales (codificación DIVIPOLA/DANE):
+- U_DPTO:       Código DIVIPOLA de departamento (5=Antioquia, 8=Atlántico,
+                11=Bogotá D.C., 13=Bolívar, ... 99=Vichada). NO son 1-32.
+- U_MPIO:       Código DIVIPOLA de municipio (3 dígitos dentro del depto).
+- P_SEXO:       Sexo (1=Hombre, 2=Mujer).
+- P_EDADR:      CÓDIGO DE RANGO ETARIO (1-21). NO es edad en años.
+                Código 1=00-04 años, 2=05-09, ..., 21=100+ años.
+- P_NIVEL_ANOSR: Nivel educativo (código DANE, no años corridos).
+- PA1_GRP_ETNIC: Grupo étnico (1=Indígena, 2=Gitano ROM, 3=Raizal,
+                 4=Palenquero, 5=Negro/Afrocolombiano, 6=Ninguno).
+- P_ENFERMO:    Enfermedad crónica (1=Sí, 2=No, 9=Ignorado).
+- P_EST_CIVIL:  Estado civil (1=Unión libre, 2=Separado/a, 3=Viudo/a,
+                4=Soltero/a, 5=Casado/a, 9=N/A).
+- P_TRABAJO:    Situación laboral (1=Trabajó, 2=Tenía trabajo, 3=Buscó,
+                4=Estudió, 5=Oficios hogar, 6=Rentista, 7=Pensionado,
+                8=Inválido, 9=Otro, 0=Menor de 10 años).
+- P_ALFABETA:   Alfabetismo (1=Sí, 2=No, 9=Ignorado).
+- PA_ASISTENCIA: Asistencia educativa (1=Sí, 2=No, 9=Ignorado).
 
 Arquitectura:
 - Modelo ORM (SQLAlchemy): Para persistencia en base de datos
@@ -60,7 +66,7 @@ class RegistroCenso2018ORM(Base):
     
     # Variables demográficas principales (índices para análisis)
     p_sexo: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True, comment="Sexo (1=Hombre, 2=Mujer)")
-    p_edadr: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True, comment="Edad en años")
+    p_edadr: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True, comment="Código de rango etario DANE (1-21, no es edad en años)")
     p_parentescor: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, comment="Parentesco")
     
     # Variables étnicas
@@ -149,7 +155,7 @@ class RegistroCenso2018Base(BaseModel):
                 "u_dpto": 5,
                 "u_mpio": 1,
                 "p_sexo": 1,
-                "p_edadr": 35,
+                "p_edadr": 7,
                 "pa1_grp_etnic": 5,
                 "p_enfermo": 2,
                 "p_est_civil": 2,
@@ -163,13 +169,13 @@ class RegistroCenso2018Base(BaseModel):
     
     # Identificadores geográficos
     tipo_reg: Optional[int] = Field(default=5, description="Tipo de registro (5=Persona)")
-    u_dpto: Optional[int] = Field(default=None, ge=1, le=99, description="Código departamento DANE (1-32)")
+    u_dpto: Optional[int] = Field(default=None, ge=1, le=99, description="Código DIVIPOLA del departamento (5=Antioquia, 11=Bogotá D.C., 76=Valle del Cauca, etc.)")
     u_mpio: Optional[int] = Field(default=None, ge=0, le=9999, description="Código municipio DANE")
     ua_clase: Optional[int] = Field(default=None, description="Clase de área")
     
     # Variables demográficas principales
     p_sexo: Optional[int] = Field(default=None, ge=1, le=2, description="Sexo (1=Hombre, 2=Mujer)")
-    p_edadr: Optional[int] = Field(default=None, ge=0, le=120, description="Edad en años (0-120)")
+    p_edadr: Optional[int] = Field(default=None, ge=1, le=21, description="Código de rango etario DANE (1=00-04 años, 2=05-09, ..., 21=100+ años). NO es edad en años.")
     p_parentescor: Optional[int] = Field(default=None, description="Parentesco")
     
     # Variables étnicas
@@ -278,11 +284,13 @@ class RegistroCenso2018Base(BaseModel):
     
     @field_validator("p_edadr", mode="after")
     @classmethod
-    def validar_edad_censo(cls, v: Optional[int]) -> Optional[int]:
-        """Valida edad en rango biológico razonable para censo."""
-        if v is not None and not (0 <= v <= 120):
+    def validar_rango_etario(cls, v: Optional[int]) -> Optional[int]:
+        """Valida que p_edadr sea un código de rango DANE válido (1-21)."""
+        if v is not None and not (1 <= v <= 21):
             raise ValueError(
-                f"Edad inválida: {v}. Rango aceptado: 0-120 años (restricción biológica)"
+                f"Código de rango etario inválido: {v}. "
+                f"El DANE usa códigos 1-21 (1=00-04 años, ..., 21=100+ años). "
+                f"Este campo NO es edad en años."
             )
         return v
     
@@ -301,42 +309,38 @@ class RegistroCenso2018Base(BaseModel):
     def validar_coherencia_demografica(self) -> "RegistroCenso2018Base":
         """
         Validaciones cruzadas de coherencia demográfica.
-        
-        Reglas:
-        - Menores de 12 años no deberían tener estado civil de casado/unido
-        - Menores de 5 años no deberían tener variables de trabajo/educación
-        - Variables de fecundidad solo aplican a mujeres 12-49 años
+
+        p_edadr contiene CÓDIGOS DE RANGO (1-21), no edades en años:
+          Código 1 = 00-04 años, 2 = 05-09, 3 = 10-14, ..., 10 = 45-49,
+          11 = 50-54, ..., 21 = 100+ años.
+
+        Reglas aplicadas:
+        - Hombres: se limpian variables de fecundidad (no aplican).
+        - Código ≤ 2 (0-9 años) o código ≥ 11 (50+ años): fuera de edad
+          fértil → se limpian variables de fecundidad.
         """
-        edad = self.p_edadr
+        codigo_edad = self.p_edadr
         sexo = self.p_sexo
-        estado_civil = self.p_est_civil
-        trabajo = self.p_trabajo
-        
-        # Coherencia estado civil - edad
-        if edad is not None and edad < 12 and estado_civil is not None:
-            if estado_civil in (2, 3):  # Casado o Unido
-                # No es válido pero no rechazamos, solo es data quality issue
-                pass
-        
-        # Coherencia fecundidad - sexo y edad
-        if sexo == 1:  # Hombre
-            # Limpiar variables de fecundidad para hombres (no aplican)
-            for field in ['pa_hnv', 'pa1_thnv', 'pa2_hnvh', 'pa3_hnvm', 
-                         'pa_hnvs', 'pa1_thsv', 'pa2_hsvh', 'pa3_hsvm',
-                         'pa_hfc', 'pa1_thfc', 'pa2_hfch', 'pa3_hfcm',
-                         'pa_uhnv', 'pa1_mes_uhnv', 'pa2_ano_uhnv']:
+
+        CAMPOS_FECUNDIDAD = [
+            'pa_hnv', 'pa1_thnv', 'pa2_hnvh', 'pa3_hnvm',
+            'pa_hnvs', 'pa1_thsv', 'pa2_hsvh', 'pa3_hsvm',
+            'pa_hfc', 'pa1_thfc', 'pa2_hfch', 'pa3_hfcm',
+            'pa_uhnv', 'pa1_mes_uhnv', 'pa2_ano_uhnv',
+        ]
+
+        # Hombres no tienen variables de fecundidad
+        if sexo == 1:
+            for field in CAMPOS_FECUNDIDAD:
                 if getattr(self, field) is not None:
                     setattr(self, field, None)
-        
-        if edad is not None and (edad < 12 or edad > 49):
-            # Fuera de edad fértil, limpiar variables de fecundidad
-            for field in ['pa_hnv', 'pa1_thnv', 'pa2_hnvh', 'pa3_hnvm',
-                         'pa_hnvs', 'pa1_thsv', 'pa2_hsvh', 'pa3_hsvm',
-                         'pa_hfc', 'pa1_thfc', 'pa2_hfch', 'pa3_hfcm',
-                         'pa_uhnv', 'pa1_mes_uhnv', 'pa2_ano_uhnv']:
+
+        # Fuera de edad fértil: códigos 1-2 (0-9 años) o 11+ (50+ años)
+        if codigo_edad is not None and (codigo_edad <= 2 or codigo_edad >= 11):
+            for field in CAMPOS_FECUNDIDAD:
                 if getattr(self, field) is not None:
                     setattr(self, field, None)
-        
+
         return self
 
 

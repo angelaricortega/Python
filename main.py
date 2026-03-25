@@ -78,35 +78,143 @@ logger = logging.getLogger("encuesta_api")
 # Inicialización de FastAPI
 # ─────────────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="API de Encuestas Poblacionales",
+    title="API de Encuestas Poblacionales · Colombia",
     description="""
-## Sistema de Validación y Gestión de Encuestas Colombianas
+## Sistema de Validación y Gestión de Encuestas Poblacionales Colombianas
 
-API REST desarrollada con **FastAPI + Pydantic v2** para la recolección,
-validación y análisis estadístico de encuestas poblacionales.
+API REST desarrollada con **FastAPI + Pydantic v2** para la recolección, validación y
+análisis estadístico de encuestas poblacionales y datos del **Censo Nacional 2018** del DANE.
 
-### Características principales
-- **Validación rigurosa**: edad [0-120], estrato [1-6], departamentos DANE
-- **Tipos polimórficos**: Likert (1-5), porcentaje (0-100), texto, si/no
-- **CRUD completo** con almacenamiento en memoria
-- **Upload de CSV** desde Google Forms o archivos locales
-- **Export a JSON/Pickle** para interoperabilidad
-- **Estadísticas agregadas** en tiempo real
-- **Manejo de errores HTTP 422** con mensajes descriptivos
-- **Documentación interactiva** en `/docs` (Swagger) y `/redoc` (Redoc)
+---
 
-### Censo 2018 (NUEVO)
-- **Carga masiva** de bases de datos del DANE (millones de registros)
-- **Índices demográficos**: masculinidad, dependencia
-- **Estadísticas descriptivas** completas
-- **Base de datos SQLite** para persistencia
+## 📦 Módulo 1 — Encuestas (almacenamiento en memoria)
 
-### Ejecución local
+Gestiona encuestas poblacionales con validación estricta de dominio colombiano.
+
+### Flujo de trabajo típico
+1. `POST /encuestas/` — crear una encuesta manualmente
+2. `POST /encuestas/upload-csv/` — cargar resultados desde Google Forms o CSV propio
+3. `GET /encuestas/estadisticas/` — obtener resumen estadístico en tiempo real
+4. `GET /encuestas/export/json/` o `.../pickle/` — exportar para análisis externo
+
+### Modelo de datos: `EncuestaCompleta`
+
+Cada encuesta contiene:
+- **`encuestado`** — perfil demográfico del respondente:
+  - `nombre` (str, 2-100 chars)
+  - `edad` (int, 0-120) — axioma biológico
+  - `genero` (Literal) — `masculino | femenino | no_binario | prefiero_no_decir`
+  - `estrato` (int, 1-6) — clasificación socioeconómica DANE
+  - `departamento` (str) — validado contra catálogo DANE DIVIPOLA (33 entidades)
+  - `municipio` (str, 2-100 chars)
+  - `nivel_educativo` (Literal) — `ninguno | primaria | secundaria | tecnico | universitario | posgrado | otro`
+  - `ocupacion` (str, opcional)
+- **`respuestas`** — lista de `RespuestaEncuesta`:
+  - `pregunta_id` (int ≥ 1, único por encuesta)
+  - `enunciado` (str, 5-500 chars)
+  - `tipo_pregunta` (Literal) — `likert | porcentaje | texto_abierto | si_no`
+  - `valor` — polimórfico según tipo:
+    - `likert` → **int** en [1, 5]
+    - `porcentaje` → **float** en [0.0, 100.0]
+    - `si_no` → **str** `"si"` o `"no"`
+    - `texto_abierto` → **str** no vacío
+  - `observacion` (str, opcional, hasta 300 chars)
+- **`observaciones_generales`** (str, opcional) — notas del levantamiento
+- **`fuente`** — `"manual"`, `"csv_upload"`, `"google_forms"`
+- **`id_encuesta`** — UUID asignado automáticamente por el servidor
+- **`fecha_registro`** — timestamp ISO 8601 asignado por el servidor
+
+### Validaciones automáticas (Pydantic v2)
+| Campo | Regla | Motivo |
+|-------|-------|--------|
+| `edad` | 0–120 | Axioma biológico demográfico |
+| `estrato` | 1–6 | Clasificación oficial DANE |
+| `departamento` | Catálogo DANE | Integridad referencial regional |
+| `likert` | 1–5 | Escala ordinal estándar |
+| `porcentaje` | 0.0–100.0 | Escala de razón estadística |
+| `pregunta_id` | Sin duplicados por encuesta | Consistencia interna |
+
+### Normalización de departamento
+El sistema acepta variaciones de escritura:
+- `'ANTIOQUIA'`, `'antioquia'` → `'Antioquia'`
+- `'Cordoba'` (sin tilde) → `'Córdoba'`
+- `'bogota d.c.'` → `'Bogotá D.C.'`
+
+### Errores HTTP retornados
+- **201 Created** — encuesta creada exitosamente
+- **200 OK** — consulta exitosa
+- **204 No Content** — eliminación exitosa (sin cuerpo)
+- **400 Bad Request** — archivo inválido o vacío
+- **404 Not Found** — encuesta no encontrada por ID
+- **422 Unprocessable Entity** — falla de validación Pydantic (con detalle por campo)
+
+---
+
+## 🏛️ Módulo 2 — Censo 2018 DANE (base de datos SQLite)
+
+Carga y análisis de las bases de datos del **Censo Nacional de Población y Vivienda 2018**
+publicadas por el DANE. Los archivos CSV originales contienen decenas de variables por persona.
+
+### Arquitectura de persistencia
+- **SQLite + SQLAlchemy 2.0 async** con `aiosqlite`
+- Tabla `censo_2018_registros` con índices compuestos en columnas de alta consulta
+- Procesamiento en lotes de **50.000 registros** para no saturar RAM
+
+### Variables principales del CSV del DANE
+| Variable | Descripción | Códigos |
+|----------|-------------|---------|
+| `U_DPTO` | Código departamento DIVIPOLA | 5=Antioquia, 11=Bogotá, 76=Valle... |
+| `U_MPIO` | Código municipio DIVIPOLA | Varía por departamento |
+| `P_SEXO` | Sexo | 1=Hombre, 2=Mujer |
+| `P_EDADR` | Rango etario (código 1-21) | 1=00-04, 4=15-19, 13=60-64... |
+| `PA1_GRP_ETNIC` | Grupo étnico | 1=Ninguno, 4=Afro, 6=Indígena... |
+| `P_NIVEL_ANOSR` | Años de educación aprobados | 0-11, 99=Ignorado |
+| `P_EST_CIVIL` | Estado civil | 1=Soltero, 2=Casado... |
+| `P_TRABAJO` | Situación laboral | 0=No trabaja, 1-9=categorías |
+
+### ⚠️ Nota sobre edad en el Censo 2018
+El DANE **no registra edades individuales** — usa **rangos quinquenales** (código 1-21):
+- Código 1 = 00-04 años
+- Código 4 = 15-19 años
+- Código 13 = 60-64 años
+- Código 21 = 100+ años
+
+Por esto, **no se calculan promedio/mediana de edad** en los endpoints — sería inventar datos
+que no existen. En su lugar se muestran distribuciones por rangos DANE y grupos amplios.
+
+### Índices demográficos implementados
+- **Índice de masculinidad** = (Hombres / Mujeres) × 100
+  - &gt;100: más hombres · =100: equilibrio · &lt;100: más mujeres
+- **Índice de dependencia** = ((Población &lt;15 + Población &gt;64) / Población 15-64) × 100
+  - &gt;60: alta presión · 40-60: equilibrio · &lt;40: baja presión
+
+### Municipios — cruce con catálogo DIVIPOLA
+Los endpoints muestran nombres oficiales de municipios cruzados con el catálogo DIVIPOLA del DANE,
+no solo códigos numéricos. La distribución `distribucion_por_municipio` muestra los 15 municipios
+con más registros con sus nombres completos.
+
+---
+
+## 🔧 Ejecución local
 ```bash
-uvicorn main:app --reload --port 8000
+# Activar entorno virtual
+.venv\\Scripts\\activate          # Windows
+source .venv/bin/activate        # macOS/Linux
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Iniciar servidor
+uvicorn main:app --reload --port 8001
 ```
+
+**Interfaces disponibles:**
+- Interfaz visual: `http://localhost:8001/ui`
+- Swagger UI: `http://localhost:8001/docs`
+- ReDoc: `http://localhost:8001/redoc`
+- Health check: `http://localhost:8001/`
     """,
-    version="2.1.0",
+    version="2.2.0",
     contact={
         "name": "Equipo de Desarrollo — Python para APIs e IA",
         "email": "dev@encuestas-co.edu",
@@ -278,9 +386,23 @@ async def manejador_error_validacion(
     tags=["Encuestas"],
     summary="Registrar nueva encuesta",
     description=(
-        "Recibe, valida y almacena una encuesta poblacional completa. "
-        "El servidor asigna automáticamente el `id_encuesta` (UUID) y el "
-        "`fecha_registro` (timestamp ISO 8601). Retorna la encuesta guardada."
+        "Recibe, valida y almacena una encuesta poblacional completa.\n\n"
+        "**Campos obligatorios del encuestado:** `nombre`, `edad`, `genero`, `estrato`, "
+        "`departamento`, `municipio`, `nivel_educativo`.\n\n"
+        "**Campos obligatorios de cada respuesta:** `pregunta_id` (único por encuesta), "
+        "`enunciado` (mín. 5 chars), `tipo_pregunta`, `valor` (validado por tipo).\n\n"
+        "**Asignados automáticamente por el servidor:**\n"
+        "- `id_encuesta` — UUID v4 único, imposible de predecir ni falsificar\n"
+        "- `fecha_registro` — timestamp UTC ISO 8601 del momento de registro\n\n"
+        "**Validaciones que generan HTTP 422:**\n"
+        "- `edad` fuera de [0, 120]\n"
+        "- `estrato` fuera de [1, 6]\n"
+        "- `departamento` no existe en catálogo DANE (acepta variaciones sin tilde/mayúsculas)\n"
+        "- `tipo_pregunta = 'likert'` con valor fuera de [1, 5]\n"
+        "- `tipo_pregunta = 'porcentaje'` con valor fuera de [0.0, 100.0]\n"
+        "- `tipo_pregunta = 'si_no'` con valor distinto de `'si'`/`'no'`\n"
+        "- `pregunta_id` duplicado dentro de la misma encuesta\n\n"
+        "**Retorna:** `201 Created` con el objeto `EncuestaCompleta` completo incluido el UUID."
     ),
 )
 @log_request
@@ -304,8 +426,14 @@ async def crear_encuesta(
     tags=["Encuestas"],
     summary="Listar todas las encuestas",
     description=(
-        "Retorna el listado completo de encuestas registradas. "
-        "Soporta paginación mediante `skip` (offset) y `limit` (máximo por página)."
+        "Retorna el listado completo de encuestas almacenadas en memoria.\n\n"
+        "**Paginación (query params):**\n"
+        "- `skip` (int, default 0) — número de registros a saltar (offset)\n"
+        "- `limit` (int, default 100) — máximo de registros a retornar\n\n"
+        "**Ejemplo:** `GET /encuestas/?skip=10&limit=5` retorna las encuestas 11-15.\n\n"
+        "**Nota:** El almacenamiento es **en memoria** — los datos se pierden al reiniciar "
+        "el servidor. Use `/encuestas/export/json/` para persistir antes de reiniciar.\n\n"
+        "**Retorna:** `200 OK` con array de `EncuestaCompleta` (puede ser vacío `[]`)."
     ),
 )
 @log_request
@@ -324,12 +452,22 @@ async def listar_encuestas(
     response_model=EstadisticasEncuesta,
     status_code=200,
     tags=["Estadísticas"],
-    summary="Estadísticas agregadas del repositorio",
+    summary="Estadísticas agregadas del repositorio de encuestas",
     description=(
-        "Genera un resumen estadístico en tiempo real: conteo total, "
-        "promedio de edad, distribuciones por estrato, departamento, "
-        "género y nivel educativo. "
-        "**Endpoint async** — en producción delegaría cómputo a una BD con `await`."
+        "Genera un resumen estadístico en tiempo real sobre todas las encuestas en memoria.\n\n"
+        "**Campos retornados:**\n"
+        "- `total_encuestas` — conteo total de encuestas registradas\n"
+        "- `edad_promedio` — media aritmética de edades (float, 2 decimales)\n"
+        "- `edad_minima` / `edad_maxima` — rango observado de edades\n"
+        "- `distribucion_por_estrato` — frecuencia por estrato (`{'Estrato 1': 5, ...}`)\n"
+        "- `distribucion_por_departamento` — frecuencia por departamento, ordenada descendente\n"
+        "- `distribucion_por_genero` — frecuencia por género\n"
+        "- `distribucion_por_nivel_educativo` — frecuencia por nivel educativo\n"
+        "- `promedio_respuestas_por_encuesta` — promedio de preguntas por encuesta\n\n"
+        "**Si no hay encuestas:** retorna todos los campos en 0 o `{}`, nunca lanza 404.\n\n"
+        "**Por qué `async def`:** en producción este endpoint consultaría una base de datos "
+        "con `await db.aggregate(...)`. Con `async/await`, el event loop atiende otros "
+        "requests mientras espera la BD — miles de requests concurrentes con un solo proceso."
     ),
 )
 @timer
@@ -408,8 +546,14 @@ async def obtener_estadisticas(request: Request) -> EstadisticasEncuesta:
     tags=["Encuestas"],
     summary="Obtener encuesta por ID",
     description=(
-        "Recupera una encuesta específica por su UUID. "
-        "Retorna **200 OK** si existe, **404 Not Found** si el ID no está registrado."
+        "Recupera una encuesta específica por su UUID.\n\n"
+        "**Path param:** `id_encuesta` — UUID v4 completo (ej: `3fa85f64-5717-4562-b3fc-2c963f66afa6`).\n\n"
+        "**Respuestas:**\n"
+        "- `200 OK` — objeto `EncuestaCompleta` completo\n"
+        "- `404 Not Found` — el UUID no existe en el repositorio. "
+        "Use `GET /encuestas/` para obtener los IDs disponibles.\n\n"
+        "**Tip:** Los IDs se obtienen de la respuesta del `POST /encuestas/` "
+        "o del listado `GET /encuestas/`."
     ),
 )
 @log_request
@@ -432,11 +576,20 @@ async def obtener_encuesta(
     response_model=EncuestaCompleta,
     status_code=200,
     tags=["Encuestas"],
-    summary="Actualizar encuesta existente",
+    summary="Actualizar encuesta existente (reemplazo total)",
     description=(
-        "Reemplaza completamente los datos de una encuesta existente. "
-        "Preserva el `id_encuesta` original y actualiza el `fecha_registro`. "
-        "Retorna **200 OK** con el objeto actualizado, **404** si no existe."
+        "Reemplaza **completamente** los datos de una encuesta existente (PUT semántico).\n\n"
+        "**Comportamiento:**\n"
+        "- El `id_encuesta` del path tiene precedencia — el del body se ignora\n"
+        "- El `fecha_registro` se actualiza al momento del PUT\n"
+        "- Aplica todas las mismas validaciones Pydantic que el `POST /encuestas/`\n\n"
+        "**Diferencia PUT vs PATCH:** PUT reemplaza el recurso completo. "
+        "Si omite un campo opcional, quedará como `null`. "
+        "No existe PATCH en esta API — use PUT con el objeto completo.\n\n"
+        "**Respuestas:**\n"
+        "- `200 OK` — encuesta actualizada con el objeto completo\n"
+        "- `404 Not Found` — UUID no existe\n"
+        "- `422 Unprocessable Entity` — falla de validación en el body"
     ),
 )
 @log_request
@@ -465,9 +618,13 @@ async def actualizar_encuesta(
     tags=["Encuestas"],
     summary="Eliminar encuesta",
     description=(
-        "Elimina permanentemente una encuesta del repositorio. "
-        "Retorna **204 No Content** en caso de éxito, **404** si el ID no existe. "
-        "Esta operación es irreversible."
+        "Elimina permanentemente una encuesta del repositorio en memoria.\n\n"
+        "**Respuestas:**\n"
+        "- `204 No Content` — eliminación exitosa. La respuesta **no tiene cuerpo** "
+        "(esto es estándar HTTP: 204 significa éxito sin contenido).\n"
+        "- `404 Not Found` — el UUID no existe en el repositorio.\n\n"
+        "**⚠️ Irreversible:** una vez eliminada no hay forma de recuperar la encuesta. "
+        "Si necesita respaldo, exporte primero con `GET /encuestas/export/json/`."
     ),
 )
 @log_request
@@ -490,8 +647,23 @@ async def eliminar_encuesta(request: Request, id_encuesta: str):
 @app.post(
     "/encuestas/debug-columns/",
     tags=["Upload/Export"],
-    summary="Debug: Ver columnas detectadas en CSV",
-    description="Subí un CSV y te devuelve qué columnas detectó el sistema.",
+    summary="Debug: Ver columnas detectadas en CSV (sin cargar datos)",
+    description=(
+        "Analiza un CSV y retorna el mapeo de columnas detectadas **sin insertar datos**.\n\n"
+        "Útil para diagnosticar por qué un CSV no se procesa correctamente antes de cargarlo.\n\n"
+        "**Retorna:**\n"
+        "- `columnas_originales` — lista de nombres exactos de columnas en el CSV\n"
+        "- `columnas_normalizadas` — versión en minúsculas para comparación interna\n"
+        "- `detecciones` — mapa `campo → columna_detectada` (o `null` si no se encontró)\n"
+        "  - Campos buscados: `nombre`, `edad`, `genero`, `estrato`, `departamento`, "
+        "`municipio`, `educacion`, `ocupacion`\n"
+        "- `columnas_no_detectadas` — columnas del CSV que no se mapearon a ningún campo\n\n"
+        "**Variaciones aceptadas por campo (ejemplos):**\n"
+        "- `nombre`: `nombre`, `nombres`, `nombre completo`, `full name`\n"
+        "- `edad`: `edad`, `edad (años)`, `age`, `¿cuántos años tienes?`\n"
+        "- `genero`: `genero`, `género`, `sexo`, `gender`\n"
+        "- `departamento`: `departamento`, `depto`, `department`, `state`"
+    ),
     status_code=200,
 )
 async def debug_columns(request: Request, file: UploadFile = File(...)) -> dict:
@@ -537,11 +709,32 @@ async def debug_columns(request: Request, file: UploadFile = File(...)) -> dict:
 @app.post(
     "/encuestas/upload-csv/",
     tags=["Upload/Export"],
-    summary="Subir archivo CSV desde Google Forms",
+    summary="Cargar encuestas desde archivo CSV (Google Forms o propio)",
     description=(
-        "Sube un archivo CSV exportado desde Google Forms o Google Sheets. "
-        "El sistema detecta automáticamente las columnas demográficas y de respuestas. "
-        "**Filas inválidas se saltan, no se rechaza todo el archivo**."
+        "Procesa un archivo `.csv` y crea encuestas a partir de sus filas.\n\n"
+        "**Filosofía:** tolerante a errores — filas inválidas se saltan individualmente, "
+        "el resto del archivo continúa procesándose.\n\n"
+        "**Detección automática de columnas** (acepta variaciones de nombre):\n"
+        "- Requeridas: `nombre`/`nombres`/`full name`, `edad`/`age`, `departamento`/`department`\n"
+        "- Opcionales: `genero`/`sexo`, `estrato`, `municipio`/`ciudad`, "
+        "`nivel_educativo`/`educacion`, `ocupacion`/`trabajo`\n"
+        "- Respuestas: **cualquier otra columna** se trata como pregunta automáticamente\n\n"
+        "**Detección automática de tipo de respuesta:**\n"
+        "- Valor entero 1-5 → `likert`\n"
+        "- Valor numérico 0-100 → `porcentaje`\n"
+        "- Texto `si`/`sí`/`no` → `si_no`\n"
+        "- Cualquier otro texto → `texto_abierto`\n\n"
+        "**Motivos de fila saltada:**\n"
+        "- Columna `nombre` o `edad` no encontrada en el CSV\n"
+        "- Departamento no reconocible en catálogo DANE\n"
+        "- Nombre o municipio que son números puros\n"
+        "- Fila sin ninguna respuesta válida\n\n"
+        "**Retorna:**\n"
+        "- `exitosos` — encuestas creadas\n"
+        "- `fallidos` — filas saltadas\n"
+        "- `errores` — hasta 20 mensajes descriptivos del motivo de cada fallo\n"
+        "- `ids_creados` — primeros 10 UUIDs generados\n\n"
+        "**Tip:** use primero `POST /encuestas/debug-columns/` para verificar el mapeo."
     ),
     status_code=200,
 )
@@ -864,8 +1057,21 @@ async def upload_csv(request: Request, file: UploadFile = File(...)) -> dict:
 @app.get(
     "/encuestas/export/json/",
     tags=["Upload/Export"],
-    summary="Exportar encuestas a JSON",
-    description="Descarga todas las encuestas en formato JSON.",
+    summary="Exportar todas las encuestas a JSON",
+    description=(
+        "Descarga todas las encuestas del repositorio en un archivo `encuestas.json`.\n\n"
+        "**Formato de respuesta:** `StreamingResponse` con `Content-Type: application/json` "
+        "y header `Content-Disposition: attachment; filename=encuestas.json`.\n\n"
+        "**Estructura del JSON:** array de objetos `EncuestaCompleta`. "
+        "El campo `fecha_registro` se serializa como string ISO 8601 "
+        "(ej: `'2025-03-25T10:30:00.123456'`).\n\n"
+        "**JSON vs Pickle:**\n"
+        "- ✅ JSON: texto plano, legible por humanos, interoperable con cualquier lenguaje "
+        "(Python, R, JavaScript, Excel Power Query). Ideal para compartir o archivar.\n"
+        "- ⚠️ Pickle: binario Python-only, no legible por humanos, más rápido para "
+        "recargar en Python, pero riesgo de seguridad si la fuente no es confiable.\n\n"
+        "**404** si no hay encuestas registradas."
+    ),
 )
 async def export_json(request: Request):
     """
@@ -893,8 +1099,24 @@ async def export_json(request: Request):
 @app.get(
     "/encuestas/export/pickle/",
     tags=["Upload/Export"],
-    summary="Exportar encuestas a Pickle",
-    description="Descarga todas las encuestas en formato Pickle (binario de Python).",
+    summary="Exportar todas las encuestas a Pickle (binario Python)",
+    description=(
+        "Descarga todas las encuestas en formato Pickle (`encuestas.pkl`).\n\n"
+        "**Cómo cargar en Python:**\n"
+        "```python\n"
+        "import pickle\n"
+        "with open('encuestas.pkl', 'rb') as f:\n"
+        "    encuestas = pickle.load(f)  # Lista de objetos EncuestaCompleta\n"
+        "```\n\n"
+        "**Protocolo:** Pickle protocolo 4 (compatible con Python 3.4+).\n\n"
+        "**Cuándo usar Pickle sobre JSON:**\n"
+        "- Cuando necesita recargar los datos rápidamente en Python\n"
+        "- Cuando el tamaño importa (Pickle es más compacto que JSON)\n"
+        "- Cuando trabaja con objetos Python complejos que JSON no puede serializar\n\n"
+        "**⚠️ Advertencia de seguridad:** nunca deserialice (cargue) un archivo `.pkl` "
+        "de una fuente no confiable — Pickle puede ejecutar código arbitrario al cargar.\n\n"
+        "**404** si no hay encuestas registradas."
+    ),
 )
 async def export_pickle(request: Request):
     """
@@ -938,8 +1160,18 @@ def frontend():
 @app.get(
     "/",
     tags=["Sistema"],
-    summary="Health check",
-    description="Verifica que la API esté activa. Retorna estado y enlaces a la documentación.",
+    summary="Health check — estado de la API",
+    description=(
+        "Verifica que la API esté activa y retorna información de estado básica.\n\n"
+        "**Retorna:**\n"
+        "- `estado` — siempre `'activo'` si el servidor está corriendo\n"
+        "- `encuestas_registradas` — número de encuestas en memoria\n"
+        "- `documentacion_swagger` — URL de Swagger UI (interfaz interactiva)\n"
+        "- `redoc` — URL de ReDoc (documentación detallada)\n"
+        "- `frontend` — URL de la interfaz gráfica\n\n"
+        "**Uso típico:** los frontends y sistemas de monitoreo hacen `GET /` cada N segundos "
+        "para verificar disponibilidad (liveness check). Si hay respuesta → API activa."
+    ),
 )
 async def health_check():
     """Endpoint de verificación de estado de la API."""
