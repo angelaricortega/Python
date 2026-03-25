@@ -284,10 +284,6 @@ async def obtener_estadisticas_censo(db: AsyncSession = Depends(get_db)):
     if total_registros == 0:
         return EstadisticasCenso2018(
             total_registros=0,
-            edad_promedio=0.0,
-            edad_mediana=0.0,
-            edad_minima=0,
-            edad_maxima=0,
             distribucion_por_sexo={},
             distribucion_por_departamento={},
             distribucion_por_grupo_etnico={},
@@ -587,21 +583,21 @@ async def obtener_indice_dependencia(
     if departamento:
         base_conditions.append(RegistroCenso2018ORM.u_dpto == departamento)
     
-    # Población joven (<15)
+    # Población joven (<15 años) = códigos DANE 1-3 (00-04, 05-09, 10-14)
     poblacion_joven = await db.execute(
-        select(func.count()).where(*base_conditions, RegistroCenso2018ORM.p_edadr < 15)
+        select(func.count()).where(*base_conditions, RegistroCenso2018ORM.p_edadr.in_([1, 2, 3]))
     )
     joven_count = poblacion_joven.scalar() or 0
-    
-    # Población adulta mayor (>64)
+
+    # Población adulta mayor (>64 años) = códigos DANE 14-21 (65-69, ..., 100+)
     poblacion_mayor = await db.execute(
-        select(func.count()).where(*base_conditions, RegistroCenso2018ORM.p_edadr > 64)
+        select(func.count()).where(*base_conditions, RegistroCenso2018ORM.p_edadr.in_([14, 15, 16, 17, 18, 19, 20, 21]))
     )
     mayor_count = poblacion_mayor.scalar() or 0
-    
-    # Población en edad activa (15-64)
+
+    # Población en edad activa (15-64 años) = códigos DANE 4-13 (15-19, ..., 60-64)
     poblacion_activa = await db.execute(
-        select(func.count()).where(*base_conditions, RegistroCenso2018ORM.p_edadr >= 15, RegistroCenso2018ORM.p_edadr <= 64)
+        select(func.count()).where(*base_conditions, RegistroCenso2018ORM.p_edadr.in_([4, 5, 6, 7, 8, 9, 10, 11, 12, 13]))
     )
     activa_count = poblacion_activa.scalar() or 0
     

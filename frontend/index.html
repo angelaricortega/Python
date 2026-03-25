@@ -1716,7 +1716,7 @@
       }
     }
 
-    async function loadCensoEstadisticas() {
+    async function loadCensoEstadisticas(soloEstado = false) {
       try {
         const response = await fetch(`${API}/censo-2018/estadisticas/`);
 
@@ -1726,6 +1726,20 @@
 
         const data = await response.json();
         console.log('Datos del censo:', data);
+
+        // Si es solo verificación de estado y no hay datos, mostrar mensaje vacío
+        if (soloEstado && data.total_registros === 0) {
+          const kpiContainer = document.getElementById('censo-stats-kpi');
+          kpiContainer.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--texto-2);">
+              <div style="font-size:3rem;margin-bottom:0.5rem;">📁</div>
+              <p>No hay datos del Censo 2018 cargados</p>
+              <p style="font-size:0.85rem;margin-top:0.5rem;">Sube un archivo CSV para comenzar el análisis</p>
+            </div>
+          `;
+          document.getElementById('censo-indices-result').innerHTML = '';
+          return;
+        }
 
         const kpiContainer = document.getElementById('censo-stats-kpi');
         kpiContainer.innerHTML = `
@@ -1892,53 +1906,7 @@
       }
     }
 
-    async function loadCensoEstadisticas(soloEstado = false) {
-      try {
-        const response = await fetch(`${API}/censo-2018/estadisticas/`);
-        const data = await response.json();
-
-        // Si está vacío y es solo estado, mostrar mensaje
-        if (soloEstado && data.total_registros === 0) {
-          const kpiContainer = document.getElementById('censo-stats-kpi');
-          kpiContainer.innerHTML = `
-            <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--texto-2);">
-              <div style="font-size:3rem;margin-bottom:0.5rem;">📁</div>
-              <p>No hay datos del Censo 2018 cargados</p>
-              <p style="font-size:0.85rem;margin-top:0.5rem;">Sube un archivo CSV para comenzar el análisis</p>
-            </div>
-          `;
-          document.getElementById('censo-indices-result').innerHTML = '';
-          return;
-        }
-
-        const kpiContainer = document.getElementById('censo-stats-kpi');
-        kpiContainer.innerHTML = `
-          <div class="kpi-card">
-            <div class="kpi-value">${data.total_registros.toLocaleString()}</div>
-            <div class="kpi-label">Total Registros</div>
-          </div>
-        `;
-
-        // Agregar índices si existen
-        const indicesDiv = document.getElementById('censo-indices-result');
-        if (data.indice_masculinidad !== null || data.indice_dependencia !== null) {
-          let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem;">';
-          if (data.indice_masculinidad !== null) {
-            html += `<div class="kpi-card" style="background:linear-gradient(135deg, #DAE8FF, #B6D4FE);"><div class="kpi-value" style="color:#084298;">${data.indice_masculinidad.toFixed(2)}</div><div class="kpi-label" style="color:#084298;">Índice Masculinidad</div></div>`;
-          }
-          if (data.indice_dependencia !== null) {
-            html += `<div class="kpi-card" style="background:linear-gradient(135deg, #D4FADF, #A7E0B8);"><div class="kpi-value" style="color:#0A5F2E;">${data.indice_dependencia.toFixed(2)}</div><div class="kpi-label" style="color:#0A5F2E;">Índice Dependencia</div></div>`;
-          }
-          html += '</div>';
-          indicesDiv.innerHTML = html;
-        }
-
-        showJSON('censo-stats-json', data);
-      } catch (err) {
-        console.error(err);
-        showToast('✗ Error al cargar estadísticas del censo', 'error');
-      }
-    }
+    // (segunda definición eliminada — loadCensoEstadisticas ya está definida arriba con soloEstado)
   </script>
 </body>
 
