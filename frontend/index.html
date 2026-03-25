@@ -1046,7 +1046,7 @@
   <div id="toast-container"></div>
 
   <script>
-    const API = "http://localhost:8000";
+    const API = "http://localhost:8001";
 
     function showTab(tabId) {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1055,7 +1055,7 @@
       event.target.classList.add('active');
       if (tabId === 'listar') loadEncuestas();
       if (tabId === 'estadisticas') loadEstadisticas();
-      if (tabId === 'censo') loadCensoEstadisticas(true);  // true = solo mostrar estado, no cargar si está vacío
+      if (tabId === 'censo') loadCensoEstadisticas();
     }
 
     async function checkHealth() {
@@ -1291,6 +1291,7 @@
           showJSON('crear-json', data);
           showToast('Encuesta creada', 'success');
           resetFormCrear();
+          loadEstadisticas();
         } else if (resp.status === 422) {
           // Mostrar errores de validación de forma amigable
           mostrarErroresAmigablesDesdeAPI(data);
@@ -1456,6 +1457,7 @@
       if (cargadas > 0) {
         showToast(`${cargadas} encuestas de ejemplo cargadas`, 'success');
         loadEncuestas();
+        loadEstadisticas();
       } else {
         showToast('Error: Verifica que la API esté corriendo', 'error');
       }
@@ -1474,6 +1476,7 @@
 
         showToast('Historial borrado', 'success');
         loadEncuestas();
+        loadEstadisticas();
       } catch (err) {
         showToast('Error al borrar', 'error');
       }
@@ -1505,6 +1508,7 @@
           showToast('Encuesta eliminada', 'success');
           document.getElementById('listar-json').classList.remove('show');
           loadEncuestas();
+          loadEstadisticas();
         } else {
           showToast('Error al eliminar', 'error');
         }
@@ -1579,6 +1583,7 @@
           showAlert('upload-alert', `✅ ${data.exitosos} encuestas cargadas. Errores: ${data.fallidos}`, 'success');
           showJSON('upload-json', data);
           showToast(`${data.exitosos} encuestas cargadas`, 'success');
+          loadEstadisticas();
         } else {
           showAlert('upload-alert', `❌ Error ${resp.status}: ${JSON.stringify(data)}`, 'error');
           showToast(`Error ${resp.status}`, 'error');
@@ -1700,7 +1705,7 @@
           alertDiv.className = 'alert alert-success show';
           alertDiv.textContent = `✓ Carga completada: ${data.exitosos} registros exitosos, ${data.fallidos} fallidos`;
           showJSON('censo-upload-json', data);
-          setTimeout(() => loadCensoEstadisticas(), 1000);
+          setTimeout(() => { loadCensoEstadisticas(); loadEstadisticas(); }, 1000);
         } else {
           showToast(`✗ Error: ${data.detail || 'Error en la carga'}`, 'error');
           alertDiv.className = 'alert alert-error show';

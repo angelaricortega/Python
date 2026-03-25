@@ -399,6 +399,10 @@ class EstadisticasCenso2018(BaseModel):
 
     distribucion_por_sexo: Dict[str, int] = Field(description="Distribución por sexo")
     distribucion_por_departamento: Dict[str, int] = Field(description="Distribución por departamento")
+    distribucion_por_municipio: Optional[Dict[str, int]] = Field(
+        default=None,
+        description="Top 15 municipios por población, cruzados con catálogo DIVIPOLA"
+    )
     distribucion_por_grupo_etnico: Dict[str, int] = Field(description="Distribución por grupo étnico")
     distribucion_por_nivel_educativo: Dict[str, int] = Field(description="Distribución por nivel educativo")
     distribucion_por_estado_civil: Dict[str, int] = Field(description="Distribución por estado civil")

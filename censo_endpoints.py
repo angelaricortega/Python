@@ -48,12 +48,15 @@ from models_censo import (
 )
 from censo_codes import (
     DEPARTAMENTOS_DANE,
+    MUNICIPIOS_DANE,
     SEXO,
     GRUPO_ETNICO,
     ESTADO_CIVIL,
     TRABAJO,
     RANGOS_EDAD_DANE,
     GRUPOS_EDAD_AMPLIOS,
+    obtener_nombre_municipio,
+    obtener_nombre_departamento,
 )
 
 logger = logging.getLogger("censo_api")
@@ -286,6 +289,7 @@ async def obtener_estadisticas_censo(db: AsyncSession = Depends(get_db)):
             total_registros=0,
             distribucion_por_sexo={},
             distribucion_por_departamento={},
+            distribucion_por_municipio={},
             distribucion_por_grupo_etnico={},
             distribucion_por_nivel_educativo={},
             distribucion_por_estado_civil={},
@@ -343,14 +347,9 @@ async def obtener_estadisticas_censo(db: AsyncSession = Depends(get_db)):
     )
     distribucion_por_departamento = {}
     for codigo, count in depto_dist.all():
-        if codigo == 5:
-            distribucion_por_departamento["Antioquia"] = count
-        elif codigo == 14:
-            distribucion_por_departamento["Cundinamarca"] = count
-        elif codigo == 11001:
-            distribucion_por_departamento["Bogotá D.C."] = count
-        elif codigo and 1 <= codigo <= 32:
-            distribucion_por_departamento[f"Depto {codigo}"] = count
+        if codigo is not None:
+            nombre = DEPARTAMENTOS_DANE.get(codigo, f"Depto {codigo}")
+            distribucion_por_departamento[nombre] = count
 
     # Distribución por grupo étnico
     etnia_dist = await db.execute(
@@ -471,10 +470,24 @@ async def obtener_estadisticas_censo(db: AsyncSession = Depends(get_db)):
             rango_str = RANGOS_EDAD_DANE[codigo]["rango"]
             distribucion_por_rangos_edad[f"{rango_str} años"] = count
 
+    # Distribución por municipio — top 15, cruzado con catálogo DIVIPOLA
+    mpio_dist = await db.execute(
+        select(RegistroCenso2018ORM.u_dpto, RegistroCenso2018ORM.u_mpio, func.count())
+        .group_by(RegistroCenso2018ORM.u_dpto, RegistroCenso2018ORM.u_mpio)
+        .order_by(func.count().desc())
+        .limit(15)
+    )
+    distribucion_por_municipio = {}
+    for dpto, mpio, count in mpio_dist.all():
+        if dpto is not None and mpio is not None:
+            nombre = obtener_nombre_municipio(dpto, mpio)
+            distribucion_por_municipio[nombre] = count
+
     return EstadisticasCenso2018(
         total_registros=total_registros,
         distribucion_por_sexo=distribucion_por_sexo,
         distribucion_por_departamento=distribucion_por_departamento,
+        distribucion_por_municipio=distribucion_por_municipio,
         distribucion_por_grupo_etnico=distribucion_por_grupo_etnico,
         distribucion_por_nivel_educativo=distribucion_por_nivel_educativo,
         distribucion_por_estado_civil=distribucion_por_estado_civil,
@@ -540,8 +553,8 @@ async def obtener_indice_masculinidad(
     }
     
     if departamento:
-        desglose["departamento"] = obtener_nombre_departamento(departamento)
-    
+        desglose["departamento"] = DEPARTAMENTOS_DANE.get(departamento, f"Depto {departamento}")
+
     return IndiceDemografico(
         nombre="Índice de masculinidad",
         valor=indice or 0,
@@ -611,8 +624,7 @@ async def obtener_indice_dependencia(
     }
     
     if departamento:
-        from censo_codes import obtener_nombre_departamento
-        desglose["departamento"] = obtener_nombre_departamento(departamento)
+        desglose["departamento"] = DEPARTAMENTOS_DANE.get(departamento, f"Depto {departamento}")
     
     return IndiceDemografico(
         nombre="Índice de dependencia demográfica",
