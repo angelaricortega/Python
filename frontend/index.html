@@ -1,366 +1,1115 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API de Encuestas Poblacionales</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
   <style>
     :root {
-      --bg: #FFF0F5; --bg2: #F8EEFF; --card: #FFFFFF;
-      --rosa-palido: #FFE4EE; --rosa-suave: #FFB6C1; --rosa-medio: #FF8FAB; --rosa-vivo: #FF5C8A;
-      --lila: #E8D5F5; --lila-suave: #C9A8E8;
-      --menta: #D4F5E9; --menta-vivo: #4CAF84;
-      --texto: #3D1A47; --texto-2: #8A5F8A; --borde: #F0CFDF;
+      --bg: #FFF0F5;
+      --bg2: #F8EEFF;
+      --card: #FFFFFF;
+      --rosa-palido: #FFE4EE;
+      --rosa-suave: #FFB6C1;
+      --rosa-medio: #FF8FAB;
+      --rosa-vivo: #FF5C8A;
+      --lila: #E8D5F5;
+      --lila-suave: #C9A8E8;
+      --menta: #D4F5E9;
+      --menta-vivo: #4CAF84;
+      --texto: #3D1A47;
+      --texto-2: #8A5F8A;
+      --borde: #F0CFDF;
       --sombra: rgba(180, 80, 130, 0.10);
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%); min-height: 100vh; color: var(--texto); }
-    header { background: linear-gradient(120deg, #FF8FAB 0%, #C06DD0 100%); color: #fff; padding: 1.2rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 18px rgba(180,80,130,0.25); position: sticky; top: 0; z-index: 100; }
-    header h1 { font-size: 1.5rem; font-weight: 700; }
-    header p { font-size: 0.78rem; opacity: 0.88; margin-top: 2px; }
-    .status-badge { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); border-radius: 50px; padding: 6px 14px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: #aaa; }
-    .dot.online { background: #7EFF9A; box-shadow: 0 0 8px #7EFF9A; }
-    .dot.offline { background: #FF7E7E; }
-    .tabs { display: flex; gap: 4px; padding: 1.2rem 2rem 0; overflow-x: auto; }
-    .tab-btn { padding: 10px 22px; border: 2px solid var(--borde); border-bottom: none; border-radius: 14px 14px 0 0; background: var(--rosa-palido); color: var(--texto-2); font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all .2s; }
-    .tab-btn:hover { background: var(--lila); color: var(--texto); }
-    .tab-btn.active { background: var(--card); color: var(--rosa-vivo); font-weight: 600; border-color: var(--borde); box-shadow: 0 -3px 0 var(--rosa-vivo) inset; }
-    .panel { display: none; }
-    .panel.active { display: block; }
-    .main-content { max-width: 1100px; margin: 0 auto; padding: 0 2rem 3rem; }
-    .panel-card { background: var(--card); border: 1px solid var(--borde); border-radius: 0 16px 16px 16px; padding: 2rem; box-shadow: 0 8px 30px var(--sombra); }
-    .section-title { font-size: 1.15rem; font-weight: 600; color: var(--rosa-vivo); margin-bottom: 1.2rem; padding-bottom: 0.6rem; border-bottom: 2px dashed var(--borde); display: flex; align-items: center; gap: 8px; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.2rem; }
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .form-group.full { grid-column: 1 / -1; }
-    label { font-size: 0.78rem; font-weight: 600; color: var(--texto-2); text-transform: uppercase; letter-spacing: 0.5px; }
-    input, select, textarea { padding: 10px 14px; border: 1.5px solid var(--borde); border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 0.88rem; color: var(--texto); background: var(--bg); transition: border-color .2s, box-shadow .2s; }
-    input:focus, select:focus, textarea:focus { border-color: var(--rosa-medio); box-shadow: 0 0 0 3px rgba(255,143,171,0.2); background: #fff; }
-    textarea { resize: vertical; min-height: 70px; }
-    .btn { padding: 10px 22px; border: none; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 7px; }
-    .btn-primary { background: linear-gradient(135deg, var(--rosa-medio) 0%, var(--rosa-vivo) 100%); color: #fff; box-shadow: 0 4px 14px rgba(255,92,138,0.3); }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,92,138,0.4); }
-    .btn-secondary { background: var(--lila); color: var(--texto); border: 1.5px solid var(--lila-suave); }
-    .btn-success { background: linear-gradient(135deg, #5EC98A 0%, #38a16a 100%); color: #fff; }
-    .btn-danger { background: var(--rosa-suave); color: var(--rosa-vivo); border: 1.5px solid #FFAFAF; }
-    .btn-sm { padding: 6px 14px; font-size: 0.78rem; }
-    .btn-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1.2rem; }
-    .respuestas-container { display: flex; flex-direction: column; gap: 14px; }
-    .respuesta-card { background: var(--rosa-palido); border: 1.5px solid var(--borde); border-radius: 12px; padding: 1rem 1.2rem; position: relative; }
-    .encuestas-list { display: flex; flex-direction: column; gap: 14px; }
-    .encuesta-item { background: var(--card); border: 1.5px solid var(--borde); border-radius: 14px; padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1.2rem; box-shadow: 0 3px 12px var(--sombra); }
-    .encuesta-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--sombra); }
-    .encuesta-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--rosa-suave), var(--lila-suave)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
-    .encuesta-info { flex: 1; min-width: 0; }
-    .encuesta-info .nombre { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .encuesta-info .meta { font-size: 0.78rem; color: var(--texto-2); margin-top: 3px; }
-    .chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 50px; font-size: 0.72rem; font-weight: 600; margin-right: 5px; }
-    .chip-rosa { background: var(--rosa-palido); color: var(--rosa-vivo); }
-    .chip-lila { background: var(--lila); color: #7B3FBF; }
-    .chip-menta { background: var(--menta); color: #1A7A52; }
-    .encuesta-actions { display: flex; gap: 8px; flex-shrink: 0; }
-    .json-viewer { background: #1E0830; color: #FFADCE; border-radius: 12px; padding: 1.2rem; font-family: 'Courier New', monospace; font-size: 0.8rem; max-height: 320px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin-top: 1rem; display: none; }
-    .json-viewer.show { display: block; }
-    .stats-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 1.8rem; }
-    .kpi-card { background: linear-gradient(135deg, var(--rosa-palido), var(--lila)); border: 1.5px solid var(--borde); border-radius: 16px; padding: 1.3rem; text-align: center; box-shadow: 0 4px 14px var(--sombra); }
-    .kpi-value { font-size: 2.2rem; font-weight: 700; color: var(--rosa-vivo); line-height: 1; }
-    .kpi-label { font-size: 0.75rem; color: var(--texto-2); margin-top: 6px; font-weight: 500; }
-    .alert { padding: 12px 18px; border-radius: 10px; font-size: 0.85rem; margin-top: 1rem; display: none; }
-    .alert.show { display: block; }
-    .alert-error { background: #FFD6D6; color: #E05252; border: 1px solid #FFAFAF; }
-    .alert-success { background: var(--menta); color: #1A7A52; border: 1px solid #A8E6C6; }
-    .alert-info { background: var(--lila); color: #6B3FA0; border: 1px solid var(--lila-suave); }
-    #toast-container { position: fixed; bottom: 28px; right: 28px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-    .toast { padding: 13px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; color: #fff; min-width: 260px; box-shadow: 0 6px 20px rgba(0,0,0,0.18); animation: slideInToast .3s ease; display: flex; align-items: center; gap: 10px; }
-    .toast.success { background: linear-gradient(135deg, #5EC98A, #38a16a); }
-    .toast.error { background: linear-gradient(135deg, #FF7E7E, #E05252); }
-    .toast.info { background: linear-gradient(135deg, #C9A8E8, #9B67D9); }
-    @keyframes slideInToast { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
-    .divider { border: none; border-top: 2px dashed var(--borde); margin: 1.5rem 0; }
-    .upload-area { border: 3px dashed var(--borde); border-radius: 16px; padding: 3rem 2rem; text-align: center; background: var(--rosa-palido); cursor: pointer; transition: all .3s; }
-    .upload-area:hover { border-color: var(--rosa-vivo); background: var(--rosa-suave); }
-    .upload-area.dragover { border-color: var(--menta-vivo); background: var(--menta); }
-    .upload-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .welcome-hero { text-align: center; padding: 2rem 1rem; }
-    .welcome-hero .hero-emoji { font-size: 4rem; }
-    .welcome-hero h2 { font-size: 1.8rem; font-weight: 700; margin: 0.8rem 0 0.4rem; background: linear-gradient(135deg, var(--rosa-vivo), #9B67D9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .welcome-hero p { color: var(--texto-2); font-size: 0.92rem; max-width: 520px; margin: 0 auto 1.5rem; }
-    .endpoint-chip { background: var(--rosa-palido); border: 1.5px solid var(--borde); border-radius: 12px; padding: 0.9rem 1rem; text-align: left; }
-    .endpoint-chip .method { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 5px; margin-right: 6px; }
-    .method.POST { background: #D4FADF; color: #1A7A52; }
-    .method.GET { background: #DAE8FF; color: #1A50A0; }
-    .method.PUT { background: #FFF3CC; color: #8A6000; }
-    .method.DELETE { background: #FFD6D6; color: #E05252; }
-    .endpoint-chip .path { font-size: 0.8rem; font-weight: 600; color: var(--texto); display: block; margin-top: 5px; }
-    .endpoint-chip .desc { font-size: 0.73rem; color: var(--texto-2); margin-top: 3px; }
-    .endpoints-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.9rem; margin-top: 1.5rem; }
-    .export-card { background: linear-gradient(135deg, var(--menta), var(--lila)); border: 1.5px solid var(--borde); border-radius: 16px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
-    .export-card h3 { color: var(--texto); margin-bottom: 0.5rem; }
-    .export-card p { color: var(--texto-2); font-size: 0.85rem; margin-bottom: 1rem; }
-    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .bar-label { font-size: 0.78rem; min-width: 120px; color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bar-track { flex: 1; background: var(--rosa-palido); border-radius: 50px; height: 20px; position: relative; overflow: hidden; }
-    .bar-fill { height: 100%; background: linear-gradient(90deg, var(--rosa-suave), var(--rosa-vivo)); border-radius: 50px; min-width: 4px; }
-    .bar-fill.lila { background: linear-gradient(90deg, var(--lila), var(--lila-suave)); }
-    .bar-fill.menta { background: linear-gradient(90deg, var(--menta), var(--menta-vivo)); }
-    .bar-value { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.72rem; font-weight: 700; color: var(--texto); }
-    @media (max-width: 640px) { header { flex-direction: column; gap: 0.8rem; text-align: center; } .tabs { padding: 0.8rem 1rem 0; } .main-content { padding: 0 1rem 2rem; } .panel-card { padding: 1.2rem; } }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
+      min-height: 100vh;
+      color: var(--texto);
+    }
+
+    header {
+      background: linear-gradient(120deg, #FF8FAB 0%, #C06DD0 100%);
+      color: #fff;
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 18px rgba(180, 80, 130, 0.25);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    header p {
+      font-size: 0.78rem;
+      opacity: 0.88;
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #aaa;
+    }
+
+    .dot.online {
+      background: #7EFF9A;
+      box-shadow: 0 0 8px #7EFF9A;
+    }
+
+    .dot.offline {
+      background: #FF7E7E;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 1.2rem 2rem 0;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 10px 22px;
+      border: 2px solid var(--borde);
+      border-bottom: none;
+      border-radius: 14px 14px 0 0;
+      background: var(--rosa-palido);
+      color: var(--texto-2);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .tab-btn:hover {
+      background: var(--lila);
+      color: var(--texto);
+    }
+
+    .tab-btn.active {
+      background: var(--card);
+      color: var(--rosa-vivo);
+      font-weight: 600;
+      border-color: var(--borde);
+      box-shadow: 0 -3px 0 var(--rosa-vivo) inset;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .main-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem 3rem;
+    }
+
+    .panel-card {
+      background: var(--card);
+      border: 1px solid var(--borde);
+      border-radius: 0 16px 16px 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 30px var(--sombra);
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--rosa-vivo);
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px dashed var(--borde);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--texto-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 10px 14px;
+      border: 1.5px solid var(--borde);
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      color: var(--texto);
+      background: var(--bg);
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--rosa-medio);
+      box-shadow: 0 0 0 3px rgba(255, 143, 171, 0.2);
+      background: #fff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .btn {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--rosa-medio) 0%, var(--rosa-vivo) 100%);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(255, 92, 138, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 92, 138, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--lila);
+      color: var(--texto);
+      border: 1.5px solid var(--lila-suave);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #5EC98A 0%, #38a16a 100%);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: var(--rosa-suave);
+      color: var(--rosa-vivo);
+      border: 1.5px solid #FFAFAF;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 0.78rem;
+    }
+
+    .btn-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 1.2rem;
+    }
+
+    .respuestas-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .respuesta-card {
+      background: var(--rosa-palido);
+      border: 1.5px solid var(--borde);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      position: relative;
+    }
+
+    .encuestas-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .encuesta-item {
+      background: var(--card);
+      border: 1.5px solid var(--borde);
+      border-radius: 14px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      box-shadow: 0 3px 12px var(--sombra);
+    }
+
+    .encuesta-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--sombra);
+    }
+
+    .encuesta-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--rosa-suave), var(--lila-suave));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .encuesta-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .encuesta-info .nombre {
+      font-weight: 600;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .encuesta-info .meta {
+      font-size: 0.78rem;
+      color: var(--texto-2);
+      margin-top: 3px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-right: 5px;
+    }
+
+    .chip-rosa {
+      background: var(--rosa-palido);
+      color: var(--rosa-vivo);
+    }
+
+    .chip-lila {
+      background: var(--lila);
+      color: #7B3FBF;
+    }
+
+    .chip-menta {
+      background: var(--menta);
+      color: #1A7A52;
+    }
+
+    .encuesta-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .json-viewer {
+      background: #1E0830;
+      color: #FFADCE;
+      border-radius: 12px;
+      padding: 1.2rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      max-height: 320px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .json-viewer.show {
+      display: block;
+    }
+
+    .stats-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .kpi-card {
+      background: linear-gradient(135deg, var(--rosa-palido), var(--lila));
+      border: 1.5px solid var(--borde);
+      border-radius: 16px;
+      padding: 1.3rem;
+      text-align: center;
+      box-shadow: 0 4px 14px var(--sombra);
+    }
+
+    .kpi-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--rosa-vivo);
+      line-height: 1;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      color: var(--texto-2);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .alert {
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert-error {
+      background: #FFD6D6;
+      color: #E05252;
+      border: 1px solid #FFAFAF;
+    }
+
+    .alert-success {
+      background: var(--menta);
+      color: #1A7A52;
+      border: 1px solid #A8E6C6;
+    }
+
+    .alert-info {
+      background: var(--lila);
+      color: #6B3FA0;
+      border: 1px solid var(--lila-suave);
+    }
+
+    #toast-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #fff;
+      min-width: 260px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+      animation: slideInToast .3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.success {
+      background: linear-gradient(135deg, #5EC98A, #38a16a);
+    }
+
+    .toast.error {
+      background: linear-gradient(135deg, #FF7E7E, #E05252);
+    }
+
+    .toast.info {
+      background: linear-gradient(135deg, #C9A8E8, #9B67D9);
+    }
+
+    @keyframes slideInToast {
+      from {
+        opacity: 0;
+        transform: translateX(60px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .divider {
+      border: none;
+      border-top: 2px dashed var(--borde);
+      margin: 1.5rem 0;
+    }
+
+    .upload-area {
+      border: 3px dashed var(--borde);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      text-align: center;
+      background: var(--rosa-palido);
+      cursor: pointer;
+      transition: all .3s;
+    }
+
+    .upload-area:hover {
+      border-color: var(--rosa-vivo);
+      background: var(--rosa-suave);
+    }
+
+    .upload-area.dragover {
+      border-color: var(--menta-vivo);
+      background: var(--menta);
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .welcome-hero {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    .welcome-hero .hero-emoji {
+      font-size: 4rem;
+    }
+
+    .welcome-hero h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0.8rem 0 0.4rem;
+      background: linear-gradient(135deg, var(--rosa-vivo), #9B67D9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome-hero p {
+      color: var(--texto-2);
+      font-size: 0.92rem;
+      max-width: 520px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .endpoint-chip {
+      background: var(--rosa-palido);
+      border: 1.5px solid var(--borde);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      text-align: left;
+    }
+
+    .endpoint-chip .method {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 5px;
+      margin-right: 6px;
+    }
+
+    .method.POST {
+      background: #D4FADF;
+      color: #1A7A52;
+    }
+
+    .method.GET {
+      background: #DAE8FF;
+      color: #1A50A0;
+    }
+
+    .method.PUT {
+      background: #FFF3CC;
+      color: #8A6000;
+    }
+
+    .method.DELETE {
+      background: #FFD6D6;
+      color: #E05252;
+    }
+
+    .endpoint-chip .path {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--texto);
+      display: block;
+      margin-top: 5px;
+    }
+
+    .endpoint-chip .desc {
+      font-size: 0.73rem;
+      color: var(--texto-2);
+      margin-top: 3px;
+    }
+
+    .endpoints-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 0.9rem;
+      margin-top: 1.5rem;
+    }
+
+    .export-card {
+      background: linear-gradient(135deg, var(--menta), var(--lila));
+      border: 1.5px solid var(--borde);
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .export-card h3 {
+      color: var(--texto);
+      margin-bottom: 0.5rem;
+    }
+
+    .export-card p {
+      color: var(--texto-2);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .bar-label {
+      font-size: 0.78rem;
+      min-width: 120px;
+      color: var(--texto);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bar-track {
+      flex: 1;
+      background: var(--rosa-palido);
+      border-radius: 50px;
+      height: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--rosa-suave), var(--rosa-vivo));
+      border-radius: 50px;
+      min-width: 4px;
+    }
+
+    .bar-fill.lila {
+      background: linear-gradient(90deg, var(--lila), var(--lila-suave));
+    }
+
+    .bar-fill.menta {
+      background: linear-gradient(90deg, var(--menta), var(--menta-vivo));
+    }
+
+    .bar-value {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--texto);
+    }
+
+    @media (max-width: 640px) {
+      header {
+        flex-direction: column;
+        gap: 0.8rem;
+        text-align: center;
+      }
+
+      .tabs {
+        padding: 0.8rem 1rem 0;
+      }
+
+      .main-content {
+        padding: 0 1rem 2rem;
+      }
+
+      .panel-card {
+        padding: 1.2rem;
+      }
+    }
   </style>
 </head>
+
 <body>
 
-<header>
-  <div>
-    <h1>🌸 Encuestas Poblacionales</h1>
-    <p>FastAPI + Pydantic v2 · Colombia</p>
-  </div>
-  <div class="status-badge" onclick="checkHealth()">
-    <div class="dot" id="status-dot"></div>
-    <span id="status-text">Verificando...</span>
-  </div>
-</header>
-
-<div class="tabs">
-  <button class="tab-btn active" onclick="showTab('inicio')">🏠 Inicio</button>
-  <button class="tab-btn" onclick="showTab('crear')">✏️ Nueva</button>
-  <button class="tab-btn" onclick="showTab('listar')">📋 Listar</button>
-  <button class="tab-btn" onclick="showTab('upload')">📤 Upload CSV</button>
-  <button class="tab-btn" onclick="showTab('export')">📥 Exportar</button>
-  <button class="tab-btn" onclick="showTab('estadisticas')">📊 Estadísticas</button>
-</div>
-
-<div class="main-content">
-
-  <!-- INICIO -->
-  <div id="panel-inicio" class="panel active">
-    <div class="panel-card">
-      <div class="welcome-hero">
-        <div class="hero-emoji">🌺</div>
-        <h2>Sistema de Encuestas Poblacionales</h2>
-        <p>Plataforma para recolección y análisis estadístico de datos demográficos colombianos. Validación rigurosa basada en catálogo DANE.</p>
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="showTab('crear')">✏️ Crear encuesta</button>
-          <button class="btn btn-secondary" onclick="showTab('upload')">📤 Subir CSV</button>
-          <a href="/docs" target="_blank" class="btn btn-secondary" style="text-decoration:none;">📖 Swagger UI</a>
-        </div>
-      </div>
-      <hr class="divider"/>
-      <div class="section-title"><span class="icon">🔗</span> Endpoints</div>
-      <div class="endpoints-grid">
-        <div class="endpoint-chip"><span class="method POST">POST</span><span class="path">/encuestas/</span><div class="desc">Crear</div></div>
-        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/</span><div class="desc">Listar</div></div>
-        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/{id}</span><div class="desc">Obtener</div></div>
-        <div class="endpoint-chip"><span class="method PUT">PUT</span><span class="path">/encuestas/{id}</span><div class="desc">Actualizar</div></div>
-        <div class="endpoint-chip"><span class="method DELETE">DELETE</span><span class="path">/encuestas/{id}</span><div class="desc">Eliminar</div></div>
-        <div class="endpoint-chip"><span class="method POST">POST</span><span class="path">/encuestas/upload-csv/</span><div class="desc">Upload CSV</div></div>
-        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/export/json/</span><div class="desc">Export JSON</div></div>
-        <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/export/pickle/</span><div class="desc">Export Pickle</div></div>
-      </div>
-      <div id="health-result" class="json-viewer"></div>
+  <header>
+    <div>
+      <h1>🌸 Encuestas Poblacionales</h1>
+      <p>FastAPI + Pydantic v2 · Colombia</p>
     </div>
-  </div>
-
-  <!-- CREAR -->
-  <div id="panel-crear" class="panel">
-    <div class="panel-card">
-      <div class="section-title"><span class="icon">👤</span> Datos del Encuestado</div>
-      <div class="form-grid">
-        <div class="form-group"><label>Nombre completo</label><input type="text" id="enc-nombre" placeholder="María García" /></div>
-        <div class="form-group"><label>Edad (0-120)</label><input type="number" id="enc-edad" min="0" max="120" placeholder="34" /></div>
-        <div class="form-group"><label>Género</label><select id="enc-genero"><option value="">Seleccionar…</option><option value="masculino">Masculino</option><option value="femenino">Femenino</option><option value="no_binario">No binario</option><option value="prefiero_no_decir">Prefiero no decir</option></select></div>
-        <div class="form-group"><label>Estrato (1-6)</label><select id="enc-estrato"><option value="">Seleccionar…</option><option value="1">1 — Bajo-bajo</option><option value="2">2 — Bajo</option><option value="3">3 — Medio-bajo</option><option value="4">4 — Medio</option><option value="5">5 — Medio-alto</option><option value="6">6 — Alto</option></select></div>
-        <div class="form-group"><label>Departamento</label><select id="enc-departamento"><option value="">Seleccionar…</option><option>Amazonas</option><option>Antioquia</option><option>Arauca</option><option>Atlántico</option><option>Bolívar</option><option>Boyacá</option><option>Caldas</option><option>Caquetá</option><option>Casanare</option><option>Cauca</option><option>Cesar</option><option>Chocó</option><option>Córdoba</option><option>Cundinamarca</option><option>Guainía</option><option>Guaviare</option><option>Huila</option><option>La Guajira</option><option>Magdalena</option><option>Meta</option><option>Nariño</option><option>Norte de Santander</option><option>Putumayo</option><option>Quindío</option><option>Risaralda</option><option>San Andrés y Providencia</option><option>Santander</option><option>Sucre</option><option>Tolima</option><option>Valle del Cauca</option><option>Vaupés</option><option>Vichada</option><option>Bogotá D.C.</option></select></div>
-        <div class="form-group"><label>Municipio</label><input type="text" id="enc-municipio" placeholder="Medellín" /></div>
-        <div class="form-group"><label>Nivel educativo</label><select id="enc-nivel"><option value="">Seleccionar…</option><option value="ninguno">Ninguno</option><option value="primaria">Primaria</option><option value="secundaria">Secundaria</option><option value="tecnico">Técnico</option><option value="universitario">Universitario</option><option value="posgrado">Posgrado</option></select></div>
-        <div class="form-group"><label>Ocupación</label><input type="text" id="enc-ocupacion" placeholder="Docente" /></div>
-      </div>
-      <hr class="divider"/>
-      <div class="section-title"><span class="icon">📝</span> Respuestas</div>
-      <div id="respuestas-container" class="respuestas-container"></div>
-      <div id="no-preguntas-msg" style="text-align:center;padding:2rem;color:var(--texto-2);">
-        <div style="font-size:3rem;margin-bottom:0.5rem;">📝</div>
-        <p>No hay preguntas agregadas</p>
-        <p style="font-size:0.85rem;margin-top:0.5rem;">Haz clic en "+ Agregar pregunta" para comenzar</p>
-      </div>
-      <button class="btn btn-secondary" style="margin-top:10px;" onclick="addRespuesta()">+ Agregar pregunta</button>
-      <hr class="divider"/>
-      <div class="form-group full"><label>Observaciones</label><textarea id="enc-observaciones" placeholder="Notas sobre el levantamiento…"></textarea></div>
-      <div class="btn-actions">
-        <button class="btn btn-primary" onclick="crearEncuesta()">🚀 Enviar</button>
-        <button class="btn btn-secondary" onclick="resetFormCrear()">🔄 Limpiar</button>
-      </div>
-      <div id="crear-alert" class="alert"></div>
-      <div id="crear-json" class="json-viewer"></div>
+    <div class="status-badge" onclick="checkHealth()">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text">Verificando...</span>
     </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('inicio')">🏠 Inicio</button>
+    <button class="tab-btn" onclick="showTab('crear')">✏️ Nueva</button>
+    <button class="tab-btn" onclick="showTab('listar')">📋 Listar</button>
+    <button class="tab-btn" onclick="showTab('upload')">📤 Upload CSV</button>
+    <button class="tab-btn" onclick="showTab('export')">📥 Exportar</button>
+    <button class="tab-btn" onclick="showTab('estadisticas')">📊 Estadísticas</button>
+    <button class="tab-btn" onclick="showTab('censo')">🏛️ Censo 2018</button>
   </div>
 
-  <!-- LISTAR -->
-  <div id="panel-listar" class="panel">
-    <div class="panel-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-        <div class="section-title" style="margin:0;"><span class="icon">📋</span> Encuestas</div>
-        <div style="display:flex;gap:10px;">
-          <button class="btn btn-secondary btn-sm" onclick="cargarDatosEjemplo()">📦 Cargar Ejemplo</button>
-          <button class="btn btn-danger btn-sm" onclick="borrarHistorial()">🗑️ Borrar Todo</button>
-          <button class="btn btn-secondary" onclick="loadEncuestas()">🔄 Actualizar</button>
-        </div>
-      </div>
-      <div id="encuestas-list" class="encuestas-list"></div>
-      <div id="listar-json" class="json-viewer"></div>
-    </div>
-  </div>
+  <div class="main-content">
 
-  <!-- UPLOAD -->
-  <div id="panel-upload" class="panel">
-    <div class="panel-card">
-      <div class="section-title"><span class="icon">📤</span> Upload CSV</div>
-      <p style="color:var(--texto-2);margin-bottom:1.5rem;">Sube un archivo CSV exportado desde Google Forms. El sistema detecta automáticamente las columnas.</p>
-
-      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
-        <div class="upload-icon">📁</div>
-        <h3>Arrastra tu archivo CSV aquí o haz clic para seleccionar</h3>
-        <p style="color:var(--texto-2);margin-top:0.5rem;">Formato: .csv</p>
-        <input type="file" id="file-input" accept=".csv" style="display:none;" onchange="handleFileSelect(event)" />
-      </div>
-
-      <div style="margin-top:1rem;text-align:center;">
-        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-input-debug').click()">🔍 Debug: Ver columnas detectadas</button>
-        <input type="file" id="file-input-debug" accept=".csv" style="display:none;" onchange="handleFileDebug(event)" />
-      </div>
-
-      <div id="upload-progress" style="margin-top:1.5rem;display:none;">
-        <div style="background:var(--rosa-palido);border-radius:10px;padding:1rem;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
-            <div class="spinner"></div>
-            <span id="upload-text">Procesando archivo...</span>
+    <!-- INICIO -->
+    <div id="panel-inicio" class="panel active">
+      <div class="panel-card">
+        <div class="welcome-hero">
+          <div class="hero-emoji">🌺</div>
+          <h2>Sistema de Encuestas Poblacionales</h2>
+          <p>Plataforma para recolección y análisis estadístico de datos demográficos colombianos. Validación rigurosa
+            basada en catálogo DANE.</p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="showTab('crear')">✏️ Crear encuesta</button>
+            <button class="btn btn-secondary" onclick="showTab('upload')">📤 Subir CSV</button>
+            <a href="/docs" target="_blank" class="btn btn-secondary" style="text-decoration:none;">📖 Swagger UI</a>
           </div>
         </div>
-      </div>
-
-      <div id="upload-alert" class="alert"></div>
-      <div id="upload-json" class="json-viewer"></div>
-      <div id="debug-json" class="json-viewer"></div>
-
-      <hr class="divider"/>
-      <div class="section-title"><span class="icon">ℹ️</span> Columnas esperadas</div>
-      <div style="background:var(--rosa-palido);padding:1rem;border-radius:10px;font-size:0.85rem;">
-        <p style="margin-bottom:0.5rem;"><strong>Demográficas (requeridas):</strong></p>
-        <code>nombre, edad, genero, estrato, departamento, municipio</code>
-        <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Demográficas (opcionales):</strong></p>
-        <code>nivel_educativo, ocupacion</code>
-        <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Respuestas:</strong></p>
-        <p>Cualquier otra columna será tratada como pregunta. Valores 1-5 → Likert, 0-100 → Porcentaje, "si/no" → Sí/No.</p>
+        <hr class="divider" />
+        <div class="section-title"><span class="icon">🔗</span> Endpoints</div>
+        <div class="endpoints-grid">
+          <div class="endpoint-chip"><span class="method POST">POST</span><span class="path">/encuestas/</span>
+            <div class="desc">Crear</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/</span>
+            <div class="desc">Listar</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span class="path">/encuestas/{id}</span>
+            <div class="desc">Obtener</div>
+          </div>
+          <div class="endpoint-chip"><span class="method PUT">PUT</span><span class="path">/encuestas/{id}</span>
+            <div class="desc">Actualizar</div>
+          </div>
+          <div class="endpoint-chip"><span class="method DELETE">DELETE</span><span class="path">/encuestas/{id}</span>
+            <div class="desc">Eliminar</div>
+          </div>
+          <div class="endpoint-chip"><span class="method POST">POST</span><span
+              class="path">/encuestas/upload-csv/</span>
+            <div class="desc">Upload CSV</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span
+              class="path">/encuestas/export/json/</span>
+            <div class="desc">Export JSON</div>
+          </div>
+          <div class="endpoint-chip"><span class="method GET">GET</span><span
+              class="path">/encuestas/export/pickle/</span>
+            <div class="desc">Export Pickle</div>
+          </div>
+        </div>
+        <div id="health-result" class="json-viewer"></div>
       </div>
     </div>
-  </div>
 
-  <!-- EXPORT -->
-  <div id="panel-export" class="panel">
-    <div class="panel-card">
-      <div class="section-title"><span class="icon">📥</span> Exportar Resultados</div>
-      <p style="color:var(--texto-2);margin-bottom:1.5rem;">Descarga todas las encuestas en formato JSON o Pickle.</p>
-      
-      <div class="export-card">
-        <h3>📄 Exportar a JSON</h3>
-        <p>Formato universal, legible por humanos, interoperable con cualquier lenguaje.</p>
-        <button class="btn btn-primary" onclick="exportJSON()">⬇️ Descargar JSON</button>
+    <!-- CREAR -->
+    <div id="panel-crear" class="panel">
+      <div class="panel-card">
+        <div class="section-title"><span class="icon">👤</span> Datos del Encuestado</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Nombre completo</label><input type="text" id="enc-nombre"
+              placeholder="María García" /></div>
+          <div class="form-group"><label>Edad (0-120)</label><input type="number" id="enc-edad" min="0" max="120"
+              placeholder="34" /></div>
+          <div class="form-group"><label>Género</label><select id="enc-genero">
+              <option value="">Seleccionar…</option>
+              <option value="masculino">Masculino</option>
+              <option value="femenino">Femenino</option>
+              <option value="no_binario">No binario</option>
+              <option value="prefiero_no_decir">Prefiero no decir</option>
+            </select></div>
+          <div class="form-group"><label>Estrato (1-6)</label><select id="enc-estrato">
+              <option value="">Seleccionar…</option>
+              <option value="1">1 — Bajo-bajo</option>
+              <option value="2">2 — Bajo</option>
+              <option value="3">3 — Medio-bajo</option>
+              <option value="4">4 — Medio</option>
+              <option value="5">5 — Medio-alto</option>
+              <option value="6">6 — Alto</option>
+            </select></div>
+          <div class="form-group"><label>Departamento</label><select id="enc-departamento">
+              <option value="">Seleccionar…</option>
+              <option>Amazonas</option>
+              <option>Antioquia</option>
+              <option>Arauca</option>
+              <option>Atlántico</option>
+              <option>Bolívar</option>
+              <option>Boyacá</option>
+              <option>Caldas</option>
+              <option>Caquetá</option>
+              <option>Casanare</option>
+              <option>Cauca</option>
+              <option>Cesar</option>
+              <option>Chocó</option>
+              <option>Córdoba</option>
+              <option>Cundinamarca</option>
+              <option>Guainía</option>
+              <option>Guaviare</option>
+              <option>Huila</option>
+              <option>La Guajira</option>
+              <option>Magdalena</option>
+              <option>Meta</option>
+              <option>Nariño</option>
+              <option>Norte de Santander</option>
+              <option>Putumayo</option>
+              <option>Quindío</option>
+              <option>Risaralda</option>
+              <option>San Andrés y Providencia</option>
+              <option>Santander</option>
+              <option>Sucre</option>
+              <option>Tolima</option>
+              <option>Valle del Cauca</option>
+              <option>Vaupés</option>
+              <option>Vichada</option>
+              <option>Bogotá D.C.</option>
+            </select></div>
+          <div class="form-group"><label>Municipio</label><input type="text" id="enc-municipio"
+              placeholder="Medellín" /></div>
+          <div class="form-group"><label>Nivel educativo</label><select id="enc-nivel">
+              <option value="">Seleccionar…</option>
+              <option value="ninguno">Ninguno</option>
+              <option value="primaria">Primaria</option>
+              <option value="secundaria">Secundaria</option>
+              <option value="tecnico">Técnico</option>
+              <option value="universitario">Universitario</option>
+              <option value="posgrado">Posgrado</option>
+            </select></div>
+          <div class="form-group"><label>Ocupación</label><input type="text" id="enc-ocupacion" placeholder="Docente" />
+          </div>
+        </div>
+        <hr class="divider" />
+        <div class="section-title"><span class="icon">📝</span> Respuestas</div>
+        <div id="respuestas-container" class="respuestas-container"></div>
+        <div id="no-preguntas-msg" style="text-align:center;padding:2rem;color:var(--texto-2);">
+          <div style="font-size:3rem;margin-bottom:0.5rem;">📝</div>
+          <p>No hay preguntas agregadas</p>
+          <p style="font-size:0.85rem;margin-top:0.5rem;">Haz clic en "+ Agregar pregunta" para comenzar</p>
+        </div>
+        <button class="btn btn-secondary" style="margin-top:10px;" onclick="addRespuesta()">+ Agregar pregunta</button>
+        <hr class="divider" />
+        <div class="form-group full"><label>Observaciones</label><textarea id="enc-observaciones"
+            placeholder="Notas sobre el levantamiento…"></textarea></div>
+        <div class="btn-actions">
+          <button class="btn btn-primary" onclick="crearEncuesta()">🚀 Enviar</button>
+          <button class="btn btn-secondary" onclick="resetFormCrear()">🔄 Limpiar</button>
+        </div>
+        <div id="crear-alert" class="alert"></div>
+        <div id="crear-json" class="json-viewer"></div>
       </div>
-
-      <div class="export-card">
-        <h3>🥒 Exportar a Pickle</h3>
-        <p>Formato binario de Python, más rápido pero solo compatible con Python.</p>
-        <button class="btn btn-secondary" onclick="exportPickle()">⬇️ Descargar Pickle</button>
-      </div>
-
-      <div id="export-alert" class="alert"></div>
     </div>
-  </div>
 
-  <!-- ESTADISTICAS -->
-  <div id="panel-estadisticas" class="panel">
-    <div class="panel-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-        <div class="section-title" style="margin:0;"><span class="icon">📊</span> Estadísticas</div>
-        <button class="btn btn-secondary" onclick="loadEstadisticas()">🔄 Actualizar</button>
+    <!-- LISTAR -->
+    <div id="panel-listar" class="panel">
+      <div class="panel-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+          <div class="section-title" style="margin:0;"><span class="icon">📋</span> Encuestas</div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-secondary btn-sm" onclick="cargarDatosEjemplo()">📦 Cargar Ejemplo</button>
+            <button class="btn btn-danger btn-sm" onclick="borrarHistorial()">🗑️ Borrar Todo</button>
+            <button class="btn btn-secondary" onclick="loadEncuestas()">🔄 Actualizar</button>
+          </div>
+        </div>
+        <div id="encuestas-list" class="encuestas-list"></div>
+        <div id="listar-json" class="json-viewer"></div>
       </div>
-      <div id="stats-kpi" class="stats-kpi-grid"></div>
-      
-      <div class="section-title"><span class="icon">📈</span> Distribuciones</div>
-      <div id="stats-charts"></div>
-      <div id="stats-json" class="json-viewer"></div>
     </div>
+
+    <!-- UPLOAD -->
+    <div id="panel-upload" class="panel">
+      <div class="panel-card">
+        <div class="section-title"><span class="icon">📤</span> Upload CSV</div>
+        <p style="color:var(--texto-2);margin-bottom:1.5rem;">Sube un archivo CSV exportado desde Google Forms. El
+          sistema detecta automáticamente las columnas.</p>
+
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+          <div class="upload-icon">📁</div>
+          <h3>Arrastra tu archivo CSV aquí o haz clic para seleccionar</h3>
+          <p style="color:var(--texto-2);margin-top:0.5rem;">Formato: .csv</p>
+          <input type="file" id="file-input" accept=".csv" style="display:none;" onchange="handleFileSelect(event)" />
+        </div>
+
+        <div style="margin-top:1rem;text-align:center;">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-input-debug').click()">🔍
+            Debug: Ver columnas detectadas</button>
+          <input type="file" id="file-input-debug" accept=".csv" style="display:none;"
+            onchange="handleFileDebug(event)" />
+        </div>
+
+        <div id="upload-progress" style="margin-top:1.5rem;display:none;">
+          <div style="background:var(--rosa-palido);border-radius:10px;padding:1rem;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+              <div class="spinner"></div>
+              <span id="upload-text">Procesando archivo...</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="upload-alert" class="alert"></div>
+        <div id="upload-json" class="json-viewer"></div>
+        <div id="debug-json" class="json-viewer"></div>
+
+        <hr class="divider" />
+        <div class="section-title"><span class="icon">ℹ️</span> Columnas esperadas</div>
+        <div style="background:var(--rosa-palido);padding:1rem;border-radius:10px;font-size:0.85rem;">
+          <p style="margin-bottom:0.5rem;"><strong>Demográficas (requeridas):</strong></p>
+          <code>nombre, edad, genero, estrato, departamento, municipio</code>
+          <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Demográficas (opcionales):</strong></p>
+          <code>nivel_educativo, ocupacion</code>
+          <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Respuestas:</strong></p>
+          <p>Cualquier otra columna será tratada como pregunta. Valores 1-5 → Likert, 0-100 → Porcentaje, "si/no" →
+            Sí/No.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div id="panel-export" class="panel">
+      <div class="panel-card">
+        <div class="section-title"><span class="icon">📥</span> Exportar Resultados</div>
+        <p style="color:var(--texto-2);margin-bottom:1.5rem;">Descarga todas las encuestas en formato JSON o Pickle.</p>
+
+        <div class="export-card">
+          <h3>📄 Exportar a JSON</h3>
+          <p>Formato universal, legible por humanos, interoperable con cualquier lenguaje.</p>
+          <button class="btn btn-primary" onclick="exportJSON()">⬇️ Descargar JSON</button>
+        </div>
+
+        <div class="export-card">
+          <h3>🥒 Exportar a Pickle</h3>
+          <p>Formato binario de Python, más rápido pero solo compatible con Python.</p>
+          <button class="btn btn-secondary" onclick="exportPickle()">⬇️ Descargar Pickle</button>
+        </div>
+
+        <div id="export-alert" class="alert"></div>
+      </div>
+    </div>
+
+    <!-- ESTADISTICAS -->
+    <div id="panel-estadisticas" class="panel">
+      <div class="panel-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+          <div class="section-title" style="margin:0;"><span class="icon">📊</span> Estadísticas</div>
+          <button class="btn btn-secondary" onclick="loadEstadisticas()">🔄 Actualizar</button>
+        </div>
+        <div id="stats-kpi" class="stats-kpi-grid"></div>
+
+        <div class="section-title"><span class="icon">📈</span> Distribuciones</div>
+        <div id="stats-charts"></div>
+        <div id="stats-json" class="json-viewer"></div>
+      </div>
+    </div>
+
+    <!-- CENSO 2018 -->
+    <div id="panel-censo" class="panel">
+      <div class="panel-card">
+        <div class="welcome-hero">
+          <div class="hero-emoji">🏛️</div>
+          <h2>Censo 2018 - Colombia</h2>
+          <p>Carga y análisis de bases de datos del DANE. Procesamiento batch para millones de registros.</p>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="section-title"><span class="icon">📤</span> Carga de Archivo</div>
+        <div class="upload-area" id="censo-upload-area" onclick="document.getElementById('censo-file-input').click()">
+          <div class="upload-icon">📁</div>
+          <h3>Arrastra tu archivo CSV del Censo 2018 o haz clic para seleccionar</h3>
+          <p style="color:var(--texto-2);margin-top:0.5rem;">Formato: CSV (tablas individuales del DANE)</p>
+          <input type="file" id="censo-file-input" accept=".csv" style="display:none;"
+            onchange="handleCensoFile(event)" />
+        </div>
+
+        <div id="censo-upload-progress" style="margin-top:1.5rem;display:none;">
+          <div style="background:var(--rosa-palido);border-radius:10px;padding:1rem;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="spinner"></div>
+              <span id="censo-upload-text">Cargando archivo. Esto puede tomar varios minutos...</span>
+            </div>
+            <div style="background:var(--borde);border-radius:5px;height:8px;margin-top:10px;overflow:hidden;">
+              <div id="censo-progress-bar"
+                style="background:linear-gradient(90deg, var(--rosa-medio), var(--rosa-vivo));height:100%;width:0%;transition:width 0.3s;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="censo-upload-alert" class="alert"></div>
+        <div id="censo-upload-json" class="json-viewer"></div>
+
+        <hr class="divider" />
+
+        <div class="section-title"><span class="icon">📊</span> Estadísticas del Censo</div>
+        <div style="display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="loadCensoEstadisticas()">🔄 Cargar Estadísticas</button>
+          <button class="btn btn-secondary" onclick="loadIndiceMasculinidad()">👨 Índice Masculinidad</button>
+          <button class="btn btn-secondary" onclick="loadIndiceDependencia()">👶 Índice Dependencia</button>
+          <button class="btn btn-danger" onclick="borrarDatosCenso()" style="margin-left:auto;">🗑️ Borrar
+            Datos</button>
+        </div>
+
+        <div id="censo-stats-kpi" class="stats-kpi-grid"></div>
+        <div id="censo-grupos-edad" style="margin-top:1.5rem;"></div>
+        <div id="censo-rangos-edad" style="margin-top:2rem;"></div>
+        <div id="censo-indices-result" style="margin-top:1rem;"></div>
+        <div id="censo-stats-json" class="json-viewer"></div>
+
+        <hr class="divider" />
+
+        <div class="section-title"><span class="icon">ℹ️</span> Variables del Censo 2018</div>
+        <div style="background:var(--rosa-palido);padding:1rem;border-radius:10px;font-size:0.85rem;">
+          <p style="margin-bottom:0.5rem;"><strong>Demográficas:</strong></p>
+          <code>P_SEXO (Sexo), P_EDADR (Edad)</code>
+          <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Geográficas:</strong></p>
+          <code>U_DPTO (Departamento), U_MPIO (Municipio)</code>
+          <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Étnicas:</strong></p>
+          <code>PA1_GRP_ETNIC (Grupo étnico)</code>
+          <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Educativas:</strong></p>
+          <code>P_ALFABETA (Alfabetismo), PA_ASISTENCIA (Asistencia), P_NIVEL_ANOSR (Años educación)</code>
+          <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Laborales:</strong></p>
+          <code>P_TRABAJO (Situación laboral), P_EST_CIVIL (Estado civil)</code>
+          <p style="margin-top:1rem;margin-bottom:0.5rem;"><strong>Salud:</strong></p>
+          <code>P_ENFERMO (Enfermedad crónica)</code>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-</div>
+  <div id="toast-container"></div>
 
-<div id="toast-container"></div>
+  <script>
+    const API = "http://localhost:8000";
 
-<script>
-  const API = "http://localhost:8000";
-
-  function showTab(tabId) {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('panel-' + tabId).classList.add('active');
-    event.target.classList.add('active');
-    if (tabId === 'listar') loadEncuestas();
-    if (tabId === 'estadisticas') loadEstadisticas();
-  }
-
-  async function checkHealth() {
-    try {
-      const resp = await fetch(`${API}/`);
-      const data = await resp.json();
-      document.getElementById('status-dot').className = 'dot online';
-      document.getElementById('status-text').textContent = 'En línea';
-      return data;
-    } catch {
-      document.getElementById('status-dot').className = 'dot offline';
-      document.getElementById('status-text').textContent = 'Sin conexión';
-      return null;
+    function showTab(tabId) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('panel-' + tabId).classList.add('active');
+      event.target.classList.add('active');
+      if (tabId === 'listar') loadEncuestas();
+      if (tabId === 'estadisticas') loadEstadisticas();
+      if (tabId === 'censo') loadCensoEstadisticas(true);  // true = solo mostrar estado, no cargar si está vacío
     }
-  }
 
-  function showToast(mensaje, tipo) {
-    const toast = document.createElement('div');
-    toast.className = `toast ${tipo}`;
-    toast.textContent = mensaje;
-    document.getElementById('toast-container').appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-  }
-
-  function showAlert(containerId, mensaje, tipo) {
-    const alert = document.getElementById(containerId);
-    alert.className = `alert ${tipo} show`;
-    alert.textContent = mensaje;
-    setTimeout(() => alert.classList.remove('show'), 5000);
-  }
-
-  function showJSON(elementId, data) {
-    const el = document.getElementById(elementId);
-    el.textContent = JSON.stringify(data, null, 2);
-    el.classList.add('show');
-  }
-
-  /* CREAR ENCUESTA */
-  function updateNoPreguntasMsg() {
-    const container = document.getElementById('respuestas-container');
-    const msg = document.getElementById('no-preguntas-msg');
-    if (container.children.length === 0) {
-      msg.style.display = 'block';
-    } else {
-      msg.style.display = 'none';
+    async function checkHealth() {
+      try {
+        const resp = await fetch(`${API}/`);
+        const data = await resp.json();
+        document.getElementById('status-dot').className = 'dot online';
+        document.getElementById('status-text').textContent = 'En línea';
+        return data;
+      } catch {
+        document.getElementById('status-dot').className = 'dot offline';
+        document.getElementById('status-text').textContent = 'Sin conexión';
+        return null;
+      }
     }
-  }
 
-  function addRespuesta() {
-    const container = document.getElementById('respuestas-container');
-    const idx = container.children.length + 1;
-    const div = document.createElement('div');
-    div.className = 'respuesta-card';
-    div.innerHTML = `
+    function showToast(mensaje, tipo) {
+      const toast = document.createElement('div');
+      toast.className = `toast ${tipo}`;
+      toast.textContent = mensaje;
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function showAlert(containerId, mensaje, tipo) {
+      const alert = document.getElementById(containerId);
+      alert.className = `alert ${tipo} show`;
+      alert.textContent = mensaje;
+      setTimeout(() => alert.classList.remove('show'), 5000);
+    }
+
+    function showJSON(elementId, data) {
+      const el = document.getElementById(elementId);
+      el.textContent = JSON.stringify(data, null, 2);
+      el.classList.add('show');
+    }
+
+    /* CREAR ENCUESTA */
+    function updateNoPreguntasMsg() {
+      const container = document.getElementById('respuestas-container');
+      const msg = document.getElementById('no-preguntas-msg');
+      if (container.children.length === 0) {
+        msg.style.display = 'block';
+      } else {
+        msg.style.display = 'none';
+      }
+    }
+
+    function addRespuesta() {
+      const container = document.getElementById('respuestas-container');
+      const idx = container.children.length + 1;
+      const div = document.createElement('div');
+      div.className = 'respuesta-card';
+      div.innerHTML = `
       <div class="resp-header">
         <span class="resp-num">Pregunta ${idx}</span>
         <button class="btn btn-danger btn-sm" onclick="removeRespuesta(this)" style="padding:4px 10px;font-size:0.7rem;">🗑️ Eliminar</button>
@@ -371,284 +1120,284 @@
         <div class="form-group"><label>Valor</label><input type="text" class="resp-valor" placeholder="Seleccione un tipo primero" disabled /></div>
       </div>
     `;
-    container.appendChild(div);
-    updateNoPreguntasMsg();
-  }
-
-  function removeRespuesta(btn) {
-    const card = btn.closest('.respuesta-card');
-    card.remove();
-    // Renumerar preguntas
-    document.querySelectorAll('.respuesta-card').forEach((c, i) => {
-      c.querySelector('.resp-num').textContent = `Pregunta ${i + 1}`;
-    });
-    updateNoPreguntasMsg();
-  }
-
-  function updateValorInput(select) {
-    const input = select.parentElement.nextElementSibling.querySelector('input');
-    const tipo = select.value;
-
-    if (!tipo) {
-      input.disabled = true;
-      input.placeholder = 'Seleccione un tipo primero';
-      input.value = '';
-      return;
+      container.appendChild(div);
+      updateNoPreguntasMsg();
     }
 
-    input.disabled = false;
-    if (tipo === 'likert') {
-      input.type = 'number';
-      input.min = 1;
-      input.max = 5;
-      input.placeholder = '1-5';
-    }
-    else if (tipo === 'porcentaje') {
-      input.type = 'number';
-      input.min = 0;
-      input.max = 100;
-      input.placeholder = '0-100';
-    }
-    else if (tipo === 'si_no') {
-      input.type = 'text';
-      input.placeholder = 'si o no';
-    }
-    else {
-      input.type = 'text';
-      input.placeholder = 'Texto';
-    }
-  }
-
-  async function crearEncuesta() {
-    // Limpiar alertas previas
-    document.getElementById('crear-alert').classList.remove('show');
-    document.getElementById('crear-json').classList.remove('show');
-
-    const nombre = document.getElementById('enc-nombre').value.trim();
-    const edad = parseInt(document.getElementById('enc-edad').value);
-    const genero = document.getElementById('enc-genero').value;
-    const estrato = parseInt(document.getElementById('enc-estrato').value);
-    const departamento = document.getElementById('enc-departamento').value;
-    const municipio = document.getElementById('enc-municipio').value.trim();
-    const nivel = document.getElementById('enc-nivel').value;
-    const ocupacion = document.getElementById('enc-ocupacion').value.trim();
-    const observaciones = document.getElementById('enc-observaciones').value.trim();
-
-    // Validaciones básicas antes de enviar
-    const errores = [];
-
-    // Validar nombre (no aceptar números puros)
-    if (!nombre || nombre.length < 2) {
-      errores.push({campo: 'Nombre', mensaje: 'Debe tener al menos 2 caracteres'});
-    } else if (/^\d+$/.test(nombre)) {
-      errores.push({campo: 'Nombre', mensaje: `No puede ser un número ('${nombre}'). Ingresá un nombre válido`});
+    function removeRespuesta(btn) {
+      const card = btn.closest('.respuesta-card');
+      card.remove();
+      // Renumerar preguntas
+      document.querySelectorAll('.respuesta-card').forEach((c, i) => {
+        c.querySelector('.resp-num').textContent = `Pregunta ${i + 1}`;
+      });
+      updateNoPreguntasMsg();
     }
 
-    if (!edad || edad < 0 || edad > 120) errores.push({campo: 'Edad', mensaje: 'Debe estar entre 0 y 120 años'});
-    if (!genero) errores.push({campo: 'Género', mensaje: 'Debe seleccionar una opción'});
-    if (!estrato || estrato < 1 || estrato > 6) errores.push({campo: 'Estrato', mensaje: 'Debe estar entre 1 y 6'});
-    if (!departamento) errores.push({campo: 'Departamento', mensaje: 'Debe seleccionar uno'});
+    function updateValorInput(select) {
+      const input = select.parentElement.nextElementSibling.querySelector('input');
+      const tipo = select.value;
 
-    // Validar municipio (no aceptar números puros)
-    if (!municipio || municipio.length < 2) {
-      errores.push({campo: 'Municipio', mensaje: 'Debe tener al menos 2 caracteres'});
-    } else if (/^\d+$/.test(municipio)) {
-      errores.push({campo: 'Municipio', mensaje: `No puede ser un número ('${municipio}'). Ingresá un municipio válido`});
-    }
-
-    if (!nivel) errores.push({campo: 'Nivel educativo', mensaje: 'Debe seleccionar una opción'});
-
-    // Validar ocupación (no aceptar números puros si está presente)
-    if (ocupacion && ocupacion.length > 0) {
-      if (/^\d+$/.test(ocupacion)) {
-        errores.push({campo: 'Ocupación', mensaje: `No puede ser un número ('${ocupacion}'). Ingresá una ocupación válida`});
-      }
-    }
-
-    if (errores.length > 0) {
-      mostrarErroresAmigables(errores);
-      return;
-    }
-
-    const respuestas = [];
-    document.querySelectorAll('.respuesta-card').forEach((card, idx) => {
-      const enunciado = card.querySelector('.resp-enunciado').value.trim();
-      const tipo = card.querySelector('.resp-tipo').value;
-      let valor = card.querySelector('.resp-valor').value.trim();
-
-      // Validaciones de pregunta
-      if (!enunciado || enunciado.length < 5) {
-        errores.push({campo: `Pregunta ${idx + 1} - Enunciado`, mensaje: 'Debe tener al menos 5 caracteres'});
-        return;
-      }
       if (!tipo) {
-        errores.push({campo: `Pregunta ${idx + 1} - Tipo`, mensaje: 'Debe seleccionar un tipo de pregunta'});
-        return;
-      }
-      if (!valor) {
-        errores.push({campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ingresar un valor'});
+        input.disabled = true;
+        input.placeholder = 'Seleccione un tipo primero';
+        input.value = '';
         return;
       }
 
+      input.disabled = false;
       if (tipo === 'likert') {
-        const num = parseInt(valor);
-        if (isNaN(num) || num < 1 || num > 5) {
-          errores.push({campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser un número entre 1 y 5'});
-          return;
-        }
-        valor = num;
+        input.type = 'number';
+        input.min = 1;
+        input.max = 5;
+        input.placeholder = '1-5';
       }
       else if (tipo === 'porcentaje') {
-        const num = parseFloat(valor);
-        if (isNaN(num) || num < 0 || num > 100) {
-          errores.push({campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser un número entre 0 y 100'});
-          return;
-        }
-        valor = num;
+        input.type = 'number';
+        input.min = 0;
+        input.max = 100;
+        input.placeholder = '0-100';
       }
       else if (tipo === 'si_no') {
-        valor = valor.toLowerCase();
-        if (valor !== 'si' && valor !== 'no') {
-          errores.push({campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser "si" o "no"'});
-          return;
+        input.type = 'text';
+        input.placeholder = 'si o no';
+      }
+      else {
+        input.type = 'text';
+        input.placeholder = 'Texto';
+      }
+    }
+
+    async function crearEncuesta() {
+      // Limpiar alertas previas
+      document.getElementById('crear-alert').classList.remove('show');
+      document.getElementById('crear-json').classList.remove('show');
+
+      const nombre = document.getElementById('enc-nombre').value.trim();
+      const edad = parseInt(document.getElementById('enc-edad').value);
+      const genero = document.getElementById('enc-genero').value;
+      const estrato = parseInt(document.getElementById('enc-estrato').value);
+      const departamento = document.getElementById('enc-departamento').value;
+      const municipio = document.getElementById('enc-municipio').value.trim();
+      const nivel = document.getElementById('enc-nivel').value;
+      const ocupacion = document.getElementById('enc-ocupacion').value.trim();
+      const observaciones = document.getElementById('enc-observaciones').value.trim();
+
+      // Validaciones básicas antes de enviar
+      const errores = [];
+
+      // Validar nombre (no aceptar números puros)
+      if (!nombre || nombre.length < 2) {
+        errores.push({ campo: 'Nombre', mensaje: 'Debe tener al menos 2 caracteres' });
+      } else if (/^\d+$/.test(nombre)) {
+        errores.push({ campo: 'Nombre', mensaje: `No puede ser un número ('${nombre}'). Ingresá un nombre válido` });
+      }
+
+      if (!edad || edad < 0 || edad > 120) errores.push({ campo: 'Edad', mensaje: 'Debe estar entre 0 y 120 años' });
+      if (!genero) errores.push({ campo: 'Género', mensaje: 'Debe seleccionar una opción' });
+      if (!estrato || estrato < 1 || estrato > 6) errores.push({ campo: 'Estrato', mensaje: 'Debe estar entre 1 y 6' });
+      if (!departamento) errores.push({ campo: 'Departamento', mensaje: 'Debe seleccionar uno' });
+
+      // Validar municipio (no aceptar números puros)
+      if (!municipio || municipio.length < 2) {
+        errores.push({ campo: 'Municipio', mensaje: 'Debe tener al menos 2 caracteres' });
+      } else if (/^\d+$/.test(municipio)) {
+        errores.push({ campo: 'Municipio', mensaje: `No puede ser un número ('${municipio}'). Ingresá un municipio válido` });
+      }
+
+      if (!nivel) errores.push({ campo: 'Nivel educativo', mensaje: 'Debe seleccionar una opción' });
+
+      // Validar ocupación (no aceptar números puros si está presente)
+      if (ocupacion && ocupacion.length > 0) {
+        if (/^\d+$/.test(ocupacion)) {
+          errores.push({ campo: 'Ocupación', mensaje: `No puede ser un número ('${ocupacion}'). Ingresá una ocupación válida` });
         }
       }
 
-      respuestas.push({ pregunta_id: idx + 1, enunciado, tipo_pregunta: tipo, valor });
-    });
-
-    if (respuestas.length === 0 && errores.length === 0) {
-      // Las respuestas ahora son opcionales, no es un error
-      // Solo agrego una nota informativa
-      console.log('Encuesta sin preguntas - solo datos demográficos');
-    }
-
-    if (errores.length > 0) {
-      mostrarErroresAmigables(errores);
-      return;
-    }
-
-    const payload = {
-      encuestado: { nombre, edad, genero, estrato, departamento, municipio, nivel_educativo: nivel, ocupacion: ocupacion || null },
-      respuestas,
-      observaciones_generales: observaciones || null,
-    };
-
-    try {
-      const resp = await fetch(`${API}/encuestas/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const data = await resp.json();
-      if (resp.ok) {
-        showAlert('crear-alert', `✅ Encuesta creada exitosamente. ID: ${data.id_encuesta.substring(0, 8)}...`, 'success');
-        showJSON('crear-json', data);
-        showToast('Encuesta creada', 'success');
-        resetFormCrear();
-      } else if (resp.status === 422) {
-        // Mostrar errores de validación de forma amigable
-        mostrarErroresAmigablesDesdeAPI(data);
-      } else {
-        showAlert('crear-alert', `❌ Error ${resp.status}: ${data.error || data.detail || 'Error desconocido'}`, 'error');
-        showToast(`Error ${resp.status}`, 'error');
-      }
-    } catch (err) {
-      showAlert('crear-alert', `❌ Error de conexión: ${err.message}. Verifique que la API esté corriendo en ${API}`, 'error');
-      showToast('Error de conexión', 'error');
-    }
-  }
-
-  function mostrarErroresAmigables(errores) {
-    const container = document.getElementById('crear-alert');
-    let html = '<strong>⚠️ Se encontraron los siguientes errores:</strong><ul style="margin-top:8px;padding-left:20px;">';
-    errores.forEach(e => {
-      html += `<li><strong>${e.campo}:</strong> ${e.mensaje}</li>`;
-    });
-    html += '</ul>';
-    container.innerHTML = html;
-    container.className = 'alert alert-error show';
-    showToast(`${errores.length} error(s) encontrado(s)`, 'error');
-  }
-
-  function mostrarErroresAmigablesDesdeAPI(data) {
-    const container = document.getElementById('crear-alert');
-    const detalles = data.detalle_errores || [];
-
-    if (detalles.length === 0) {
-      container.innerHTML = `<strong>❌ Error de validación</strong><p>${data.descripcion || 'Datos inválidos'}</p>`;
-      container.className = 'alert alert-error show';
-      return;
-    }
-
-    let html = '<strong>⚠️ Los siguientes campos tienen errores:</strong><ul style="margin-top:8px;padding-left:20px;">';
-
-    detalles.forEach(err => {
-      // Traducir el campo a algo más entendible
-      let campoAmigable = err.campo
-        .replace('body → encuestado → ', '')
-        .replace('body → respuestas → ', 'Pregunta ')
-        .replace(' → ', ' - ')
-        .replace(/(\d+)/, '#$1');
-
-      // Traducir mensajes comunes
-      let mensajeAmigable = err.mensaje;
-      if (err.tipo_error === 'string_too_short') {
-        const match = err.mensaje.match(/at least (\d+) characters/);
-        if (match) {
-          mensajeAmigable = `Debe tener al menos ${match[1]} caracteres`;
-        }
-      } else if (err.tipo_error === 'less_than_equal') {
-        const match = err.mensaje.match(/less than or equal to (\d+)/);
-        if (match) {
-          mensajeAmigable = `Debe ser menor o igual a ${match[1]}`;
-        }
-      } else if (err.tipo_error === 'greater_than_equal') {
-        const match = err.mensaje.match(/greater than or equal to (\d+)/);
-        if (match) {
-          mensajeAmigable = `Debe ser mayor o igual a ${match[1]}`;
-        }
-      } else if (err.tipo_error === 'literal_error') {
-        mensajeAmigable = 'Valor no permitido';
-      } else if (err.tipo_error === 'int_parsing') {
-        mensajeAmigable = 'Debe ser un número entero';
-      } else if (err.tipo_error === 'float_parsing') {
-        mensajeAmigable = 'Debe ser un número';
-      } else if (err.tipo_error === 'enum_violation') {
-        mensajeAmigable = 'Debe seleccionar una opción válida';
-      }
-
-      html += `<li><strong>${campoAmigable}:</strong> ${mensajeAmigable}</li>`;
-    });
-
-    html += '</ul>';
-    container.innerHTML = html;
-    container.className = 'alert alert-error show';
-    showToast(`${detalles.length} error(s) de validación`, 'error');
-  }
-
-  function resetFormCrear() {
-    document.getElementById('enc-nombre').value = '';
-    document.getElementById('enc-edad').value = '';
-    document.getElementById('enc-genero').value = '';
-    document.getElementById('enc-estrato').value = '';
-    document.getElementById('enc-departamento').value = '';
-    document.getElementById('enc-municipio').value = '';
-    document.getElementById('enc-nivel').value = '';
-    document.getElementById('enc-ocupacion').value = '';
-    document.getElementById('enc-observaciones').value = '';
-    document.getElementById('respuestas-container').innerHTML = '';
-    document.getElementById('crear-alert').classList.remove('show');
-    document.getElementById('crear-json').classList.remove('show');
-  }
-
-  /* LISTAR */
-  async function loadEncuestas() {
-    try {
-      const resp = await fetch(`${API}/encuestas/`);
-      const data = await resp.json();
-      const container = document.getElementById('encuestas-list');
-      if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>No hay encuestas registradas</p><p style="font-size:0.85rem;margin-top:0.5rem;">Crea una nueva o carga datos de ejemplo</p></div>';
+      if (errores.length > 0) {
+        mostrarErroresAmigables(errores);
         return;
       }
-      container.innerHTML = data.map(enc => `
+
+      const respuestas = [];
+      document.querySelectorAll('.respuesta-card').forEach((card, idx) => {
+        const enunciado = card.querySelector('.resp-enunciado').value.trim();
+        const tipo = card.querySelector('.resp-tipo').value;
+        let valor = card.querySelector('.resp-valor').value.trim();
+
+        // Validaciones de pregunta
+        if (!enunciado || enunciado.length < 5) {
+          errores.push({ campo: `Pregunta ${idx + 1} - Enunciado`, mensaje: 'Debe tener al menos 5 caracteres' });
+          return;
+        }
+        if (!tipo) {
+          errores.push({ campo: `Pregunta ${idx + 1} - Tipo`, mensaje: 'Debe seleccionar un tipo de pregunta' });
+          return;
+        }
+        if (!valor) {
+          errores.push({ campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ingresar un valor' });
+          return;
+        }
+
+        if (tipo === 'likert') {
+          const num = parseInt(valor);
+          if (isNaN(num) || num < 1 || num > 5) {
+            errores.push({ campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser un número entre 1 y 5' });
+            return;
+          }
+          valor = num;
+        }
+        else if (tipo === 'porcentaje') {
+          const num = parseFloat(valor);
+          if (isNaN(num) || num < 0 || num > 100) {
+            errores.push({ campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser un número entre 0 y 100' });
+            return;
+          }
+          valor = num;
+        }
+        else if (tipo === 'si_no') {
+          valor = valor.toLowerCase();
+          if (valor !== 'si' && valor !== 'no') {
+            errores.push({ campo: `Pregunta ${idx + 1} - Valor`, mensaje: 'Debe ser "si" o "no"' });
+            return;
+          }
+        }
+
+        respuestas.push({ pregunta_id: idx + 1, enunciado, tipo_pregunta: tipo, valor });
+      });
+
+      if (respuestas.length === 0 && errores.length === 0) {
+        // Las respuestas ahora son opcionales, no es un error
+        // Solo agrego una nota informativa
+        console.log('Encuesta sin preguntas - solo datos demográficos');
+      }
+
+      if (errores.length > 0) {
+        mostrarErroresAmigables(errores);
+        return;
+      }
+
+      const payload = {
+        encuestado: { nombre, edad, genero, estrato, departamento, municipio, nivel_educativo: nivel, ocupacion: ocupacion || null },
+        respuestas,
+        observaciones_generales: observaciones || null,
+      };
+
+      try {
+        const resp = await fetch(`${API}/encuestas/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const data = await resp.json();
+        if (resp.ok) {
+          showAlert('crear-alert', `✅ Encuesta creada exitosamente. ID: ${data.id_encuesta.substring(0, 8)}...`, 'success');
+          showJSON('crear-json', data);
+          showToast('Encuesta creada', 'success');
+          resetFormCrear();
+        } else if (resp.status === 422) {
+          // Mostrar errores de validación de forma amigable
+          mostrarErroresAmigablesDesdeAPI(data);
+        } else {
+          showAlert('crear-alert', `❌ Error ${resp.status}: ${data.error || data.detail || 'Error desconocido'}`, 'error');
+          showToast(`Error ${resp.status}`, 'error');
+        }
+      } catch (err) {
+        showAlert('crear-alert', `❌ Error de conexión: ${err.message}. Verifique que la API esté corriendo en ${API}`, 'error');
+        showToast('Error de conexión', 'error');
+      }
+    }
+
+    function mostrarErroresAmigables(errores) {
+      const container = document.getElementById('crear-alert');
+      let html = '<strong>⚠️ Se encontraron los siguientes errores:</strong><ul style="margin-top:8px;padding-left:20px;">';
+      errores.forEach(e => {
+        html += `<li><strong>${e.campo}:</strong> ${e.mensaje}</li>`;
+      });
+      html += '</ul>';
+      container.innerHTML = html;
+      container.className = 'alert alert-error show';
+      showToast(`${errores.length} error(s) encontrado(s)`, 'error');
+    }
+
+    function mostrarErroresAmigablesDesdeAPI(data) {
+      const container = document.getElementById('crear-alert');
+      const detalles = data.detalle_errores || [];
+
+      if (detalles.length === 0) {
+        container.innerHTML = `<strong>❌ Error de validación</strong><p>${data.descripcion || 'Datos inválidos'}</p>`;
+        container.className = 'alert alert-error show';
+        return;
+      }
+
+      let html = '<strong>⚠️ Los siguientes campos tienen errores:</strong><ul style="margin-top:8px;padding-left:20px;">';
+
+      detalles.forEach(err => {
+        // Traducir el campo a algo más entendible
+        let campoAmigable = err.campo
+          .replace('body → encuestado → ', '')
+          .replace('body → respuestas → ', 'Pregunta ')
+          .replace(' → ', ' - ')
+          .replace(/(\d+)/, '#$1');
+
+        // Traducir mensajes comunes
+        let mensajeAmigable = err.mensaje;
+        if (err.tipo_error === 'string_too_short') {
+          const match = err.mensaje.match(/at least (\d+) characters/);
+          if (match) {
+            mensajeAmigable = `Debe tener al menos ${match[1]} caracteres`;
+          }
+        } else if (err.tipo_error === 'less_than_equal') {
+          const match = err.mensaje.match(/less than or equal to (\d+)/);
+          if (match) {
+            mensajeAmigable = `Debe ser menor o igual a ${match[1]}`;
+          }
+        } else if (err.tipo_error === 'greater_than_equal') {
+          const match = err.mensaje.match(/greater than or equal to (\d+)/);
+          if (match) {
+            mensajeAmigable = `Debe ser mayor o igual a ${match[1]}`;
+          }
+        } else if (err.tipo_error === 'literal_error') {
+          mensajeAmigable = 'Valor no permitido';
+        } else if (err.tipo_error === 'int_parsing') {
+          mensajeAmigable = 'Debe ser un número entero';
+        } else if (err.tipo_error === 'float_parsing') {
+          mensajeAmigable = 'Debe ser un número';
+        } else if (err.tipo_error === 'enum_violation') {
+          mensajeAmigable = 'Debe seleccionar una opción válida';
+        }
+
+        html += `<li><strong>${campoAmigable}:</strong> ${mensajeAmigable}</li>`;
+      });
+
+      html += '</ul>';
+      container.innerHTML = html;
+      container.className = 'alert alert-error show';
+      showToast(`${detalles.length} error(s) de validación`, 'error');
+    }
+
+    function resetFormCrear() {
+      document.getElementById('enc-nombre').value = '';
+      document.getElementById('enc-edad').value = '';
+      document.getElementById('enc-genero').value = '';
+      document.getElementById('enc-estrato').value = '';
+      document.getElementById('enc-departamento').value = '';
+      document.getElementById('enc-municipio').value = '';
+      document.getElementById('enc-nivel').value = '';
+      document.getElementById('enc-ocupacion').value = '';
+      document.getElementById('enc-observaciones').value = '';
+      document.getElementById('respuestas-container').innerHTML = '';
+      document.getElementById('crear-alert').classList.remove('show');
+      document.getElementById('crear-json').classList.remove('show');
+    }
+
+    /* LISTAR */
+    async function loadEncuestas() {
+      try {
+        const resp = await fetch(`${API}/encuestas/`);
+        const data = await resp.json();
+        const container = document.getElementById('encuestas-list');
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>No hay encuestas registradas</p><p style="font-size:0.85rem;margin-top:0.5rem;">Crea una nueva o carga datos de ejemplo</p></div>';
+          return;
+        }
+        container.innerHTML = data.map(enc => `
         <div class="encuesta-item">
           <div class="encuesta-avatar">👤</div>
           <div class="encuesta-info">
@@ -666,257 +1415,531 @@
           </div>
         </div>
       `).join('');
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  async function cargarDatosEjemplo() {
-    if (!confirm('¿Cargar 5 encuestas de ejemplo? Esto agregará datos demográficos colombianos variados.')) return;
-
-    // Cargar datos de ejemplo directamente (sin depender del backend)
-    const ejemplos = [
-      { nombre: "María García", edad: 34, genero: "femenino", estrato: 3, departamento: "Antioquia", municipio: "Medellín", nivel_educativo: "universitario", ocupacion: "Docente" },
-      { nombre: "Carlos López", edad: 28, genero: "masculino", estrato: 2, departamento: "Valle del Cauca", municipio: "Cali", nivel_educativo: "tecnico", ocupacion: "Ingeniero" },
-      { nombre: "Ana Rodríguez", edad: 45, genero: "femenino", estrato: 4, departamento: "Bogotá D.C.", municipio: "Bogotá", nivel_educativo: "posgrado", ocupacion: "Abogada" },
-      { nombre: "Juan Pérez", edad: 52, genero: "masculino", estrato: 3, departamento: "Cundinamarca", municipio: "Bogotá", nivel_educativo: "universitario", ocupacion: "Contador" },
-      { nombre: "Luisa Gómez", edad: 23, genero: "femenino", estrato: 1, departamento: "Santander", municipio: "Bucaramanga", nivel_educativo: "secundaria", ocupacion: "Estudiante" },
-    ];
-
-    let cargadas = 0;
-    for (const ej of ejemplos) {
-      try {
-        const resp = await fetch(`${API}/encuestas/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            encuestado: ej,
-            respuestas: [
-              { pregunta_id: 1, enunciado: "¿Satisfacción con servicios públicos?", tipo_pregunta: "likert", valor: Math.floor(Math.random() * 5) + 1 },
-              { pregunta_id: 2, enunciado: "¿Confianza en instituciones (%)?", tipo_pregunta: "porcentaje", valor: Math.floor(Math.random() * 100) }
-            ],
-            observaciones_generales: "[Datos de ejemplo]"
-          })
-        });
-        if (resp.ok) cargadas++;
       } catch (err) {
-        console.error('Error al cargar ejemplo:', err);
+        console.error(err);
       }
     }
 
-    if (cargadas > 0) {
-      showToast(`${cargadas} encuestas de ejemplo cargadas`, 'success');
-      loadEncuestas();
-    } else {
-      showToast('Error: Verifica que la API esté corriendo', 'error');
-    }
-  }
+    async function cargarDatosEjemplo() {
+      if (!confirm('¿Cargar 5 encuestas de ejemplo? Esto agregará datos demográficos colombianos variados.')) return;
 
-  async function borrarHistorial() {
-    if (!confirm('⚠️ ¿Estás seguro de que quieres BORRAR TODAS las encuestas? Esta acción no se puede deshacer.')) return;
+      // Cargar datos de ejemplo directamente (sin depender del backend)
+      const ejemplos = [
+        { nombre: "María García", edad: 34, genero: "femenino", estrato: 3, departamento: "Antioquia", municipio: "Medellín", nivel_educativo: "universitario", ocupacion: "Docente" },
+        { nombre: "Carlos López", edad: 28, genero: "masculino", estrato: 2, departamento: "Valle del Cauca", municipio: "Cali", nivel_educativo: "tecnico", ocupacion: "Ingeniero" },
+        { nombre: "Ana Rodríguez", edad: 45, genero: "femenino", estrato: 4, departamento: "Bogotá D.C.", municipio: "Bogotá", nivel_educativo: "posgrado", ocupacion: "Abogada" },
+        { nombre: "Juan Pérez", edad: 52, genero: "masculino", estrato: 3, departamento: "Cundinamarca", municipio: "Bogotá", nivel_educativo: "universitario", ocupacion: "Contador" },
+        { nombre: "Luisa Gómez", edad: 23, genero: "femenino", estrato: 1, departamento: "Santander", municipio: "Bucaramanga", nivel_educativo: "secundaria", ocupacion: "Estudiante" },
+      ];
 
-    try {
-      const resp = await fetch(`${API}/encuestas/`);
-      const encuestas = await resp.json();
-
-      for (const enc of encuestas) {
-        await fetch(`${API}/encuestas/${enc.id_encuesta}`, { method: 'DELETE' });
+      let cargadas = 0;
+      for (const ej of ejemplos) {
+        try {
+          const resp = await fetch(`${API}/encuestas/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              encuestado: ej,
+              respuestas: [
+                { pregunta_id: 1, enunciado: "¿Satisfacción con servicios públicos?", tipo_pregunta: "likert", valor: Math.floor(Math.random() * 5) + 1 },
+                { pregunta_id: 2, enunciado: "¿Confianza en instituciones (%)?", tipo_pregunta: "porcentaje", valor: Math.floor(Math.random() * 100) }
+              ],
+              observaciones_generales: "[Datos de ejemplo]"
+            })
+          });
+          if (resp.ok) cargadas++;
+        } catch (err) {
+          console.error('Error al cargar ejemplo:', err);
+        }
       }
 
-      showToast('Historial borrado', 'success');
-      loadEncuestas();
-    } catch (err) {
-      showToast('Error al borrar', 'error');
-    }
-  }
-
-  async function verEncuesta(id) {
-    try {
-      const resp = await fetch(`${API}/encuestas/${id}`);
-      const data = await resp.json();
-      showJSON('listar-json', data);
-      // Agregar botón de eliminar arriba del JSON
-      const container = document.getElementById('listar-json');
-      const btnEliminar = document.createElement('button');
-      btnEliminar.className = 'btn btn-danger btn-sm';
-      btnEliminar.style.cssText = 'margin-bottom:10px;display:block;';
-      btnEliminar.textContent = '🗑️ Eliminar esta encuesta';
-      btnEliminar.onclick = () => eliminarEncuesta(id);
-      container.insertBefore(btnEliminar, container.firstChild);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  async function eliminarEncuesta(id) {
-    if (!confirm(`¿Eliminar la encuesta ${id.slice(0, 8)}...? Esta acción es irreversible.`)) return;
-    try {
-      const resp = await fetch(`${API}/encuestas/${id}`, { method: 'DELETE' });
-      if (resp.status === 204) {
-        showToast('Encuesta eliminada', 'success');
-        document.getElementById('listar-json').classList.remove('show');
+      if (cargadas > 0) {
+        showToast(`${cargadas} encuestas de ejemplo cargadas`, 'success');
         loadEncuestas();
       } else {
-        showToast('Error al eliminar', 'error');
+        showToast('Error: Verifica que la API esté corriendo', 'error');
       }
-    } catch (err) {
-      showToast('Error de conexión', 'error');
     }
-  }
 
-  /* UPLOAD */
-  const uploadArea = document.getElementById('upload-area');
-  uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-  uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file) uploadFile(file);
-  });
+    async function borrarHistorial() {
+      if (!confirm('⚠️ ¿Estás seguro de que quieres BORRAR TODAS las encuestas? Esta acción no se puede deshacer.')) return;
 
-  function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (file) uploadFile(file);
-  }
+      try {
+        const resp = await fetch(`${API}/encuestas/`);
+        const encuestas = await resp.json();
 
-  async function handleFileDebug(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+        for (const enc of encuestas) {
+          await fetch(`${API}/encuestas/${enc.id_encuesta}`, { method: 'DELETE' });
+        }
 
-    const container = document.getElementById('debug-json');
-    container.classList.remove('show');
+        showToast('Historial borrado', 'success');
+        loadEncuestas();
+      } catch (err) {
+        showToast('Error al borrar', 'error');
+      }
+    }
 
-    try {
+    async function verEncuesta(id) {
+      try {
+        const resp = await fetch(`${API}/encuestas/${id}`);
+        const data = await resp.json();
+        showJSON('listar-json', data);
+        // Agregar botón de eliminar arriba del JSON
+        const container = document.getElementById('listar-json');
+        const btnEliminar = document.createElement('button');
+        btnEliminar.className = 'btn btn-danger btn-sm';
+        btnEliminar.style.cssText = 'margin-bottom:10px;display:block;';
+        btnEliminar.textContent = '🗑️ Eliminar esta encuesta';
+        btnEliminar.onclick = () => eliminarEncuesta(id);
+        container.insertBefore(btnEliminar, container.firstChild);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function eliminarEncuesta(id) {
+      if (!confirm(`¿Eliminar la encuesta ${id.slice(0, 8)}...? Esta acción es irreversible.`)) return;
+      try {
+        const resp = await fetch(`${API}/encuestas/${id}`, { method: 'DELETE' });
+        if (resp.status === 204) {
+          showToast('Encuesta eliminada', 'success');
+          document.getElementById('listar-json').classList.remove('show');
+          loadEncuestas();
+        } else {
+          showToast('Error al eliminar', 'error');
+        }
+      } catch (err) {
+        showToast('Error de conexión', 'error');
+      }
+    }
+
+    /* UPLOAD */
+    const uploadArea = document.getElementById('upload-area');
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) uploadFile(file);
+    });
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) uploadFile(file);
+    }
+
+    async function handleFileDebug(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const container = document.getElementById('debug-json');
+      container.classList.remove('show');
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const resp = await fetch(`${API}/encuestas/debug-columns/`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await resp.json();
+
+        container.textContent = JSON.stringify(data, null, 2);
+        container.classList.add('show');
+
+        // Mostrar resumen
+        let resumen = `<strong>Columnas detectadas:</strong><br>`;
+        for (const [campo, columna] of Object.entries(data.detecciones)) {
+          resumen += `• ${campo}: ${columna ? '✅ ' + columna : '❌ No encontrada'}<br>`;
+        }
+        resumen += `<br><strong>Total columnas:</strong> ${data.total_columnas}<br>`;
+        resumen += `<strong>Columnas originales:</strong> ${data.columnas_originales.join(', ')}<br>`;
+
+        showAlert('upload-alert', resumen, data.detecciones.nombre && data.detecciones.edad ? 'success' : 'error');
+      } catch (err) {
+        showAlert('upload-alert', `Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function uploadFile(file) {
+      document.getElementById('upload-progress').style.display = 'block';
+      document.getElementById('upload-text').textContent = `Procesando ${file.name}...`;
+
       const formData = new FormData();
       formData.append('file', file);
 
-      const resp = await fetch(`${API}/encuestas/debug-columns/`, {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await resp.json();
-
-      container.textContent = JSON.stringify(data, null, 2);
-      container.classList.add('show');
-
-      // Mostrar resumen
-      let resumen = `<strong>Columnas detectadas:</strong><br>`;
-      for (const [campo, columna] of Object.entries(data.detecciones)) {
-        resumen += `• ${campo}: ${columna ? '✅ ' + columna : '❌ No encontrada'}<br>`;
+      try {
+        const resp = await fetch(`${API}/encuestas/upload-csv/`, { method: 'POST', body: formData });
+        const data = await resp.json();
+        document.getElementById('upload-progress').style.display = 'none';
+        if (resp.ok) {
+          showAlert('upload-alert', `✅ ${data.exitosos} encuestas cargadas. Errores: ${data.fallidos}`, 'success');
+          showJSON('upload-json', data);
+          showToast(`${data.exitosos} encuestas cargadas`, 'success');
+        } else {
+          showAlert('upload-alert', `❌ Error ${resp.status}: ${JSON.stringify(data)}`, 'error');
+          showToast(`Error ${resp.status}`, 'error');
+        }
+      } catch (err) {
+        document.getElementById('upload-progress').style.display = 'none';
+        showAlert('upload-alert', `❌ Sin conexión: ${err.message}`, 'error');
       }
-      resumen += `<br><strong>Total columnas:</strong> ${data.total_columnas}<br>`;
-      resumen += `<strong>Columnas originales:</strong> ${data.columnas_originales.join(', ')}<br>`;
-
-      showAlert('upload-alert', resumen, data.detecciones.nombre && data.detecciones.edad ? 'success' : 'error');
-    } catch (err) {
-      showAlert('upload-alert', `Error: ${err.message}`, 'error');
     }
-  }
 
-  async function uploadFile(file) {
-    document.getElementById('upload-progress').style.display = 'block';
-    document.getElementById('upload-text').textContent = `Procesando ${file.name}...`;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const resp = await fetch(`${API}/encuestas/upload-csv/`, { method: 'POST', body: formData });
-      const data = await resp.json();
-      document.getElementById('upload-progress').style.display = 'none';
-      if (resp.ok) {
-        showAlert('upload-alert', `✅ ${data.exitosos} encuestas cargadas. Errores: ${data.fallidos}`, 'success');
-        showJSON('upload-json', data);
-        showToast(`${data.exitosos} encuestas cargadas`, 'success');
-      } else {
-        showAlert('upload-alert', `❌ Error ${resp.status}: ${JSON.stringify(data)}`, 'error');
-        showToast(`Error ${resp.status}`, 'error');
-      }
-    } catch (err) {
-      document.getElementById('upload-progress').style.display = 'none';
-      showAlert('upload-alert', `❌ Sin conexión: ${err.message}`, 'error');
+    /* EXPORT */
+    function exportJSON() {
+      window.open(`${API}/encuestas/export/json/`, '_blank');
+      showToast('Descargando JSON...', 'info');
     }
-  }
 
-  /* EXPORT */
-  function exportJSON() {
-    window.open(`${API}/encuestas/export/json/`, '_blank');
-    showToast('Descargando JSON...', 'info');
-  }
+    function exportPickle() {
+      window.open(`${API}/encuestas/export/pickle/`, '_blank');
+      showToast('Descargando Pickle...', 'info');
+    }
 
-  function exportPickle() {
-    window.open(`${API}/encuestas/export/pickle/`, '_blank');
-    showToast('Descargando Pickle...', 'info');
-  }
+    /* ESTADISTICAS */
+    async function loadEstadisticas() {
+      try {
+        const resp = await fetch(`${API}/encuestas/estadisticas/`);
+        const data = await resp.json();
 
-  /* ESTADISTICAS */
-  async function loadEstadisticas() {
-    try {
-      const resp = await fetch(`${API}/encuestas/estadisticas/`);
-      const data = await resp.json();
-      
-      // KPIs
-      const container = document.getElementById('stats-kpi');
-      container.innerHTML = `
+        // KPIs
+        const container = document.getElementById('stats-kpi');
+        container.innerHTML = `
         <div class="kpi-card"><div class="kpi-value">${data.total_encuestas}</div><div class="kpi-label">Total encuestas</div></div>
         <div class="kpi-card"><div class="kpi-value">${data.edad_promedio.toFixed(1)}</div><div class="kpi-label">Edad promedio</div></div>
         <div class="kpi-card"><div class="kpi-value">${data.edad_minima} - ${data.edad_maxima}</div><div class="kpi-label">Rango edad</div></div>
         <div class="kpi-card"><div class="kpi-value">${data.promedio_respuestas_por_encuesta.toFixed(1)}</div><div class="kpi-label">Promedio preguntas</div></div>
       `;
 
-      // Gráficos de barras
-      const chartsContainer = document.getElementById('stats-charts');
-      chartsContainer.innerHTML = '';
+        // Gráficos de barras
+        const chartsContainer = document.getElementById('stats-charts');
+        chartsContainer.innerHTML = '';
 
-      // Estrato
-      if (data.distribucion_por_estrato && Object.keys(data.distribucion_por_estrato).length > 0) {
-        let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Estrato</h4>';
-        const maxVal = Math.max(...Object.values(data.distribucion_por_estrato));
-        for (const [key, val] of Object.entries(data.distribucion_por_estrato)) {
-          const width = (val / maxVal) * 100;
-          html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+        // Estrato
+        if (data.distribucion_por_estrato && Object.keys(data.distribucion_por_estrato).length > 0) {
+          let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Estrato</h4>';
+          const maxVal = Math.max(...Object.values(data.distribucion_por_estrato));
+          for (const [key, val] of Object.entries(data.distribucion_por_estrato)) {
+            const width = (val / maxVal) * 100;
+            html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+          }
+          html += '</div>';
+          chartsContainer.innerHTML += html;
         }
-        html += '</div>';
-        chartsContainer.innerHTML += html;
-      }
 
-      // Género
-      if (data.distribucion_por_genero && Object.keys(data.distribucion_por_genero).length > 0) {
-        let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Género</h4>';
-        const maxVal = Math.max(...Object.values(data.distribucion_por_genero));
-        for (const [key, val] of Object.entries(data.distribucion_por_genero)) {
-          const width = (val / maxVal) * 100;
-          html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill lila" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+        // Género
+        if (data.distribucion_por_genero && Object.keys(data.distribucion_por_genero).length > 0) {
+          let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Género</h4>';
+          const maxVal = Math.max(...Object.values(data.distribucion_por_genero));
+          for (const [key, val] of Object.entries(data.distribucion_por_genero)) {
+            const width = (val / maxVal) * 100;
+            html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill lila" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+          }
+          html += '</div>';
+          chartsContainer.innerHTML += html;
         }
-        html += '</div>';
-        chartsContainer.innerHTML += html;
-      }
 
-      // Nivel educativo
-      if (data.distribucion_por_nivel_educativo && Object.keys(data.distribucion_por_nivel_educativo).length > 0) {
-        let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Nivel educativo</h4>';
-        const maxVal = Math.max(...Object.values(data.distribucion_por_nivel_educativo));
-        for (const [key, val] of Object.entries(data.distribucion_por_nivel_educativo)) {
-          const width = (val / maxVal) * 100;
-          html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill menta" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+        // Nivel educativo
+        if (data.distribucion_por_nivel_educativo && Object.keys(data.distribucion_por_nivel_educativo).length > 0) {
+          let html = '<div style="margin-top:1rem;"><h4 style="font-size:0.85rem;color:var(--texto-2);margin-bottom:0.5rem;">Nivel educativo</h4>';
+          const maxVal = Math.max(...Object.values(data.distribucion_por_nivel_educativo));
+          for (const [key, val] of Object.entries(data.distribucion_por_nivel_educativo)) {
+            const width = (val / maxVal) * 100;
+            html += `<div class="bar-row"><div class="bar-label">${key}</div><div class="bar-track"><div class="bar-fill menta" style="width:${width}%"></div><div class="bar-value">${val}</div></div></div>`;
+          }
+          html += '</div>';
+          chartsContainer.innerHTML += html;
         }
-        html += '</div>';
-        chartsContainer.innerHTML += html;
-      }
 
-      showJSON('stats-json', data);
-    } catch (err) {
-      console.error(err);
+        showJSON('stats-json', data);
+      } catch (err) {
+        console.error(err);
+      }
     }
-  }
 
-  /* INIT */
-  document.addEventListener('DOMContentLoaded', () => {
-    checkHealth();
-    // No agregar pregunta por defecto - el usuario debe agregarlas explícitamente
-  });
-</script>
+    /* INIT */
+    document.addEventListener('DOMContentLoaded', () => {
+      checkHealth();
+      // No agregar pregunta por defecto - el usuario debe agregarlas explícitamente
+    });
+
+    /* CENSO 2018 */
+    async function handleCensoFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const progressDiv = document.getElementById('censo-upload-progress');
+      const progressBar = document.getElementById('censo-progress-bar');
+      const alertDiv = document.getElementById('censo-upload-alert');
+      const jsonDiv = document.getElementById('censo-upload-json');
+
+      progressDiv.style.display = 'block';
+      progressBar.style.width = '30%';
+      alertDiv.className = 'alert';
+      jsonDiv.className = 'json-viewer';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        progressBar.style.width = '60%';
+        const response = await fetch(`${API}/censo-2018/upload-csv/`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        progressBar.style.width = '100%';
+        const data = await response.json();
+
+        if (response.ok) {
+          showToast(`✓ ${data.exitosos} registros cargados`, 'success');
+          alertDiv.className = 'alert alert-success show';
+          alertDiv.textContent = `✓ Carga completada: ${data.exitosos} registros exitosos, ${data.fallidos} fallidos`;
+          showJSON('censo-upload-json', data);
+          setTimeout(() => loadCensoEstadisticas(), 1000);
+        } else {
+          showToast(`✗ Error: ${data.detail || 'Error en la carga'}`, 'error');
+          alertDiv.className = 'alert alert-error show';
+          alertDiv.textContent = `✗ Error: ${data.detail || 'Error en la carga'}`;
+          showJSON('censo-upload-json', data);
+        }
+      } catch (err) {
+        showToast(`✗ Error de conexión: ${err.message}`, 'error');
+        alertDiv.className = 'alert alert-error show';
+        alertDiv.textContent = `✗ Error de conexión: ${err.message}`;
+      } finally {
+        setTimeout(() => { progressDiv.style.display = 'none'; progressBar.style.width = '0%'; }, 2000);
+      }
+    }
+
+    async function loadCensoEstadisticas() {
+      try {
+        const response = await fetch(`${API}/censo-2018/estadisticas/`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Datos del censo:', data);
+
+        const kpiContainer = document.getElementById('censo-stats-kpi');
+        kpiContainer.innerHTML = `
+          <div class="kpi-card">
+            <div class="kpi-value">${data.total_registros.toLocaleString()}</div>
+            <div class="kpi-label">Total Registros</div>
+          </div>
+        `;
+
+        // Mostrar grupos de edad amplios en recuadros
+        const gruposEdadDiv = document.getElementById('censo-grupos-edad');
+        if (data.distribucion_por_grupos_edad && Object.keys(data.distribucion_por_grupos_edad).length > 0) {
+          let html = '<div class="section-title" style="margin-top:1.5rem;"><span class="icon">👥</span> Grupos de Edad</div>';
+          html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;">';
+
+          const colores = [
+            'linear-gradient(135deg, #FFE4EE, #FFB6C1)',  // rosa
+            'linear-gradient(135deg, #E8D5F5, #C9A8E8)',  // lila
+            'linear-gradient(135deg, #D4F5E9, #4CAF84)',  // menta
+            'linear-gradient(135deg, #DAE8FF, #90CAF9)',  // azul
+            'linear-gradient(135deg, #FFF3CD, #FFC107)',  // amarillo
+            'linear-gradient(135deg, #F8D7DA, #E57373)',  // rojo
+            'linear-gradient(135deg, #D1C4E9, #9575CD)',  // violeta
+            'linear-gradient(135deg, #B2DFDB, #26A69A)',  // teal
+          ];
+
+          let colorIdx = 0;
+          for (const [grupo, cantidad] of Object.entries(data.distribucion_por_grupos_edad)) {
+            const color = colores[colorIdx % colores.length];
+            html += `
+              <div class="kpi-card" style="background:${color};min-height:120px;">
+                <div class="kpi-value" style="font-size:1.8rem;color:#3D1A47;">${cantidad.toLocaleString()}</div>
+                <div class="kpi-label" style="color:#3D1A47;font-weight:500;">${grupo}</div>
+              </div>
+            `;
+            colorIdx++;
+          }
+          html += '</div>';
+          gruposEdadDiv.innerHTML = html;
+        } else {
+          gruposEdadDiv.innerHTML = '<p style="color:var(--texto-2);text-align:center;padding:2rem;">No hay datos de grupos de edad disponibles</p>';
+        }
+
+        // Agregar índices si existen
+        const indicesDiv = document.getElementById('censo-indices-result');
+        if (data.indice_masculinidad !== null || data.indice_dependencia !== null) {
+          let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem;">';
+          if (data.indice_masculinidad !== null) {
+            html += `<div class="kpi-card" style="background:linear-gradient(135deg, #DAE8FF, #B6D4FE);"><div class="kpi-value" style="color:#084298;">${data.indice_masculinidad.toFixed(2)}</div><div class="kpi-label" style="color:#084298;">Índice Masculinidad</div></div>`;
+          }
+          if (data.indice_dependencia !== null) {
+            html += `<div class="kpi-card" style="background:linear-gradient(135deg, #D4FADF, #A7E0B8);"><div class="kpi-value" style="color:#0A5F2E;">${data.indice_dependencia.toFixed(2)}</div><div class="kpi-label" style="color:#0A5F2E;">Índice Dependencia</div></div>`;
+          }
+          html += '</div>';
+          indicesDiv.innerHTML = html;
+        }
+
+        // Mostrar rangos etarios detallados con barras de progreso
+        const rangosEdadDiv = document.getElementById('censo-rangos-edad');
+        if (data.distribucion_por_rangos_edad && Object.keys(data.distribucion_por_rangos_edad).length > 0) {
+          const maxVal = Math.max(...Object.values(data.distribucion_por_rangos_edad));
+
+          let html = '<div style="margin-top:2rem;">';
+          html += '<h3 style="color:var(--rosa-vivo);margin-bottom:1rem;">📊 Rangos Etarios Detallados</h3>';
+          html += '<div style="background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 10px rgba(0,0,0,0.1);">';
+
+          for (const [rango, cantidad] of Object.entries(data.distribucion_por_rangos_edad)) {
+            const porcentaje = (cantidad / maxVal) * 100;
+            html += '<div style="display:flex;align-items:center;margin-bottom:10px;">';
+            html += `<div style="width:90px;font-weight:600;font-size:0.85rem;">${rango}</div>`;
+            html += '<div style="flex:1;background:#f0e0e8;height:24px;border-radius:6px;overflow:hidden;">';
+            html += `<div style="background:linear-gradient(90deg,#FF8FAB,#FF5C8A);height:100%;width:${porcentaje}%;border-radius:6px;"></div>`;
+            html += '</div>';
+            html += `<div style="width:80px;text-align:right;font-weight:700;padding-right:10px;">${cantidad.toLocaleString()}</div>`;
+            html += '</div>';
+          }
+
+          html += '</div></div>';
+          rangosEdadDiv.innerHTML = html;
+        }
+
+        showJSON('censo-stats-json', data);
+        showToast('✓ Estadísticas cargadas correctamente', 'success');
+      } catch (err) {
+        console.error('Error al cargar estadísticas:', err);
+        showToast(`✗ Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function loadIndiceMasculinidad() {
+      try {
+        const response = await fetch(`${API}/censo-2018/indice/masculinidad/`);
+        const data = await response.json();
+
+        const indicesDiv = document.getElementById('censo-indices-result');
+        indicesDiv.innerHTML = `
+          <div class="kpi-card" style="background:linear-gradient(135deg, #DAE8FF, #B6D4FE);margin-top:1rem;">
+            <div class="kpi-value" style="color:#084298;">${data.valor.toFixed(2)}</div>
+            <div class="kpi-label" style="color:#084298;">Índice de Masculinidad</div>
+            <div style="font-size:0.75rem;color:#084298;margin-top:0.5rem;">
+              ${data.descripcion}<br/>
+              Fórmula: ${data.formula}<br/>
+              Hombres: ${data.desglose?.hombres?.toLocaleString() || 'N/A'} | Mujeres: ${data.desglose?.mujeres?.toLocaleString() || 'N/A'}
+            </div>
+          </div>
+        `;
+        showToast('✓ Índice de masculinidad cargado', 'success');
+      } catch (err) {
+        showToast('✗ Error al cargar índice de masculinidad', 'error');
+      }
+    }
+
+    async function loadIndiceDependencia() {
+      try {
+        const response = await fetch(`${API}/censo-2018/indice/dependencia/`);
+        const data = await response.json();
+
+        const indicesDiv = document.getElementById('censo-indices-result');
+        indicesDiv.innerHTML = `
+          <div class="kpi-card" style="background:linear-gradient(135deg, #D4FADF, #A7E0B8);margin-top:1rem;">
+            <div class="kpi-value" style="color:#0A5F2E;">${data.valor.toFixed(2)}</div>
+            <div class="kpi-label" style="color:#0A5F2E;">Índice de Dependencia</div>
+            <div style="font-size:0.75rem;color:#0A5F2E;margin-top:0.5rem;">
+              ${data.descripcion}<br/>
+              Fórmula: ${data.formula}<br/>
+              <strong><15:</strong> ${data.desglose?.['poblacion_joven (<15)']?.toLocaleString() || 'N/A'} | 
+              <strong>>64:</strong> ${data.desglose?.['poblacion_adulta_mayor (>64)']?.toLocaleString() || 'N/A'} | 
+              <strong>15-64:</strong> ${data.desglose?.['poblacion_activa (15-64)']?.toLocaleString() || 'N/A'}
+            </div>
+          </div>
+        `;
+        showToast('✓ Índice de dependencia cargado', 'success');
+      } catch (err) {
+        showToast('✗ Error al cargar índice de dependencia', 'error');
+      }
+    }
+
+    async function borrarDatosCenso() {
+      // Confirmación antes de borrar
+      if (!confirm('⚠️ ¿Estás SEGURO de que quieres borrar TODOS los datos del Censo 2018?\n\nEsta operación es IRREVERSIBLE.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API}/censo-2018/borrar-todo/`, {
+          method: 'DELETE',
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showToast(`✓ ${data.registros_borrados} registros borrados`, 'success');
+          // Limpiar panel
+          document.getElementById('censo-stats-kpi').innerHTML = '';
+          document.getElementById('censo-indices-result').innerHTML = '';
+          document.getElementById('censo-stats-json').textContent = '';
+          document.getElementById('censo-stats-json').className = 'json-viewer';
+          showToast('💡 Ahora puedes cargar un nuevo archivo CSV', 'info');
+        } else {
+          showToast(`✗ Error: ${data.detail || data.mensaje || 'Error al borrar'}`, 'error');
+        }
+      } catch (err) {
+        showToast(`✗ Error de conexión: ${err.message}`, 'error');
+      }
+    }
+
+    async function loadCensoEstadisticas(soloEstado = false) {
+      try {
+        const response = await fetch(`${API}/censo-2018/estadisticas/`);
+        const data = await response.json();
+
+        // Si está vacío y es solo estado, mostrar mensaje
+        if (soloEstado && data.total_registros === 0) {
+          const kpiContainer = document.getElementById('censo-stats-kpi');
+          kpiContainer.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--texto-2);">
+              <div style="font-size:3rem;margin-bottom:0.5rem;">📁</div>
+              <p>No hay datos del Censo 2018 cargados</p>
+              <p style="font-size:0.85rem;margin-top:0.5rem;">Sube un archivo CSV para comenzar el análisis</p>
+            </div>
+          `;
+          document.getElementById('censo-indices-result').innerHTML = '';
+          return;
+        }
+
+        const kpiContainer = document.getElementById('censo-stats-kpi');
+        kpiContainer.innerHTML = `
+          <div class="kpi-card">
+            <div class="kpi-value">${data.total_registros.toLocaleString()}</div>
+            <div class="kpi-label">Total Registros</div>
+          </div>
+        `;
+
+        // Agregar índices si existen
+        const indicesDiv = document.getElementById('censo-indices-result');
+        if (data.indice_masculinidad !== null || data.indice_dependencia !== null) {
+          let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem;">';
+          if (data.indice_masculinidad !== null) {
+            html += `<div class="kpi-card" style="background:linear-gradient(135deg, #DAE8FF, #B6D4FE);"><div class="kpi-value" style="color:#084298;">${data.indice_masculinidad.toFixed(2)}</div><div class="kpi-label" style="color:#084298;">Índice Masculinidad</div></div>`;
+          }
+          if (data.indice_dependencia !== null) {
+            html += `<div class="kpi-card" style="background:linear-gradient(135deg, #D4FADF, #A7E0B8);"><div class="kpi-value" style="color:#0A5F2E;">${data.indice_dependencia.toFixed(2)}</div><div class="kpi-label" style="color:#0A5F2E;">Índice Dependencia</div></div>`;
+          }
+          html += '</div>';
+          indicesDiv.innerHTML = html;
+        }
+
+        showJSON('censo-stats-json', data);
+      } catch (err) {
+        console.error(err);
+        showToast('✗ Error al cargar estadísticas del censo', 'error');
+      }
+    }
+  </script>
 </body>
+
 </html>

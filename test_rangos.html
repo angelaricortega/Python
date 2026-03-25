@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Rangos de Edad - Censo 2018</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 2rem; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        .btn { background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px 0; }
+        .btn:hover { background: #45a049; }
+        .rango-item { display: flex; align-items: center; margin: 8px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; }
+        .rango-label { min-width: 100px; font-weight: bold; }
+        .rango-bar { flex: 1; background: #e0e0e0; border-radius: 5px; height: 24px; margin: 0 15px; position: relative; overflow: hidden; }
+        .rango-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
+        .rango-value { min-width: 80px; text-align: right; font-weight: bold; }
+        .error { background: #ffebee; color: #c62828; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .success { background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Test: Distribución de Rangos de Edad - Censo 2018</h1>
+        
+        <button class="btn" onclick="cargarDatos()">🔄 Cargar Datos de la API</button>
+        
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8000';
+
+        async function cargarDatos() {
+            const resultadoDiv = document.getElementById('resultado');
+            resultadoDiv.innerHTML = '<p>Cargando datos...</p>';
+
+            try {
+                const response = await fetch(`${API}/censo-2018/estadisticas/`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Datos recibidos:', data);
+
+                // Verificar si hay datos de rangos
+                const rangos = data.distribucion_por_rangos_edad;
+                
+                if (!rangos || Object.keys(rangos).length === 0) {
+                    resultadoDiv.innerHTML = '<div class="error">❌ No hay datos de rangos de edad en la respuesta</div>';
+                    return;
+                }
+
+                // Calcular máximo para escalar barras
+                const maxVal = Math.max(...Object.values(rangos));
+
+                // Colores por edad
+                const getColor = (rango) => {
+                    const edad = parseInt(rango.split('-')[0]);
+                    if (edad < 10) return 'linear-gradient(90deg, #FFB6C1, #FF8FAB)';
+                    if (edad < 20) return 'linear-gradient(90deg, #C9A8E8, #9B67D9)';
+                    if (edad < 30) return 'linear-gradient(90deg, #4CAF84, #2E7D32)';
+                    if (edad < 40) return 'linear-gradient(90deg, #90CAF9, #42A5F5)';
+                    if (edad < 50) return 'linear-gradient(90deg, #FFC107, #FF9800)';
+                    if (edad < 60) return 'linear-gradient(90deg, #FF8A65, #F4511E)';
+                    return 'linear-gradient(90deg, #A5D6A7, #66BB6A)';
+                };
+
+                // Generar HTML
+                let html = '<div class="success">';
+                html += `✓ <strong>${Object.keys(rangos).length}</strong> rangos de edad cargados correctamente`;
+                html += `<br>Total registros: <strong>${data.total_registros.toLocaleString()}</strong>`;
+                html += '</div>';
+
+                html += '<h2>Rangos de Edad:</h2>';
+                for (const [rango, cantidad] of Object.entries(rangos)) {
+                    const porcentaje = (cantidad / maxVal) * 100;
+                    const color = getColor(rango);
+                    
+                    html += `
+                        <div class="rango-item">
+                            <div class="rango-label">${rango}</div>
+                            <div class="rango-bar">
+                                <div class="rango-fill" style="background: ${color}; width: ${porcentaje}%;"></div>
+                            </div>
+                            <div class="rango-value">${cantidad.toLocaleString()}</div>
+                        </div>
+                    `;
+                }
+
+                resultadoDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultadoDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Cargar automáticamente al abrir
+        window.onload = () => cargarDatos();
+    </script>
+</body>
+</html>

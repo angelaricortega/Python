@@ -59,6 +59,10 @@ from models import (
     RespuestaEncuesta,
 )
 
+# Importar endpoints del Censo 2018
+from censo_endpoints import router as censo_router
+from database import crear_tablas, engine
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Configuración de logging — auditoría de ingresos válidos e inválidos
 # ─────────────────────────────────────────────────────────────────────────────
@@ -91,12 +95,18 @@ validación y análisis estadístico de encuestas poblacionales.
 - **Manejo de errores HTTP 422** con mensajes descriptivos
 - **Documentación interactiva** en `/docs` (Swagger) y `/redoc` (Redoc)
 
+### Censo 2018 (NUEVO)
+- **Carga masiva** de bases de datos del DANE (millones de registros)
+- **Índices demográficos**: masculinidad, dependencia
+- **Estadísticas descriptivas** completas
+- **Base de datos SQLite** para persistencia
+
 ### Ejecución local
 ```bash
 uvicorn main:app --reload --port 8000
 ```
     """,
-    version="2.0.0",
+    version="2.1.0",
     contact={
         "name": "Equipo de Desarrollo — Python para APIs e IA",
         "email": "dev@encuestas-co.edu",
@@ -106,9 +116,15 @@ uvicorn main:app --reload --port 8000
         {"name": "Encuestas", "description": "Operaciones CRUD sobre encuestas poblacionales"},
         {"name": "Upload/Export", "description": "Carga y descarga de archivos"},
         {"name": "Estadísticas", "description": "Análisis estadístico agregado"},
+        {"name": "Censo 2018", "description": "Carga y análisis de bases del Censo 2018 DANE"},
         {"name": "Sistema", "description": "Health check y estado de la API"},
     ],
 )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Incluir router del Censo 2018
+# ─────────────────────────────────────────────────────────────────────────────
+app.include_router(censo_router)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -934,3 +950,18 @@ async def health_check():
         "redoc": "/redoc",
         "frontend": "/ui",
     }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# EVENTO DE INICIO: Crear tablas de base de datos
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.on_event("startup")
+async def on_startup():
+    """
+    Evento de inicio de la aplicación.
+    Crea las tablas de base de datos si no existen.
+    """
+    logger.info("INICIANDO API | Creando tablas de base de datos...")
+    await crear_tablas()
+    logger.info("BASE DE DATOS | Tablas creadas exitosamente")

@@ -1,0 +1,81 @@
+{
+  "total_registros": 1386488,
+  "distribucion_por_sexo": {
+    "Hombre": 684205,
+    "Mujer": 702283
+  },
+  "distribucion_por_departamento": {
+    "Antioquia": 1000
+  },
+  "distribucion_por_grupo_etnico": {
+    "Indígena": 1163425,
+    "Grupo 1": 184350,
+    "Ignorado": 23838,
+    "Ninguno de los anteriores": 14770,
+    "Grupo 3": 65,
+    "Negro(a), Mulato(a), Afrocolombiano(a)": 24,
+    "Grupo 2": 16
+  },
+  "distribucion_por_nivel_educativo": {
+    "Primaria": 965031,
+    "Secundaria": 298101,
+    "Ignorado": 27908
+  },
+  "distribucion_por_estado_civil": {
+    "Soltero(a)": 313718,
+    "Casado(a)": 221432,
+    "Unido(a)": 11678,
+    "Separado(a)": 46686,
+    "Divorciado(a)": 31570,
+    "Viudo(a)": 55965,
+    "Soltero(a) - menor 12 años": 475026,
+    "Ignorado": 33283
+  },
+  "distribucion_por_trabajo": {
+    "Menor de 5 años (no pregunta)": 24896,
+    "Sí trabajó": 429253,
+    "No trabajó, tenía empleo": 8209,
+    "No trabajó, buscó empleo": 46943,
+    "No trabajó, quehaceres del hogar": 60055,
+    "No trabajó, estudiaba": 47234,
+    "No trabajó, jubilado/pensionado": 189891,
+    "No trabajó, otra razón": 276256,
+    "No trabajó, sin especificar": 16422,
+    "Ignorado": 64427
+  },
+  "distribucion_por_grupos_edad": {
+    "Primera infancia (0-9 años)": 197130,
+    "Niñez (10-14 años)": 111872,
+    "Adolescencia (15-19 años)": 124347,
+    "Juventud (20-29 años)": 224791,
+    "Adultez temprana (30-44 años)": 269578,
+    "Adultez media (45-59 años)": 243575,
+    "Adultez mayor (60-74 años)": 155755,
+    "Vejez (75+ años)": 59440
+  },
+  "distribucion_por_rangos_edad": {
+    "00-04 años": 95448,
+    "05-09 años": 101682,
+    "10-14 años": 111872,
+    "15-19 años": 124347,
+    "20-24 años": 119579,
+    "25-29 años": 105212,
+    "30-34 años": 93829,
+    "35-39 años": 93938,
+    "40-44 años": 81811,
+    "45-49 años": 81558,
+    "50-54 años": 84383,
+    "55-59 años": 77634,
+    "60-64 años": 66461,
+    "65-69 años": 51741,
+    "70-74 años": 37553,
+    "75-79 años": 26802,
+    "80-84 años": 17914,
+    "85-89 años": 9643,
+    "90-94 años": 3691,
+    "95-99 años": 1047,
+    "100+ años": 343
+  },
+  "indice_masculinidad": 97.43,
+  "indice_dependencia": 49.29
+}

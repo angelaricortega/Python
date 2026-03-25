@@ -30,6 +30,106 @@
 
 ---
 
+## 📊 CENSO 2018 - NUEVA FUNCIONALIDAD
+
+### Archivos Agregados
+
+| Archivo | Líneas | Propósito |
+|---------|--------|-----------|
+| `database.py` | ~100 | Configuración SQLAlchemy async (SQLite/PostgreSQL) |
+| `models_censo.py` | ~400 | Modelos ORM + Pydantic para Censo 2018 |
+| `models_orm.py` | ~100 | Modelos ORM para encuestas y censo |
+| `censo_codes.py` | ~150 | Catálogos DANE (departamentos, sexo, etnia, etc.) |
+| `censo_endpoints.py` | ~650 | Endpoints para carga y análisis del Censo 2018 |
+
+### Nuevos Endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/censo-2018/upload-csv/` | Carga masiva batch (10,000 registros por lote) |
+| GET | `/censo-2018/estadisticas/` | Estadísticas descriptivas completas |
+| GET | `/censo-2018/indice/masculinidad/` | Índice de masculinidad (H/M × 100) |
+| GET | `/censo-2018/indice/dependencia/` | Índice de dependencia ((<15 + >64) / 15-64) × 100 |
+| GET | `/censo-2018/registros/` | Listar con paginación y filtros |
+| GET | `/censo-2018/registros/{id}/` | Obtener registro específico |
+
+### Variables del Censo 2018 (Tabla Individual)
+
+**Demográficas:**
+- `P_SEXO`: Sexo (1=Hombre, 2=Mujer)
+- `P_EDADR`: Edad en años (0-120)
+
+**Geográficas:**
+- `U_DPTO`: Código departamento DANE (1-32)
+- `U_MPIO`: Código municipio DANE
+
+**Étnicas:**
+- `PA1_GRP_ETNIC`: Grupo étnico (1-6, 9=Ignorado)
+
+**Educativas:**
+- `P_ALFABETA`: Alfabetismo (1=Sí, 2=No, 9=Ignorado)
+- `PA_ASISTENCIA`: Asistencia educativa (1=Sí, 2=No, 9=Ignorado)
+- `P_NIVEL_ANOSR`: Años de educación aprobados (0-11, 99=Ignorado)
+
+**Laborales:**
+- `P_TRABAJO`: Situación laboral (0-9)
+- `P_EST_CIVIL`: Estado civil (1-7, 9=Ignorado)
+
+**Salud:**
+- `P_ENFERMO`: Enfermedad crónica (1=Sí, 2=No, 9=Ignorado)
+
+### Índices Demográficos Implementados
+
+**Índice de Masculinidad:**
+```python
+formula: (Hombres / Mujeres) × 100
+interpretacion:
+  - > 100: Más hombres que mujeres
+  - = 100: Igualdad numérica
+  - < 100: Más mujeres que hombres
+```
+
+**Índice de Dependencia:**
+```python
+formula: ((Población <15 + Población >64) / Población 15-64) × 100
+interpretacion:
+  - Alto (>60): Gran presión sobre población activa
+  - Medio (40-60): Equilibrio relativo
+  - Bajo (<40): Poca presión demográfica
+```
+
+### Pruebas Realizadas
+
+**Test con archivo real (Antioquia 2018):**
+- Archivo: `CNPV2018_5PER_A2_05.CSV` (485 MB, ~6 millones de registros)
+- Muestra de prueba: 1,000 registros
+- Resultados:
+  - ✅ Carga exitosa: 1,000 registros
+  - ✅ Edad promedio: 7.3 años
+  - ✅ Distribución por sexo: Hombre (475), Mujer (525)
+  - ✅ Índice de masculinidad: 90.48
+  - ✅ Índice de dependencia: 1823.08 (alto por ser muestra de niños)
+
+### Decisiones Técnicas
+
+**Por qué SQLite en lugar de almacenamiento en memoria:**
+1. **Persistencia**: Los datos no se pierden al reiniciar el servidor
+2. **Escalabilidad**: Soporta millones de registros sin saturar RAM
+3. **Consultas eficientes**: Índices en columnas clave (edad, sexo, departamento)
+4. **Transacciones ACID**: Integridad de datos garantizada
+
+**Por qué procesamiento batch (10,000 registros):**
+1. **Memoria controlada**: Evita saturación al cargar archivos grandes
+2. **Rollback parcial**: Si falla un lote, los anteriores persisten
+3. **Feedback progresivo**: El usuario ve el avance de la carga
+
+**Por qué async/await en los endpoints:**
+1. **No bloqueo**: El event loop libera mientras la DB procesa
+2. **Concurrencia**: Múltiples requests simultáneos sin threads adicionales
+3. **Escalabilidad**: Miles de conexiones concurrentes posibles
+
+---
+
 ## 📁 Estructura del Proyecto
 
 ```

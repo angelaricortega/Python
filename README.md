@@ -8,6 +8,7 @@ API REST desarrollada con **FastAPI + Pydantic v2** para la recolección, valida
 
 ## ✨ Características
 
+### Encuestas Poblacionales
 - **CRUD completo** de encuestas (Crear, Leer, Actualizar, Eliminar)
 - **Validación rigurosa** con Pydantic v2:
   - Edad [0-120] — restricción biológica
@@ -18,6 +19,19 @@ API REST desarrollada con **FastAPI + Pydantic v2** para la recolección, valida
 - **Export a JSON/Pickle** para interoperabilidad
 - **Estadísticas en tiempo real** con distribuciones
 - **Manejo de errores HTTP 422** con mensajes descriptivos
+
+### Censo 2018 (NUEVO)
+- **Carga masiva de bases DANE** (millones de registros con procesamiento batch)
+- **Índices demográficos**:
+  - Índice de masculinidad: (Hombres / Mujeres) × 100
+  - Índice de dependencia: ((<15 + >64) / 15-64) × 100
+- **Estadísticas descriptivas completas**:
+  - Distribución por sexo, edad, departamento, grupo étnico
+  - Nivel educativo, estado civil, situación laboral
+- **Base de datos SQLite** para persistencia de grandes volúmenes
+- **Procesamiento asíncrono** para no bloquear la API
+
+### General
 - **Documentación interactiva** Swagger UI y Redoc
 - **Frontend HTML** interactivo
 
@@ -97,6 +111,17 @@ uvicorn main:app --reload --port 8000
 | GET | `/docs` | Swagger UI (documentación interactiva) |
 | GET | `/redoc` | Redoc (documentación alternativa) |
 
+### Censo 2018 (NUEVO)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/censo-2018/upload-csv/` | Cargar archivo CSV del DANE (batch) |
+| GET | `/censo-2018/estadisticas/` | Estadísticas descriptivas completas |
+| GET | `/censo-2018/indice/masculinidad/` | Índice de masculinidad |
+| GET | `/censo-2018/indice/dependencia/` | Índice de dependencia demográfica |
+| GET | `/censo-2018/registros/` | Listar registros con paginación |
+| GET | `/censo-2018/registros/{id}/` | Obtener registro específico |
+
 ---
 
 ## 📤 Formato de Upload (CSV)
@@ -156,6 +181,74 @@ curl -O http://localhost:8000/encuestas/export/pickle/
 
 ---
 
+## 📊 Censo 2018 - Guía de Uso
+
+### Cargar archivo CSV del DANE
+
+```bash
+# Con curl
+curl -X POST http://localhost:8000/censo-2018/upload-csv/ \
+  -F "file=@CNPV2018_5PER_A2_05.CSV"
+
+# Con Python
+import httpx
+with open("CNPV2018_5PER_A2_05.CSV", "rb") as f:
+    response = httpx.post(
+        "http://localhost:8000/censo-2018/upload-csv/",
+        files={"file": f}
+    )
+print(response.json())
+```
+
+### Obtener estadísticas
+
+```bash
+curl http://localhost:8000/censo-2018/estadisticas/
+```
+
+**Respuesta esperada:**
+```json
+{
+  "total_registros": 6147091,
+  "edad_promedio": 31.5,
+  "edad_mediana": 29.0,
+  "distribucion_por_sexo": {"Hombre": 3050000, "Mujer": 3097091},
+  "distribucion_por_grupo_etnico": {...},
+  "indice_masculinidad": 98.5,
+  "indice_dependencia": 52.3
+}
+```
+
+### Índices Demográficos
+
+```bash
+# Índice de masculinidad
+curl "http://localhost:8000/censo-2018/indice/masculinidad/?departamento=5"
+
+# Índice de dependencia
+curl "http://localhost:8000/censo-2018/indice/dependencia/?departamento=5"
+```
+
+### Fórmulas
+
+**Índice de masculinidad:**
+```
+(Hombres / Mujeres) × 100
+```
+- > 100: Más hombres que mujeres
+- = 100: Igualdad numérica
+- < 100: Más mujeres que hombres
+
+**Índice de dependencia:**
+```
+((Población <15 + Población >64) / Población 15-64) × 100
+```
+- Alto (>60): Gran presión sobre población activa
+- Medio (40-60): Equilibrio relativo
+- Bajo (<40): Poca presión demográfica
+
+---
+
 ## 🎨 Frontend
 
 Accede a la interfaz gráfica en: **http://localhost:8000/ui**
@@ -189,19 +282,30 @@ FastAPI genera automáticamente documentación interactiva:
 ```
 encuesta-api/
 ├── main.py                    # Puntos de entrada API (endpoints)
-├── models.py                  # Modelos Pydantic anidados
+├── models.py                  # Modelos Pydantic anidados (encuestas)
+├── models_censo.py            # Modelos ORM y Pydantic (Censo 2018)
+├── models_orm.py              # Modelos ORM para base de datos
+├── database.py                # Configuración SQLAlchemy (async)
 ├── validators.py              # Validadores (DANE, estrato, edad)
+├── censo_codes.py             # Catálogos DANE Censo 2018
+├── censo_endpoints.py         # Endpoints para Censo 2018
 ├── requirements.txt           # Dependencias
 ├── render.yaml                # Configuración de despliegue en Render
 ├── Procfile                   # Configuración de despliegue (Railway/Heroku)
 ├── README.md                  # Este archivo
+├── SUMARIO.md                 # Checklist y documentación del curso
 ├── .gitignore                 # Git ignore
 ├── frontend/
 │   └── index.html             # Interfaz gráfica HTML
 ├── tests/
-│   └── test_endpoints.py      # 25 tests unitarios con pytest
+│   ├── test_endpoints.py      # 25 tests unitarios con pytest
+│   ├── test_models.py         # Tests para modelos Pydantic
+│   └── test_api.py            # Tests generales de API
 ├── scripts/
-│   └── cliente_consumidor.py  # Cliente Python (httpx + pandas)
+│   ├── cliente_consumidor.py  # Cliente Python (httpx + pandas)
+│   ├── explorar_censo.py      # Script para explorar CSV del Censo
+│   ├── test_censo_rapido.py   # Prueba rápida con subconjunto de datos
+│   └── test_censo_upload.py   # Prueba completa de carga del Censo
 └── datos_ejemplo/
     └── encuestas_ejemplo.csv  # CSV de ejemplo para pruebas
 ```
