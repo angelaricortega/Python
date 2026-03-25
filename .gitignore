@@ -57,3 +57,4 @@ reporte_estadisticas.txt
 # Sistema operativo
 .DS_Store
 Thumbs.db
+*.db
